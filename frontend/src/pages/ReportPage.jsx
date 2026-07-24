@@ -832,6 +832,7 @@ export default function ReportPage() {
             <button 
               onClick={() => setShowAuthModal(false)}
               className="absolute top-4 right-4 text-black-placeholder hover:text-black transition-colors"
+              aria-label="Close modal"
             >
               <XCircle className="w-6 h-6" />
             </button>
