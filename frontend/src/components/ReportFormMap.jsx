@@ -26,6 +26,17 @@ function RecenterMap({ lat, lng }) {
   return null;
 }
 
+function MapInvalidateSize() {
+  const map = useMap();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [map]);
+  return null;
+}
+
 function MapClickHandler({ setLatitude, setLongitude, setLocationStatus, setAreaName, setAddressText }) {
   useMapEvents({
     click: async (e) => {
@@ -72,6 +83,7 @@ export default function ReportFormMap({ latitude, longitude, setLatitude, setLon
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      <MapInvalidateSize />
       {latitude !== null && longitude !== null && (
         <Marker position={[latitude, longitude]} icon={customPinIcon} />
       )}

@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import MarkerClusterGroup from '@changey/react-leaflet-markercluster';
-import 'leaflet.markercluster/dist/MarkerCluster.css';
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
-import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { MapPinned, List, RefreshCw, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -47,6 +44,17 @@ const MapBoundsFit = ({ reports }) => {
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
     }
   }, [reports, map]);
+  return null;
+};
+
+const MapInvalidateSize = () => {
+  const map = useMap();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [map]);
   return null;
 };
 
@@ -185,6 +193,7 @@ export default function RegionalActivityMap({ reports, mapStatus, onRetry }) {
               style={{ height: '100%', width: '100%' }}
               maxZoom={17}
             >
+              <MapInvalidateSize />
               <MapBoundsFit reports={filteredReports.filter((r) => r.latitude && r.longitude)} />
               <MapCenterTracker onCityChange={setCurrentCity} />
               <TileLayer
