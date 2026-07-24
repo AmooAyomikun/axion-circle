@@ -61,7 +61,11 @@ function App() {
       }(document, 'script', 'facebook-jssdk'));
     };
     
-    initFacebookSDK();
+    const timer = setTimeout(() => {
+      initFacebookSDK();
+    }, 2500);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   return (

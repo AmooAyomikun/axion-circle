@@ -43,7 +43,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           react: ['react', 'react-dom', 'react-router-dom'],
-          leaflet: ['leaflet', 'react-leaflet'],
+          leaflet: ['leaflet', 'react-leaflet', 'leaflet.markercluster', '@changey/react-leaflet-markercluster'],
           icons: ['lucide-react'],
         },
       },
