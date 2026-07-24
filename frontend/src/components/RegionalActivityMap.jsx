@@ -28,11 +28,18 @@ const getMarkerIcon = (status) => {
   else if (s === 'inprogress' || s === 'in progress') color = '#a855f7'; // purple
   else if (s === 'resolved') color = '#22c55e'; // green
 
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 36px; height: 36px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.4));">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+      <circle cx="12" cy="10" r="3.5" fill="white" stroke="none"></circle>
+    </svg>
+  `;
   return L.divIcon({
-    className: 'custom-leaflet-pin',
-    html: `<div style="background-color: ${color}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
+    className: 'custom-leaflet-pin bg-transparent border-none',
+    html: `<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 36px; height: 36px; position: relative;">${svg}</div>`,
+    iconSize: [36, 36],
+    iconAnchor: [18, 36],
+    popupAnchor: [0, -36]
   });
 };
 
