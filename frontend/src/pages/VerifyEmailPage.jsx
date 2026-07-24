@@ -199,6 +199,7 @@ export default function VerifyEmailPage() {
               {code.map((digit, index) => (
                 <input
                   key={index}
+                  aria-label={`Digit ${index + 1}`}
                   ref={el => inputRefs.current[index] = el}
                   type="text"
                   maxLength={6} // allow pasting full code
