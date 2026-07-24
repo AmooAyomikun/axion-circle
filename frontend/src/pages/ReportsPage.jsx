@@ -413,7 +413,7 @@ export default function ReportsPage() {
 
           {/* Report Cards Grid */}
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-20">
+            <div className="flex flex-col items-center justify-center py-20 min-h-[500px]">
               <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
               <p className="text-sm font-medium text-paragraph">Loading community reports...</p>
             </div>

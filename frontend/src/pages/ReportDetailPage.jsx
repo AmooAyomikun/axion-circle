@@ -618,11 +618,12 @@ export default function ReportDetailPage() {
             <div className="w-full h-[250px] sm:h-[360px] rounded-2xl overflow-hidden bg-white-stroke shadow-sm relative z-0">
               {thePhotoUrl ? (
                 <img 
-                  src={thePhotoUrl} 
-                  alt="Report issue" 
+                  src={report.photoUrl} 
+                  alt={report.title} 
                   width="800"
-                  height="360"
-                  className="w-full h-full object-cover"
+                  height="600"
+                  fetchpriority="high"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }}
                 />
               ) : (
@@ -775,6 +776,7 @@ export default function ReportDetailPage() {
                                 onClick={() => handleDeleteComment(cid)}
                                 className="text-black-placeholder hover:text-alert-error transition-colors p-1"
                                 title="Delete comment"
+                                aria-label="Delete comment"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
