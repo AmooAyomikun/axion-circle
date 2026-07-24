@@ -1,5 +1,5 @@
-import React from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import React, { useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -26,6 +26,17 @@ const getMarkerIcon = (status) => {
   });
 };
 
+function MapInvalidateSize() {
+  const map = useMap();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [map]);
+  return null;
+}
+
 const ReportDetailMap = ({ report, geoDistrict, geoAddress }) => {
   const latitude = report.latitude || 40.7128;
   const longitude = report.longitude || -74.0060;
@@ -45,6 +56,7 @@ const ReportDetailMap = ({ report, geoDistrict, geoAddress }) => {
         url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
         maxZoom={18}
       />
+      <MapInvalidateSize />
       <Marker position={[latitude, longitude]} icon={getMarkerIcon(report.status)}>
         <Popup>
           <div className="font-heading font-bold text-sm text-black">
