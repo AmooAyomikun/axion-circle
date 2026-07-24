@@ -344,7 +344,7 @@ export default function ReportDetailPage() {
             {/* Photo */}
             <div className="relative mb-8 mt-2">
               <div className="w-full h-[220px] rounded-2xl overflow-hidden shadow-sm bg-white-bg2 border border-white-stroke">
-                <img loading="lazy" src={thePhotoUrl ? optimizeCloudinaryUrl(thePhotoUrl, 800) : fallbackImage} alt="Report evidence" width="400" height="220" className="w-full h-full object-cover" onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }} />
+                <img fetchpriority="high" src={thePhotoUrl ? optimizeCloudinaryUrl(thePhotoUrl, 800) : fallbackImage} alt="Report evidence" width="400" height="220" className="w-full h-full object-cover" onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }} />
               </div>
               
               {/* Overlapping Reporter Avatar */}
