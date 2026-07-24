@@ -11,6 +11,7 @@ export default function AuthHeroPanel() {
         width="960"
         height="1080"
         className="absolute inset-0 w-full h-full object-cover"
+        fetchpriority="high"
       />
 
 

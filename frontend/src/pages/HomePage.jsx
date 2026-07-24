@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import AppNavbar from '../components/AppNavbar';
 import Footer from '../components/Footer';
-import mapBg from '../assets/map-bg.webp';
+
 import api from '../services/api';
 import ReportListView from '../components/ReportListView';
 const RegionalActivityMap = lazy(() => import('../components/RegionalActivityMap'));
