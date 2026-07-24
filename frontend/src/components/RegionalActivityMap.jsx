@@ -45,12 +45,18 @@ const getMarkerIcon = (status) => {
 
 const MapBoundsFit = ({ reports }) => {
   const map = useMap();
+  const [prevReportIds, setPrevReportIds] = useState('');
+
   useEffect(() => {
     if (reports && reports.length > 0) {
-      const bounds = L.latLngBounds(reports.map(r => [r.latitude, r.longitude]));
-      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+      const currentIds = reports.map(r => r.id).sort().join(',');
+      if (currentIds !== prevReportIds) {
+        const bounds = L.latLngBounds(reports.map(r => [r.latitude, r.longitude]));
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+        setPrevReportIds(currentIds);
+      }
     }
-  }, [reports, map]);
+  }, [reports, map, prevReportIds]);
   return null;
 };
 
