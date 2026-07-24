@@ -37,14 +37,7 @@ const getCategoryIcon = (category) => {
   return <FileText className="w-4 h-4 text-paragraph" />;
 };
 
-export default function AdminReportsTable({ reports, onRefresh }) {
-  const [sortColumn, setSortColumn] = useState('date');
-  const [sortDirection, setSortDirection] = useState('desc');
-  const [filterStatus, setFilterStatus] = useState('All Status');
-  const [filterCategory, setFilterCategory] = useState('All Categories');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
-
+export default function AdminReportsTable({ reports, pageData, filters, onFilterChange, onRefresh }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
   const [newStatus, setNewStatus] = useState('');
@@ -52,12 +45,12 @@ export default function AdminReportsTable({ reports, onRefresh }) {
   const [isUpdating, setIsUpdating] = useState(false);
 
   const handleSort = (column) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortColumn(column);
-      setSortDirection('asc');
+    if (!['category', 'createdAt', 'status'].includes(column)) return;
+    let direction = 'desc';
+    if (filters?.sortBy === column && filters?.direction === 'desc') {
+      direction = 'asc';
     }
+    onFilterChange(prev => ({ ...prev, sortBy: column, direction, page: 0 }));
   };
 
   const openStatusModal = (report) => {
@@ -86,68 +79,16 @@ export default function AdminReportsTable({ reports, onRefresh }) {
     }
   };
 
-  const filteredAndSortedReports = useMemo(() => {
-    let result = [...reports];
-
-    // Filter by Status
-    if (filterStatus !== 'All Status') {
-      result = result.filter(r => (r.status || 'Reported').toLowerCase() === filterStatus.toLowerCase());
-    }
-
-    // Filter by Category
-    if (filterCategory !== 'All Categories') {
-      result = result.filter(r => (r.category || '').toLowerCase() === filterCategory.toLowerCase());
-    }
-
-    // Sort
-    result.sort((a, b) => {
-      let aVal, bVal;
-      switch (sortColumn) {
-        case 'category':
-          aVal = (a.category || '').toLowerCase();
-          bVal = (b.category || '').toLowerCase();
-          break;
-        case 'reference':
-          aVal = a.id || '';
-          bVal = b.id || '';
-          break;
-        case 'urgency':
-          aVal = (a.urgency || 'medium').toLowerCase();
-          bVal = (b.urgency || 'medium').toLowerCase();
-          break;
-        case 'area':
-          aVal = (a.areaName || a.address || '').toLowerCase();
-          bVal = (b.areaName || b.address || '').toLowerCase();
-          break;
-        case 'date':
-          aVal = new Date(a.createdAt || a.date || 0).getTime();
-          bVal = new Date(b.createdAt || b.date || 0).getTime();
-          break;
-        case 'status':
-          aVal = (a.status || '').toLowerCase();
-          bVal = (b.status || '').toLowerCase();
-          break;
-        default:
-          aVal = ''; bVal = '';
-      }
-
-      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    return result;
-  }, [reports, sortColumn, sortDirection, filterStatus, filterCategory]);
-
-  const totalPages = Math.ceil(filteredAndSortedReports.length / itemsPerPage) || 1;
-  const paginatedReports = filteredAndSortedReports.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const totalPages = pageData?.totalPages || 1;
+  const paginatedReports = reports || [];
+  const currentPage = (filters?.page || 0) + 1;
+  const itemsPerPage = filters?.size || 5;
+  const totalElements = pageData?.totalElements || 0;
 
   const SortIcon = ({ column }) => {
-    if (sortColumn !== column) return <ChevronDown className="w-3 h-3 text-paragraph opacity-50" />;
-    return sortDirection === 'asc' ? <ChevronUp className="w-3 h-3 text-primary" /> : <ChevronDown className="w-3 h-3 text-primary" />;
+    if (!['category', 'createdAt', 'status'].includes(column)) return null;
+    if (filters?.sortBy !== column) return <ChevronDown className="w-3 h-3 text-paragraph opacity-50" />;
+    return filters?.direction === 'asc' ? <ChevronUp className="w-3 h-3 text-primary" /> : <ChevronDown className="w-3 h-3 text-primary" />;
   };
 
   return (
@@ -158,28 +99,30 @@ export default function AdminReportsTable({ reports, onRefresh }) {
         
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <select 
-            value={filterStatus}
-            onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
+            value={filters?.status || ''}
+            onChange={(e) => onFilterChange(prev => ({ ...prev, status: e.target.value, page: 0 }))}
             className="px-3 py-2 bg-white border border-white-stroke rounded-lg text-sm font-medium text-black outline-none focus:border-primary shadow-sm"
             aria-label="Filter by status"
           >
-            <option>All Status</option>
-            <option>Reported</option>
-            <option>Acknowledged</option>
-            <option>In Progress</option>
-            <option>Resolved</option>
+            <option value="">All Status</option>
+            <option value="REPORTED">Reported</option>
+            <option value="ACKNOWLEDGED">Acknowledged</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="RESOLVED">Resolved</option>
           </select>
           <select 
-            value={filterCategory}
-            onChange={(e) => { setFilterCategory(e.target.value); setCurrentPage(1); }}
+            value={filters?.category || ''}
+            onChange={(e) => onFilterChange(prev => ({ ...prev, category: e.target.value, page: 0 }))}
             className="px-3 py-2 bg-white border border-white-stroke rounded-lg text-sm font-medium text-black outline-none focus:border-primary shadow-sm"
             aria-label="Filter by category"
           >
-            <option>All Categories</option>
-            <option>Waste Management</option>
-            <option>Plumbing Issue</option>
-            <option>Street Lighting</option>
-            <option>Sanitation Issue</option>
+            <option value="">All Categories</option>
+            <option value="OVERFLOW">Overflow</option>
+            <option value="ILLEGAL_DUMPING">Illegal Dumping</option>
+            <option value="BLOCKED_DRAIN">Blocked Drain</option>
+            <option value="STREET_LITTER">Street Litter</option>
+            <option value="RESIDENTIAL_DUMP">Residential Dump</option>
+            <option value="COMMERCIAL_DUMP">Commercial Dump</option>
           </select>
           <button className="px-3 py-2 bg-white border border-white-stroke rounded-lg text-sm font-medium text-black flex items-center gap-2 hover:bg-white-bg shadow-sm">
             <Filter className="w-4 h-4 text-black-icon" /> Advanced Filter
@@ -207,8 +150,8 @@ export default function AdminReportsTable({ reports, onRefresh }) {
               <th className="px-5 py-3 cursor-pointer whitespace-nowrap" onClick={() => handleSort('area')}>
                 <div className="flex items-center gap-1">Area <SortIcon column="area" /></div>
               </th>
-              <th className="px-5 py-3 cursor-pointer whitespace-nowrap" onClick={() => handleSort('date')}>
-                <div className="flex items-center gap-1">Date Reported <SortIcon column="date" /></div>
+              <th className="px-5 py-3 cursor-pointer whitespace-nowrap" onClick={() => handleSort('createdAt')}>
+                <div className="flex items-center gap-1">Date Reported <SortIcon column="createdAt" /></div>
               </th>
               <th className="px-5 py-3 cursor-pointer whitespace-nowrap" onClick={() => handleSort('status')}>
                 <div className="flex items-center gap-1">Status <SortIcon column="status" /></div>
@@ -290,12 +233,12 @@ export default function AdminReportsTable({ reports, onRefresh }) {
       {/* Pagination Footer */}
       <div className="p-4 sm:p-5 border-t border-white-stroke flex items-center justify-between">
         <span className="text-sm font-medium text-paragraph">
-          Showing <span className="font-bold text-black">{paginatedReports.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> to <span className="font-bold text-black">{Math.min(currentPage * itemsPerPage, filteredAndSortedReports.length)}</span> of <span className="font-bold text-black">{filteredAndSortedReports.length}</span> entries
+          Showing <span className="font-bold text-black">{totalElements > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> to <span className="font-bold text-black">{Math.min(currentPage * itemsPerPage, totalElements)}</span> of <span className="font-bold text-black">{totalElements}</span> entries
         </span>
         <div className="flex items-center gap-1.5">
           <button 
             disabled={currentPage === 1}
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            onClick={() => onFilterChange(prev => ({ ...prev, page: Math.max(0, prev.page - 1) }))}
             className="px-3 py-1.5 rounded-lg border border-white-stroke text-sm font-semibold text-black hover:bg-white-bg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Prev
@@ -312,7 +255,7 @@ export default function AdminReportsTable({ reports, onRefresh }) {
                 return (
                   <button
                     key={page}
-                    onClick={() => setCurrentPage(page)}
+                    onClick={() => onFilterChange(prev => ({ ...prev, page: page - 1 }))}
                     className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-colors ${
                       currentPage === page 
                         ? 'bg-primary text-white shadow-sm' 
@@ -332,7 +275,7 @@ export default function AdminReportsTable({ reports, onRefresh }) {
 
           <button 
             disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            onClick={() => onFilterChange(prev => ({ ...prev, page: Math.min(totalPages - 1, prev.page + 1) }))}
             className="px-3 py-1.5 rounded-lg border border-white-stroke text-sm font-semibold text-black hover:bg-white-bg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Next
