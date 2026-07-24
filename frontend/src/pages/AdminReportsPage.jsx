@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { 
   FileText, 
@@ -20,14 +20,51 @@ import ReportListView from '../components/ReportListView';
 export default function AdminReportsPage() {
   const [reports, setReports] = useState([]);
   const [status, setStatus] = useState('loading');
+  const [stats, setStats] = useState({ total: 0, resolved: 0, pending: 0 });
+  const [pageData, setPageData] = useState({ totalElements: 0, totalPages: 1 });
+  
+  const [filters, setFilters] = useState({
+    page: 0,
+    size: 5,
+    status: '',
+    category: '',
+    sortBy: 'createdAt',
+    direction: 'desc'
+  });
 
-  const fetchAdminReports = async () => {
+  const fetchAdminReports = useCallback(async () => {
     try {
       setStatus('loading');
+      
+      // Fetch stats for the top cards
+      const statsRes = await api.get('/reports/stats');
+      if (statsRes.data?.data) {
+        setStats({
+          total: statsRes.data.data.totalReports || 0,
+          resolved: statsRes.data.data.resolvedReports || 0,
+          pending: statsRes.data.data.pendingReports || 0
+        });
+      }
+
+      // Build query string
+      const params = new URLSearchParams();
+      params.append('page', filters.page);
+      params.append('size', filters.size);
+      params.append('sortBy', filters.sortBy);
+      params.append('direction', filters.direction);
+      if (filters.status) params.append('status', filters.status);
+      if (filters.category) params.append('category', filters.category);
+
       // Fetch from admin endpoint
-      const res = await api.get('/admin/reports');
-      const content = res.data?.data?.content || [];
+      const res = await api.get(`/admin/reports?${params.toString()}`);
+      const pageInfo = res.data?.data || {};
+      const content = pageInfo.content || [];
       const apiReports = Array.isArray(content) ? content : [];
+      
+      setPageData({
+        totalElements: pageInfo.totalElements || 0,
+        totalPages: pageInfo.totalPages || 1
+      });
       
       // We will apply the same jitter as HomePage for the map
       const lagosLat = 6.5244;
@@ -56,7 +93,6 @@ export default function AdminReportsPage() {
         };
       });
       
-      allReports.sort((a, b) => (b.rawDate || 0) - (a.rawDate || 0));
       setReports(allReports);
       setStatus('success');
     } catch (err) {
@@ -67,15 +103,15 @@ export default function AdminReportsPage() {
         setStatus('error');
       }
     }
-  };
+  }, [filters]);
 
   useEffect(() => {
     fetchAdminReports();
-  }, []);
+  }, [fetchAdminReports]);
 
-  const totalReports = reports.length;
-  const resolvedReports = reports.filter(r => (r.status || '').toLowerCase() === 'resolved').length;
-  const pendingReports = reports.filter(r => ['reported', 'pending'].includes((r.status || '').toLowerCase())).length;
+  const totalReports = stats.total;
+  const resolvedReports = stats.resolved;
+  const pendingReports = stats.pending;
 
   return (
     <AdminLayout>
@@ -243,7 +279,13 @@ export default function AdminReportsPage() {
 
         {/* The Main Table */}
         <div className="pb-8">
-          <AdminReportsTable reports={reports} onRefresh={fetchAdminReports} />
+          <AdminReportsTable 
+            reports={reports} 
+            pageData={pageData}
+            filters={filters}
+            onFilterChange={setFilters}
+            onRefresh={fetchAdminReports} 
+          />
         </div>
 
       </div>
