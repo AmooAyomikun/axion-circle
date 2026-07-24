@@ -2,6 +2,7 @@ import { useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import ReactGA from 'react-ga4';
+import AdminRoute from './components/AdminRoute';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const ReportPage = lazy(() => import('./pages/ReportPage'));
@@ -14,6 +15,7 @@ const CreditsPage = lazy(() => import('./pages/CreditsPage'));
 const RewardsPage = lazy(() => import('./pages/RewardsPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const AdminReportsPage = lazy(() => import('./pages/AdminReportsPage'));
+const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
@@ -91,8 +93,9 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
 
           {/* Admin Routes */}
-          <Route path="/admin" element={<AdminReportsPage />} />
-          <Route path="/admin/reports" element={<AdminReportsPage />} />
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/admin" element={<AdminRoute><AdminReportsPage /></AdminRoute>} />
+          <Route path="/admin/reports" element={<AdminRoute><AdminReportsPage /></AdminRoute>} />
 
           {/* 404 */}
           <Route path="*" element={<NotFoundPage />} />
