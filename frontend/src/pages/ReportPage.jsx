@@ -17,75 +17,14 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { uploadToCloudinary } from '../services/cloudinary';
-import { addPendingReport } from '../services/offlineQueue';
 import AppNavbar from '../components/AppNavbar';
 import ReactGA from 'react-ga4';
 import Footer from '../components/Footer';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
+
+const ReportFormMap = React.lazy(() => import('../components/ReportFormMap'));
 
 // Custom red pin icon for Leaflet map marker
-const customPinIcon = L.divIcon({
-  className: 'custom-leaflet-pin bg-transparent border-none',
-  html: `
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 40px; height: 40px; position: relative;">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#F04438" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 40px; height: 40px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.4));">
-        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-        <circle cx="12" cy="10" r="3.5" fill="white" stroke="none"></circle>
-      </svg>
-    </div>
-  `,
-  iconSize: [40, 40],
-  iconAnchor: [20, 40],
-});
-
-// Component to handle map clicks for manual pinning
-function MapClickHandler({ setLatitude, setLongitude, setLocationStatus, setAreaName, setAddressText }) {
-  useMapEvents({
-    click: async (e) => {
-      const lat = e.latlng.lat;
-      const lng = e.latlng.lng;
-      setLatitude(lat);
-      setLongitude(lng);
-      setLocationStatus('loading');
-      try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16`, {
-          headers: { "User-Agent": "CleanReport-App/1.0 (amoo-ayomikun)" }
-        });
-        const data = await res.json();
-        if (data && data.address) {
-          const area = data.address.suburb || data.address.neighbourhood || data.address.city_district || data.address.city || data.address.town || data.address.county || 'Pinned Location';
-          const street = data.address.road ? `${data.address.house_number || ''} ${data.address.road}`.trim() : (data.display_name.split(',')[0] || 'Selected on map');
-          const postcode = data.address.postcode || '';
-          setAreaName(area);
-          setAddressText(`${street}${postcode ? ', ' + postcode : ''}`);
-          setLocationStatus('success');
-          return;
-        }
-      } catch (err) {
-        console.warn('Reverse geocoding failed:', err);
-      }
-      setAreaName('Pinned Location');
-      setAddressText(`Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`);
-      setLocationStatus('success');
-    }
-  });
-  return null;
-}
-
-// Component to dynamically update map view when coordinates change
-function RecenterMap({ lat, lng }) {
-  const map = useMap();
-  useEffect(() => {
-    if (lat && lng) {
-      map.setView([lat, lng], map.getZoom());
-    }
-  }, [lat, lng, map]);
-  return null;
-}
-
-
+// CustomSelect component removed from this chunk, it's defined after
 
 const CustomSelect = ({ label, value, onChange, options, placeholder, required = false, hasUserIcons = false }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -496,11 +435,12 @@ export default function ReportPage() {
           <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl" noValidate>
             {/* 1. Attach Evidence Photo */}
             <div>
-              <label className="block text-xs sm:text-sm font-semibold text-black mb-2">
+              <label htmlFor="photo-upload" className="block text-xs sm:text-sm font-semibold text-black mb-2">
                 Attach Evidence Photo <span className="text-alert-error">*</span>
               </label>
 
               <input
+                id="photo-upload"
                 type="file"
                 accept="image/*"
                 capture="environment"
@@ -511,7 +451,7 @@ export default function ReportPage() {
 
               {photoPreviewUrl ? (
                 <div className="relative rounded-xl overflow-hidden border border-white-stroke bg-white-bg p-3 shadow-sm">
-                  <img
+                  <img loading="lazy"
                     src={photoPreviewUrl}
                     alt="Evidence preview"
                     width="400"
@@ -566,32 +506,17 @@ export default function ReportPage() {
                 </div>
 
                 <div className="w-full h-48 rounded-xl overflow-hidden relative mb-3 border border-white-stroke shadow-sm z-0 bg-[#e5e3df]">
-                  {/* Always render the real interactive Leaflet map */}
-                  <MapContainer
-                    center={latitude !== null && longitude !== null ? [latitude, longitude] : [6.5244, 3.3792]} // Default to Lagos if no coords
-                    zoom={15}
-                    scrollWheelZoom={false}
-                    className="w-full h-full z-0"
-                    style={{ height: '100%', width: '100%', minHeight: '192px' }}
-                  >
-                    <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    {latitude !== null && longitude !== null && (
-                      <Marker position={[latitude, longitude]} icon={customPinIcon} />
-                    )}
-                    {latitude !== null && longitude !== null && (
-                      <RecenterMap lat={latitude} lng={longitude} />
-                    )}
-                    <MapClickHandler
+                  <React.Suspense fallback={<div className="w-full h-full bg-white-stroke animate-pulse flex items-center justify-center text-sm text-paragraph">Loading map...</div>}>
+                    <ReportFormMap 
+                      latitude={latitude}
+                      longitude={longitude}
                       setLatitude={setLatitude}
                       setLongitude={setLongitude}
                       setLocationStatus={setLocationStatus}
                       setAreaName={setAreaName}
                       setAddressText={setAddressText}
                     />
-                  </MapContainer>
+                  </React.Suspense>
 
                   {/* Overlays for loading/error states */}
                   {locationStatus === 'loading' && (
@@ -626,6 +551,7 @@ export default function ReportPage() {
                   <div className="mt-3 pt-3 border-t border-white-stroke flex gap-2">
                     <input
                       type="text"
+                      aria-label="Enter street address or area name manually"
                       value={manualLocationInput}
                       onChange={(e) => setManualLocationInput(e.target.value)}
                       placeholder="Enter street address or area name manually..."

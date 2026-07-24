@@ -616,8 +616,9 @@ export default function RegisterPage() {
                 </div>
 
                 <div>
-                  <label className="flex items-center gap-2.5 cursor-pointer text-black select-none text-sm pt-1">
+                  <label htmlFor="agreedToTerms" className="flex items-center gap-2.5 cursor-pointer text-black select-none text-sm pt-1">
                     <input
+                      id="agreedToTerms"
                       type="checkbox"
                       checked={agreedToTerms}
                       onChange={(e) =>

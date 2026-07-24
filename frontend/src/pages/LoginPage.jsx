@@ -332,8 +332,9 @@ export default function LoginPage() {
 
             {/* Remember for 30 days & Forgot password */}
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm pt-1">
-              <label className="flex items-center gap-2 cursor-pointer text-black select-none">
+              <label htmlFor="rememberMe" className="flex items-center gap-2 cursor-pointer text-black select-none">
                 <input
+                  id="rememberMe"
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}

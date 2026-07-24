@@ -463,7 +463,6 @@ export default function ReportsPage() {
                           width="400"
                           height="176"
                           className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                          loading="lazy"
                           onError={(e) => {
                             e.target.onerror = null;
                             e.target.src = fallbackImage;
