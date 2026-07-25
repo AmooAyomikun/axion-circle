@@ -59,4 +59,22 @@
   .PhoneInputCountrySelectArrow {
     @apply w-1 h-1 ml-1 border-gray-400 border-b-[1.5px] border-r-[1.5px] transform rotate-45 opacity-100;
   }
+
+  /* Custom scrollbar for dropdowns */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400;
+  }
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #D1D5DB transparent;
+  }
 }

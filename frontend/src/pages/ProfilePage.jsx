@@ -6,6 +6,7 @@ import Footer from '../components/Footer';
 import { uploadToCloudinary } from '../services/cloudinary';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import CustomCountrySelect from '../components/CustomCountrySelect';
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
@@ -452,7 +453,8 @@ export default function ProfilePage() {
                       onChange={(value) => setFormData(prev => ({ ...prev, phone: value || '' }))}
                       disabled={!isEditing}
                       placeholder="+1 908 765 4321"
-                      className="w-full h-full"
+                      className="w-full h-full custom-phone-input"
+                      countrySelectComponent={CustomCountrySelect}
                     />
                   </div>
                 </div>
