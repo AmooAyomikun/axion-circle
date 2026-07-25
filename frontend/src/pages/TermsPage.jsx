@@ -11,7 +11,14 @@ export default function TermsPage() {
         <AppNavbar />
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => {
+              if (window.history.length > 2) {
+                navigate(-1);
+              } else {
+                window.close();
+                navigate('/');
+              }
+            }}
             className="mb-6 flex items-center text-sm font-medium text-black-placeholder hover:text-black transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
