@@ -24,9 +24,13 @@ export default function NotificationBell() {
   };
 
   useEffect(() => {
-    fetchUnreadCount();
-    const intervalId = setInterval(fetchUnreadCount, 15000); // 15 seconds
-    return () => clearInterval(intervalId);
+    // Delay first fetch so it doesn't compete with page render resources
+    const initialDelay = setTimeout(() => {
+      fetchUnreadCount();
+      const intervalId = setInterval(fetchUnreadCount, 30000); // Poll every 30s (was 15s)
+      return () => clearInterval(intervalId);
+    }, 5000); // 5 second delay before first poll
+    return () => clearTimeout(initialDelay);
   }, []);
 
   useEffect(() => {

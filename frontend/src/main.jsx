@@ -1,25 +1,30 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
-import ReactGA from 'react-ga4';
-import { GoogleOAuthProvider } from '@react-oauth/google';
 import App from './App';
 import './index.css';
-const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
-if (measurementId) {
-  setTimeout(() => {
-    ReactGA.initialize(measurementId);
-  }, 2500);
-} else if (import.meta.env.DEV) {
-  console.warn('VITE_GA_MEASUREMENT_ID is missing. ReactGA will not be initialized.');
-}
+
+// Defer GA initialization until after page is fully interactive
+const initGA = () => {
+  const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
+  if (measurementId) {
+    import('react-ga4').then(({ default: ReactGA }) => {
+      ReactGA.initialize(measurementId);
+    });
+  }
+};
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </GoogleOAuthProvider>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </React.StrictMode>
 );
+
+// Initialize non-critical third-party scripts after page load
+if (document.readyState === 'complete') {
+  setTimeout(initGA, 3000);
+} else {
+  window.addEventListener('load', () => setTimeout(initGA, 3000), { once: true });
+}
