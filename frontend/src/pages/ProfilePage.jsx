@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Camera, ChevronRight, ChevronDown, Mail, CheckCircle, Edit2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AppNavbar from '../components/AppNavbar';
@@ -9,6 +10,7 @@ import 'react-phone-number-input/style.css';
 import CustomCountrySelect from '../components/CustomCountrySelect';
 
 export default function ProfilePage() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -244,11 +246,15 @@ export default function ProfilePage() {
           <div className="w-full md:w-56 lg:w-64 flex-shrink-0">
             {/* Mobile Dropdown */}
             <div className="md:hidden mb-2 relative">
-              <select className="w-full bg-white border border-gray-300 rounded-lg py-3 px-4 text-black font-semibold appearance-none focus:outline-none focus:ring-2 focus:ring-primary shadow-sm">
-                <option>My details</option>
-                <option>Password</option>
-                <option>Support</option>
-                <option>Notifications</option>
+              <select 
+                className="w-full bg-white border border-gray-300 rounded-lg py-3 px-4 text-black font-semibold appearance-none focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
+                value="/profile"
+                onChange={(e) => navigate(e.target.value)}
+              >
+                <option value="/profile">My details</option>
+                <option value="/settings/password">Password</option>
+                <option value="/profile">Support</option>
+                <option value="/profile">Notifications</option>
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
                 <ChevronDown className="w-5 h-5 text-gray-500" />
@@ -257,10 +263,16 @@ export default function ProfilePage() {
 
             {/* Desktop Sidebar */}
             <div className="hidden md:flex flex-col space-y-1">
-              <button className="text-left px-4 py-3 rounded-lg bg-gray-100 text-primary font-semibold text-sm">
+              <button 
+                onClick={() => navigate('/profile')}
+                className="text-left px-4 py-3 rounded-lg bg-gray-100 text-primary font-semibold text-sm"
+              >
                 My Profile
               </button>
-              <button className="text-left px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 font-medium text-sm transition-colors">
+              <button 
+                onClick={() => navigate('/settings/password')}
+                className="text-left px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 font-medium text-sm transition-colors"
+              >
                 Password
               </button>
               <button className="text-left px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 font-medium text-sm transition-colors">
