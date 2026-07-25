@@ -6,13 +6,13 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-black-placeholder">
         <div>Copyright © CleanReport</div>
         <div className="flex items-center gap-6">
-          <Link to="#" className="hover:text-black transition-colors">
+          <Link to="/privacy" className="hover:text-black transition-colors">
             Privacy
           </Link>
-          <Link to="#" className="hover:text-black transition-colors">
+          <Link to="/terms" className="hover:text-black transition-colors">
             Terms
           </Link>
-          <Link to="#" className="hover:text-black transition-colors">
+          <Link to="/cookies" className="hover:text-black transition-colors">
             Cookies
           </Link>
         </div>
