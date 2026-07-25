@@ -37,6 +37,10 @@ function App() {
   const location = useLocation();
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
+  useEffect(() => {
     const timer = setTimeout(() => {
       ReactGA.send({ hitType: 'pageview', page: location.pathname + location.search });
     }, 3000);
