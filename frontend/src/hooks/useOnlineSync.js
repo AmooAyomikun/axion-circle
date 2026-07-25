@@ -71,11 +71,8 @@ export const useOnlineSync = () => {
   };
 
   useEffect(() => {
-    updateCount();
-    
     const handleOnline = () => {
       setIsOnline(true);
-      // Automatically attempt sync when coming online
       syncPendingReports();
     };
     
@@ -86,22 +83,21 @@ export const useOnlineSync = () => {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Initial check in case we start online with pending items
-    if (navigator.onLine) {
-      syncPendingReports();
-    }
-
-    // Also set up a periodic check in case of flaky connections that didn't trigger 'online'
-    const intervalId = setInterval(() => {
+    // Delay initial sync/count check to not compete with page render
+    const initTimer = setTimeout(() => {
+      updateCount();
       if (navigator.onLine) {
-        updateCount().then(() => {
-           // We'll rely on the manual or online-triggered sync, 
-           // but occasionally we can check count to ensure UI is in sync
-        });
+        syncPendingReports();
       }
-    }, 30000);
+    }, 4000); // 4s delay — page should be fully interactive by then
+
+    // Periodic count refresh (every 60s is sufficient)
+    const intervalId = setInterval(() => {
+      if (navigator.onLine) updateCount();
+    }, 60000);
 
     return () => {
+      clearTimeout(initTimer);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       clearInterval(intervalId);

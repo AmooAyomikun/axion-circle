@@ -1,6 +1,5 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import 'leaflet/dist/leaflet.css';
 import { optimizeCloudinaryUrl } from '../utils/cloudinary';
 
 const ReportDetailMap = lazy(() => import('../components/ReportDetailMap'));

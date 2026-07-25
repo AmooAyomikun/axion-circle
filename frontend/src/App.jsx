@@ -1,7 +1,6 @@
-import { useEffect, Suspense, lazy } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import ReactGA from 'react-ga4';
 import AdminRoute from './components/AdminRoute';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -24,6 +23,17 @@ const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 const TermsPage = lazy(() => import('./pages/TermsPage'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 const CookiesPage = lazy(() => import('./pages/CookiesPage'));
+
+// GoogleOAuthProvider is only needed for login/register pages - loaded lazily
+const LazyGoogleOAuthProvider = ({ children }) => {
+  const [Provider, setProvider] = React.useState(null);
+  useEffect(() => {
+    import('@react-oauth/google').then(m => setProvider(() => m.GoogleOAuthProvider));
+  }, []);
+  if (!Provider) return children;
+  return <Provider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>{children}</Provider>;
+};
+
 // A simple loading fallback reusing the existing spinner style
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-white-bg">
@@ -41,43 +51,54 @@ function App() {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
+  // Deferred GA pageview tracking — lazy import, doesn't block UI
   useEffect(() => {
     const timer = setTimeout(() => {
-      ReactGA.send({ hitType: 'pageview', page: location.pathname + location.search });
-    }, 3000);
+      import('react-ga4').then(({ default: ReactGA }) => {
+        try {
+          ReactGA.send({ hitType: 'pageview', page: location.pathname + location.search });
+        } catch (e) {
+          // GA may not be initialized yet, that's fine
+        }
+      });
+    }, 4000);
     return () => clearTimeout(timer);
   }, [location]);
 
+  // Deferred Facebook SDK — only after user interaction or 8s timeout
   useEffect(() => {
     const initFacebookSDK = () => {
-      if (window.FB) return;
-      
-      window.fbAsyncInit = function() {
-        const appId = import.meta.env.VITE_FACEBOOK_APP_ID;
-        if (appId && appId !== '%VITE_FACEBOOK_APP_ID%') {
-          window.FB.init({
-            appId      : appId,
-            cookie     : true,
-            xfbml      : true,
-            version    : 'v19.0'
-          });
-        }
-      };
+      if (window.FB || document.getElementById('facebook-jssdk')) return;
+      const appId = import.meta.env.VITE_FACEBOOK_APP_ID;
+      if (!appId || appId === '%VITE_FACEBOOK_APP_ID%') return;
 
-      (function(d, s, id) {
-        var js, fjs = d.getElementsByTagName(s)[0];
-        if (d.getElementById(id)) return;
-        js = d.createElement(s); js.id = id;
-        js.src = "https://connect.facebook.net/en_US/sdk.js";
-        fjs.parentNode.insertBefore(js, fjs);
-      }(document, 'script', 'facebook-jssdk'));
+      window.fbAsyncInit = function () {
+        window.FB.init({ appId, cookie: true, xfbml: true, version: 'v19.0' });
+      };
+      const js = document.createElement('script');
+      js.id = 'facebook-jssdk';
+      js.src = 'https://connect.facebook.net/en_US/sdk.js';
+      js.async = true;
+      js.defer = true;
+      document.body.appendChild(js);
     };
-    
-    const timer = setTimeout(() => {
+
+    let timer;
+    const onInteraction = () => {
+      clearTimeout(timer);
       initFacebookSDK();
-    }, 2500);
-    
-    return () => clearTimeout(timer);
+    };
+    document.addEventListener('click', onInteraction, { once: true });
+    document.addEventListener('scroll', onInteraction, { once: true, passive: true });
+    document.addEventListener('keydown', onInteraction, { once: true });
+    timer = setTimeout(initFacebookSDK, 8000);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('click', onInteraction);
+      document.removeEventListener('scroll', onInteraction);
+      document.removeEventListener('keydown', onInteraction);
+    };
   }, []);
 
   return (
@@ -90,8 +111,9 @@ function App() {
           <Route path="/report" element={<ReportPage />} />
           <Route path="/reports" element={<ReportsPage />} />
           <Route path="/reports/:id" element={<ReportDetailPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/login" element={<LazyGoogleOAuthProvider><LoginPage /></LazyGoogleOAuthProvider>} />
+          <Route path="/register" element={<LazyGoogleOAuthProvider><RegisterPage /></LazyGoogleOAuthProvider>} />
+          <Route path="/admin/login" element={<LazyGoogleOAuthProvider><AdminLoginPage /></LazyGoogleOAuthProvider>} />
           <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
@@ -107,7 +129,6 @@ function App() {
           <Route path="/settings/password" element={<PasswordPage />} />
 
           {/* Admin Routes */}
-          <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/admin" element={<AdminRoute><AdminReportsPage /></AdminRoute>} />
           <Route path="/admin/reports" element={<AdminRoute><AdminReportsPage /></AdminRoute>} />
 
