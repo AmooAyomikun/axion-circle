@@ -4,6 +4,8 @@ import toast from 'react-hot-toast';
 import AppNavbar from '../components/AppNavbar';
 import Footer from '../components/Footer';
 import { uploadToCloudinary } from '../services/cloudinary';
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
@@ -439,20 +441,20 @@ export default function ProfilePage() {
               {/* Phone Number */}
               <div className="flex flex-col md:flex-row md:items-center">
                 <label htmlFor="phone" className="md:w-1/3 text-sm font-semibold text-gray-700 mb-1.5 md:mb-0">Phone Number</label>
-                <div className="md:w-2/3 relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-base" role="img" aria-label="US Flag">🇺🇸</span>
+                <div className="md:w-2/3">
+                  <div className={`w-full border border-gray-300 rounded-lg py-2.5 px-3 focus-within:ring-2 focus-within:ring-primary/50 focus-within:border-primary transition-colors ${!isEditing ? 'bg-white text-gray-800' : 'bg-white text-gray-900'}`}>
+                    <PhoneInput
+                      international
+                      defaultCountry="US"
+                      id="phone"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={(value) => setFormData(prev => ({ ...prev, phone: value || '' }))}
+                      disabled={!isEditing}
+                      placeholder="+1 908 765 4321"
+                      className="w-full h-full"
+                    />
                   </div>
-                  <input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="+1 908 765 4321"
-                    className="w-full border border-gray-300 rounded-lg py-2.5 pl-10 pr-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary disabled:bg-white disabled:text-gray-800 transition-colors"
-                  />
                 </div>
               </div>
 
