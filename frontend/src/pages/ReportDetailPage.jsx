@@ -83,6 +83,7 @@ export default function ReportDetailPage() {
   const [loggedInUserId, setLoggedInUserId] = useState(null);
   const [loggedInUserRole, setLoggedInUserRole] = useState(null);
   const [loggedInUserAvatar, setLoggedInUserAvatar] = useState(null);
+  const [loggedInUserDisplayName, setLoggedInUserDisplayName] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   
   const [report, setReport] = useState(null);
@@ -110,6 +111,10 @@ export default function ReportDetailPage() {
         setLoggedInUserId(user.id || user._id);
         setLoggedInUserRole((user.role || user.accountType || '').toLowerCase());
         setLoggedInUserAvatar(user.avatarUrl || user.authorAvatarUrl || null);
+        
+        let dName = user.authorName || user.displayName || user.name || user.fullName || user.username || null;
+        if (!dName) dName = localStorage.getItem('user_name') || sessionStorage.getItem('user_name') || null;
+        setLoggedInUserDisplayName(dName);
       }
     } catch (e) {
       console.error('Error parsing user from localStorage', e);
@@ -291,11 +296,14 @@ export default function ReportDetailPage() {
     };
   });
 
+  const reportReporterName = String(report.reporterName || report.reporter?.displayName || report.reporter?.name || report.reporter?.fullName || report.reporter?.firstName || '').toLowerCase();
+  
   const isAuthor = loggedInUserId && (
     report.reporterId === loggedInUserId || 
     report.authorId === loggedInUserId || 
     report.reporter?.id === loggedInUserId || 
-    report.reporter?._id === loggedInUserId
+    report.reporter?._id === loggedInUserId ||
+    (reportReporterName && loggedInUserDisplayName && reportReporterName === String(loggedInUserDisplayName).toLowerCase())
   );
 
   const displayDate = new Date(report.createdAt || report.date);
