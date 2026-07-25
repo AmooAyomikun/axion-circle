@@ -77,25 +77,8 @@ export default function AdminLoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center font-body bg-white-bg relative overflow-hidden p-6">
       {/* Decorative Background */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none" aria-hidden="true">
-        {/* Soft abstract shapes to match the design */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px]">
-          {/* Faint circles */}
-          <div className="absolute inset-0 border-[40px] border-[#F4F9F6] rounded-full opacity-60 scale-75 blur-[2px]" />
-          <div className="absolute inset-0 border-[20px] border-[#FCF9F2] rounded-full opacity-80 scale-95 blur-[1px]" />
-          <div className="absolute inset-0 border-[60px] border-[#F2F8F4] rounded-full opacity-50 scale-110 blur-[4px]" />
-          
-          {/* Decorative faint icons / blobs */}
-          <div className="absolute top-[15%] left-[20%] w-12 h-12 bg-[#FEF4ED] rounded-full opacity-80 blur-sm" />
-          <div className="absolute bottom-[20%] right-[15%] w-16 h-16 bg-[#F3FAF5] rounded-full opacity-90 blur-sm" />
-          <div className="absolute top-[30%] right-[25%] w-8 h-8 bg-[#F6F5F2] rounded-full opacity-70 blur-sm" />
-          <div className="absolute bottom-[35%] left-[10%] w-20 h-20 bg-[#F4F9F6] rounded-full opacity-60 blur-md" />
-          
-          {/* Faint location pin at top center */}
-          <div className="absolute top-[-5%] left-1/2 -translate-x-1/2 opacity-[0.03]">
-            <MapPin className="w-48 h-48 text-primary" />
-          </div>
-        </div>
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none flex items-center justify-center" aria-hidden="true">
+        <Logo className="w-[600px] h-[600px] sm:w-[800px] sm:h-[800px] lg:w-[1000px] lg:h-[1000px] object-contain opacity-[0.04] grayscale" />
       </div>
 
       {/* Main Login Card */}
