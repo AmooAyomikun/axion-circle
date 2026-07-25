@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import toast from 'react-hot-toast';
 import { 
   FileText, 
@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import AdminLayout from '../components/AdminLayout';
-import RegionalActivityMap from '../components/RegionalActivityMap';
+const RegionalActivityMap = lazy(() => import('../components/RegionalActivityMap'));
 import AdminReportsTable from '../components/AdminReportsTable';
 import ReportListView from '../components/ReportListView';
 
@@ -235,8 +235,11 @@ export default function AdminReportsPage() {
 
         {/* Map and Recent Report Side List */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-8 flex flex-col">
-            <RegionalActivityMap reports={reports} mapStatus={status} onRetry={fetchAdminReports} />
+          <div className="lg:col-span-8 bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col h-[500px]">
+            <h3 className="text-lg font-bold text-black mb-4">Live Activity Map</h3>
+            <Suspense fallback={<div className="flex-1 flex items-center justify-center bg-gray-50 rounded-xl">Loading map...</div>}>
+              <RegionalActivityMap reports={reports} mapStatus={status} onRetry={fetchAdminReports} />
+            </Suspense>
           </div>
           <div className="lg:col-span-4 flex flex-col">
             <div className="bg-white border border-white-stroke rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between flex-1 h-[440px]">

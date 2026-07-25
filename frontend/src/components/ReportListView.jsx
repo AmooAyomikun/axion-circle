@@ -1,6 +1,8 @@
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin } from 'lucide-react';
 import fallbackImage from '../assets/fallback-image.svg';
+import { optimizeCloudinaryUrl } from '../utils/cloudinary';
 
 const timeAgo = (dateStr) => {
   if (!dateStr) return 'Just now';
@@ -14,7 +16,7 @@ const timeAgo = (dateStr) => {
   return `${days}d ago`;
 };
 
-export default function ReportListView({ reports }) {
+const ReportListView = React.memo(function ReportListView({ reports }) {
   if (!reports || reports.length === 0) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-[#f0ede5] p-6 text-center">
@@ -41,7 +43,7 @@ export default function ReportListView({ reports }) {
             {report.photoUrl && (
               <div className="w-full sm:w-24 h-32 sm:h-24 rounded-lg overflow-hidden shrink-0">
                 <img 
-                  src={report.photoUrl} 
+                  src={optimizeCloudinaryUrl(report.photoUrl, 200)} 
                   alt="Thumbnail evidence for report list item" 
                   width="96"
                   height="96"
@@ -95,4 +97,6 @@ export default function ReportListView({ reports }) {
       })}
     </div>
   );
-}
+});
+
+export default ReportListView;

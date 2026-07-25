@@ -326,6 +326,7 @@ export default function ProfilePage() {
                     <img
                       src={formData.avatarUrl}
                       alt="Profile"
+                      loading="lazy"
                       className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border border-gray-200 object-cover shadow-sm"
                       onError={(e) => { e.target.onerror = null; e.target.src = avatarFallbackUrl; }}
                     />
@@ -367,6 +368,7 @@ export default function ProfilePage() {
                       <img
                         src={formData.avatarUrl}
                         alt="Profile"
+                        loading="lazy"
                         className="w-16 h-16 rounded-full border border-gray-200 object-cover"
                         onError={(e) => { e.target.onerror = null; e.target.src = avatarFallbackUrl; }}
                       />

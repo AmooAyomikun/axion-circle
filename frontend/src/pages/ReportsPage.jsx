@@ -462,6 +462,7 @@ export default function ReportsPage() {
                           alt={report.title}
                           width="400"
                           height="176"
+                          loading="lazy"
                           className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                           onError={(e) => {
                             e.target.onerror = null;

@@ -451,6 +451,7 @@ export default function ReportDetailPage() {
                              alt="Avatar" 
                              width="36"
                              height="36"
+                             loading="lazy"
                              className="w-full h-full object-cover"
                              onError={(e) => { e.target.onerror = null; e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.authorName || 'U')}&background=random`; }}
                            />
@@ -658,6 +659,7 @@ export default function ReportDetailPage() {
                       alt="Reporter" 
                       width="112"
                       height="112"
+                      loading="lazy"
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.target.onerror = null;
@@ -764,6 +766,7 @@ export default function ReportDetailPage() {
                               alt="Avatar" 
                               width="40"
                               height="40"
+                              loading="lazy"
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 e.target.onerror = null;

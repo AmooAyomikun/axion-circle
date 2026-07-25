@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import viteCompression from 'vite-plugin-compression';
 import path from 'path';
 
 export default defineConfig({
@@ -22,6 +23,14 @@ export default defineConfig({
           { src: '/logo.svg', sizes: '512x512', type: 'image/svg+xml' },
         ],
       },
+    }),
+    viteCompression({
+      algorithm: 'gzip',
+      ext: '.gz',
+    }),
+    viteCompression({
+      algorithm: 'brotliCompress',
+      ext: '.br',
     }),
   ],
   resolve: {
