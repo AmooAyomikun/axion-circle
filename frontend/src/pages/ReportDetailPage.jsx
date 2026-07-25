@@ -353,7 +353,7 @@ export default function ReportDetailPage() {
               <div className="absolute -bottom-5 left-3">
                 <div className="w-14 h-14 rounded-full bg-white p-1 shadow-sm">
                   <img 
-                    src={report.reporterAvatarUrl || report.reporterAvatar || report.reporter?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(report.reporterName || report.reporter?.displayName || report.reporter?.name || report.reporter?.fullName || report.reporter?.firstName || 'U')}&background=random`} 
+                    src={(isAuthor && loggedInUserAvatar) ? loggedInUserAvatar : (report.reporterAvatarUrl || report.reporterAvatar || report.reporter?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(report.reporterName || report.reporter?.displayName || report.reporter?.name || report.reporter?.fullName || report.reporter?.firstName || 'U')}&background=random`)} 
                     alt="Reporter" 
                     width="56"
                     height="56"
@@ -642,7 +642,7 @@ export default function ReportDetailPage() {
                 <div className="w-20 h-20 sm:w-[112px] sm:h-[112px] rounded-full bg-white flex items-center justify-center overflow-hidden shrink-0 -mt-10 sm:-mt-[56px] shadow-sm ring-4 ring-white">
                   <div className="w-full h-full rounded-full border border-white-stroke overflow-hidden shrink-0">
                     <img 
-                      src={report.reporterAvatarUrl || report.reporterAvatar || report.reporter?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(report.reporterName || report.reporter?.displayName || report.reporter?.name || report.reporter?.fullName || report.reporter?.firstName || 'U')}&background=random`} 
+                      src={(isAuthor && loggedInUserAvatar) ? loggedInUserAvatar : (report.reporterAvatarUrl || report.reporterAvatar || report.reporter?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(report.reporterName || report.reporter?.displayName || report.reporter?.name || report.reporter?.fullName || report.reporter?.firstName || 'U')}&background=random`)} 
                       alt="Reporter" 
                       width="112"
                       height="112"
