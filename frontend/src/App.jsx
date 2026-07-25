@@ -24,15 +24,6 @@ const TermsPage = lazy(() => import('./pages/TermsPage'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 const CookiesPage = lazy(() => import('./pages/CookiesPage'));
 
-// GoogleOAuthProvider is only needed for login/register pages - loaded lazily
-const LazyGoogleOAuthProvider = ({ children }) => {
-  const [Provider, setProvider] = React.useState(null);
-  useEffect(() => {
-    import('@react-oauth/google').then(m => setProvider(() => m.GoogleOAuthProvider));
-  }, []);
-  if (!Provider) return children;
-  return <Provider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>{children}</Provider>;
-};
 
 // A simple loading fallback reusing the existing spinner style
 const PageLoader = () => (
@@ -111,9 +102,9 @@ function App() {
           <Route path="/report" element={<ReportPage />} />
           <Route path="/reports" element={<ReportsPage />} />
           <Route path="/reports/:id" element={<ReportDetailPage />} />
-          <Route path="/login" element={<LazyGoogleOAuthProvider><LoginPage /></LazyGoogleOAuthProvider>} />
-          <Route path="/register" element={<LazyGoogleOAuthProvider><RegisterPage /></LazyGoogleOAuthProvider>} />
-          <Route path="/admin/login" element={<LazyGoogleOAuthProvider><AdminLoginPage /></LazyGoogleOAuthProvider>} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
