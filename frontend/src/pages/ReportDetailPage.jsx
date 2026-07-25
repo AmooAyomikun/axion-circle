@@ -82,6 +82,7 @@ export default function ReportDetailPage() {
   const navigate = useNavigate();
   const [loggedInUserId, setLoggedInUserId] = useState(null);
   const [loggedInUserRole, setLoggedInUserRole] = useState(null);
+  const [loggedInUserAvatar, setLoggedInUserAvatar] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   
   const [report, setReport] = useState(null);
@@ -108,6 +109,7 @@ export default function ReportDetailPage() {
         const user = JSON.parse(userStr);
         setLoggedInUserId(user.id || user._id);
         setLoggedInUserRole((user.role || user.accountType || '').toLowerCase());
+        setLoggedInUserAvatar(user.avatarUrl || user.authorAvatarUrl || null);
       }
     } catch (e) {
       console.error('Error parsing user from localStorage', e);
@@ -433,7 +435,7 @@ export default function ReportDetailPage() {
                            <img src="/logo.svg" alt="Mod" width="20" height="20" className="w-5 h-5 object-contain" />
                         ) : (
                            <img 
-                             src={comment.authorAvatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.authorName || 'U')}&background=random`} 
+                             src={(comment.authorId === loggedInUserId && loggedInUserAvatar) ? loggedInUserAvatar : (comment.authorAvatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.authorName || 'U')}&background=random`)} 
                              alt="Avatar" 
                              width="36"
                              height="36"
@@ -746,7 +748,7 @@ export default function ReportDetailPage() {
                         <div className="w-10 h-10 rounded-full bg-white-bg2 border border-white-stroke flex items-center justify-center shrink-0 overflow-hidden">
                           <div className="w-10 h-10 rounded-full border border-white-stroke overflow-hidden shrink-0">
                             <img 
-                              src={comment.authorAvatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.authorName || 'U')}&background=random`} 
+                              src={(cAuthorId === loggedInUserId && loggedInUserAvatar) ? loggedInUserAvatar : (comment.authorAvatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.authorName || 'U')}&background=random`)} 
                               alt="Avatar" 
                               width="40"
                               height="40"
