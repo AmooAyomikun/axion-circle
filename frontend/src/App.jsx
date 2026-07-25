@@ -37,7 +37,10 @@ function App() {
   const location = useLocation();
 
   useEffect(() => {
-    ReactGA.send({ hitType: 'pageview', page: location.pathname + location.search });
+    const timer = setTimeout(() => {
+      ReactGA.send({ hitType: 'pageview', page: location.pathname + location.search });
+    }, 3000);
+    return () => clearTimeout(timer);
   }, [location]);
 
   useEffect(() => {

@@ -5,13 +5,11 @@ import ReactGA from 'react-ga4';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import App from './App';
 import './index.css';
-import 'leaflet/dist/leaflet.css';
-import 'leaflet.markercluster/dist/MarkerCluster.css';
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
-
 const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
 if (measurementId) {
-  ReactGA.initialize(measurementId);
+  setTimeout(() => {
+    ReactGA.initialize(measurementId);
+  }, 2500);
 } else if (import.meta.env.DEV) {
   console.warn('VITE_GA_MEASUREMENT_ID is missing. ReactGA will not be initialized.');
 }
