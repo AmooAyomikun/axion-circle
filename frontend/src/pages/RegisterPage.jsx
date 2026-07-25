@@ -628,21 +628,19 @@ export default function RegisterPage() {
                     />
                     <span className="text-paragraph">
                       Agree to our{' '}
-                      <a
-                        href="#"
-                        onClick={(e) => e.preventDefault()}
+                      <Link
+                        to="/privacy"
                         className="text-primary font-semibold hover:underline"
                       >
                         Privacy
-                      </a>{' '}
-                      &{' '}
-                      <a
-                        href="#"
-                        onClick={(e) => e.preventDefault()}
+                      </Link>
+                      {' '}&{' '}
+                      <Link
+                        to="/terms"
                         className="text-primary font-semibold hover:underline"
                       >
                         Terms of Service
-                      </a>
+                      </Link>
                     </span>
                   </label>
                   {errors.agreedToTerms && (
