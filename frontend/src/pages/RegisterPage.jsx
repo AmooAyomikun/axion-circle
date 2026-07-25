@@ -631,6 +631,8 @@ export default function RegisterPage() {
                       <Link
                         to="/privacy"
                         className="text-primary font-semibold hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
                         Privacy
                       </Link>
@@ -638,6 +640,8 @@ export default function RegisterPage() {
                       <Link
                         to="/terms"
                         className="text-primary font-semibold hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
                         Terms of Service
                       </Link>
