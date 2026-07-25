@@ -39,4 +39,24 @@
   .category-pill-active {
     @apply bg-primary text-white border-primary;
   }
+
+  /* Phone Input Overrides */
+  .PhoneInput {
+    @apply flex items-center w-full;
+  }
+  .PhoneInputInput {
+    @apply flex-1 border-none bg-transparent focus:outline-none text-gray-900 ml-2 disabled:bg-transparent disabled:text-gray-800;
+  }
+  .PhoneInputCountry {
+    @apply flex items-center mr-2;
+  }
+  .PhoneInputCountryIcon {
+    @apply w-6 h-4 shadow-sm border border-gray-200 bg-white;
+  }
+  .PhoneInputCountryIconImg {
+    @apply w-full h-full object-cover;
+  }
+  .PhoneInputCountrySelectArrow {
+    @apply w-1 h-1 ml-1 border-gray-400 border-b-[1.5px] border-r-[1.5px] transform rotate-45 opacity-100;
+  }
 }

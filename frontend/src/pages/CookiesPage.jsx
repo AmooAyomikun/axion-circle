@@ -32,7 +32,7 @@ export default function CookiesPage() {
             </p>
             <h2 className="text-xl font-bold text-black mt-8 mb-4">2. Why do we use cookies?</h2>
             <p className="mb-4">
-              We use first-party and third-party cookies for several reasons. Some cookies are required for technical reasons in order for our platform to operate (such as maintaining your login session), and we refer to these as "essential" or "strictly necessary" cookies.
+              We use first-party and third-party cookies for several reasons. Some cookies are required for technical reasons in order for our platform to operate (such as maintaining your login session), and we refer to these as &quot;essential&quot; or &quot;strictly necessary&quot; cookies.
             </p>
             <h2 className="text-xl font-bold text-black mt-8 mb-4">3. Managing cookies</h2>
             <p className="mb-4">
