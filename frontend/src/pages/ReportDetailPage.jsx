@@ -291,8 +291,12 @@ export default function ReportDetailPage() {
     };
   });
 
-  const isAuthor = loggedInUserId && report.reporter && 
-                   (report.reporter.id === loggedInUserId || report.reporter._id === loggedInUserId || report.reporterId === loggedInUserId);
+  const isAuthor = loggedInUserId && (
+    report.reporterId === loggedInUserId || 
+    report.authorId === loggedInUserId || 
+    report.reporter?.id === loggedInUserId || 
+    report.reporter?._id === loggedInUserId
+  );
 
   const displayDate = new Date(report.createdAt || report.date);
   const formattedDateHeader = `${String(displayDate.getMonth() + 1).padStart(2, '0')}/${String(displayDate.getDate()).padStart(2, '0')} - ${String(displayDate.getHours()).padStart(2, '0')}:${String(displayDate.getMinutes()).padStart(2, '0')}`;
