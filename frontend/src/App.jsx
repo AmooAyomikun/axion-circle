@@ -14,6 +14,7 @@ const MyReportsPage = lazy(() => import('./pages/MyReportsPage'));
 const CreditsPage = lazy(() => import('./pages/CreditsPage'));
 const RewardsPage = lazy(() => import('./pages/RewardsPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const PasswordPage = lazy(() => import('./pages/PasswordPage'));
 const AdminReportsPage = lazy(() => import('./pages/AdminReportsPage'));
 const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
@@ -103,6 +104,7 @@ function App() {
           <Route path="/credits" element={<CreditsPage />} />
           <Route path="/rewards" element={<RewardsPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/settings/password" element={<PasswordPage />} />
 
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLoginPage />} />
