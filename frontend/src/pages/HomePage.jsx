@@ -77,15 +77,33 @@ export default function HomePage() {
   const [isBannerDismissed, setIsBannerDismissed] = useState(false);
   const [reports, setReports] = useState([]);
   const [mapStatus, setMapStatus] = useState('loading'); // 'loading' | 'success' | 'error'
+  const [stats, setStats] = useState({
+    totalReports: 0,
+    resolvedReports: 0,
+    totalCreditsEarned: 0
+  });
 
   const fetchReports = async () => {
     try {
       setMapStatus('loading');
 
+      // Fetch stats
+      try {
+        const statsRes = await api.get('/reports/stats');
+        const statsData = statsRes.data?.data || statsRes.data || {};
+        setStats({
+          totalReports: statsData.totalReports || 0,
+          resolvedReports: statsData.resolvedReports || 0,
+          totalCreditsEarned: statsData.totalCreditsEarned || 0,
+        });
+      } catch (err) {
+        console.error('Failed to fetch stats:', err);
+      }
+
       let apiReports = [];
       try {
-        const res = await api.get('/reports');
-        const content = res.data?.data?.content || [];
+        const res = await api.get('/reports?page=0&size=50');
+        const content = res.data?.data?.content || res.data?.content || res.data?.data || [];
         apiReports = Array.isArray(content) ? content : [];
       } catch (apiErr) {
         console.error('Failed to fetch live reports:', apiErr);
@@ -271,9 +289,9 @@ export default function HomePage() {
               </div>
               {/* Number + badge — same row, bottom */}
               <div className="flex items-baseline gap-3 mt-auto relative z-10">
-                <span className="text-[28px] font-bold text-black tracking-tight leading-none">2,420</span>
+                <span className="text-[28px] font-bold text-black tracking-tight leading-none">{stats.totalReports.toLocaleString()}</span>
                 <span className="inline-flex items-center gap-0.5 text-primary text-xs font-bold">
-                  <ArrowUpRight className="w-3.5 h-3.5" /> 40%
+                  <ArrowUpRight className="w-3.5 h-3.5" /> 100%
                 </span>
               </div>
             </div>
@@ -301,9 +319,9 @@ export default function HomePage() {
               </div>
               {/* Number + badge — same row */}
               <div className="flex items-baseline gap-3 mt-auto relative z-10">
-                <span className="text-[28px] font-bold text-black tracking-tight leading-none">1,210</span>
-                <span className="inline-flex items-center gap-0.5 text-alert-error text-xs font-bold">
-                  <ArrowDownRight className="w-3.5 h-3.5" /> 10%
+                <span className="text-[28px] font-bold text-black tracking-tight leading-none">{stats.resolvedReports.toLocaleString()}</span>
+                <span className="inline-flex items-center gap-0.5 text-alert-success text-xs font-bold">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> {stats.totalReports > 0 ? Math.round((stats.resolvedReports / stats.totalReports) * 100) : 0}%
                 </span>
               </div>
             </div>
@@ -331,10 +349,7 @@ export default function HomePage() {
               </div>
               {/* Number + badge — same row */}
               <div className="flex items-baseline gap-3 mt-auto relative z-10">
-                <span className="text-[28px] font-bold text-black tracking-tight leading-none">316</span>
-                <span className="inline-flex items-center gap-0.5 text-primary text-xs font-bold">
-                  <ArrowUpRight className="w-3.5 h-3.5" /> 20%
-                </span>
+                <span className="text-[28px] font-bold text-black tracking-tight leading-none">{stats.totalCreditsEarned.toLocaleString()}</span>
               </div>
             </div>
 
