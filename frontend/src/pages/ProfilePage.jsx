@@ -8,6 +8,7 @@ import { uploadToCloudinary } from '../services/cloudinary';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import CustomCountrySelect from '../components/CustomCountrySelect';
+import api from '../services/api';
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -16,8 +17,22 @@ export default function ProfilePage() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const { data } = await api.get('/notifications/unread-count');
+        const unreadResponse = data.data || data;
+        setUnreadCount(unreadResponse.unreadCount ?? unreadResponse.unread_count ?? 0);
+      } catch (error) {
+        console.error('Failed to fetch unread count:', error);
+      }
+    };
+    fetchUnreadCount();
+  }, []);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -283,7 +298,9 @@ export default function ProfilePage() {
                 className="text-left px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 font-medium text-sm flex justify-between items-center transition-colors"
               >
                 Notifications
-                <span className="bg-white border border-gray-200 text-gray-600 py-0.5 px-2.5 rounded-full text-xs font-semibold">2</span>
+                {unreadCount > 0 && (
+                  <span className="bg-white border border-gray-200 text-gray-600 py-0.5 px-2.5 rounded-full text-xs font-semibold">{unreadCount}</span>
+                )}
               </button>
             </div>
           </div>
