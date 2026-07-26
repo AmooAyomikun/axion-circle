@@ -254,7 +254,7 @@ export default function ProfilePage() {
                 <option value="/profile">My details</option>
                 <option value="/settings/password">Password</option>
                 <option value="/profile">Support</option>
-                <option value="/profile">Notifications</option>
+                <option value="/settings/notifications">Notifications</option>
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
                 <ChevronDown className="w-5 h-5 text-gray-500" />
@@ -278,7 +278,10 @@ export default function ProfilePage() {
               <button className="text-left px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 font-medium text-sm transition-colors">
                 Support
               </button>
-              <button className="text-left px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 font-medium text-sm flex justify-between items-center transition-colors">
+              <button 
+                onClick={() => navigate('/settings/notifications')}
+                className="text-left px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 font-medium text-sm flex justify-between items-center transition-colors"
+              >
                 Notifications
                 <span className="bg-white border border-gray-200 text-gray-600 py-0.5 px-2.5 rounded-full text-xs font-semibold">2</span>
               </button>
