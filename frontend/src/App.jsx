@@ -2,6 +2,7 @@ import React, { useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import AdminRoute from './components/AdminRoute';
+import ConnectionLostModal from './components/ConnectionLostModal';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const ReportPage = lazy(() => import('./pages/ReportPage'));
@@ -96,6 +97,7 @@ function App() {
   return (
     <>
       <Toaster position="top-right" />
+      <ConnectionLostModal />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public Routes */}

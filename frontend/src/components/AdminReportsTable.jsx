@@ -9,7 +9,8 @@ import {
   Zap, 
   X,
   MoreVertical,
-  Eye
+  Eye,
+  Info
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
@@ -43,6 +44,7 @@ export default function AdminReportsTable({ reports, pageData, filters, onFilter
   const [newStatus, setNewStatus] = useState('');
   const [note, setNote] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleSort = (column) => {
     if (!['category', 'createdAt', 'status'].includes(column)) return;
@@ -70,6 +72,7 @@ export default function AdminReportsTable({ reports, pageData, filters, onFilter
       });
       toast.success('Status updated successfully');
       setModalOpen(false);
+      setShowSuccessModal(true);
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error('Failed to update status', err);
@@ -284,79 +287,153 @@ export default function AdminReportsTable({ reports, pageData, filters, onFilter
       </div>
 
       {/* Status Update Modal */}
-      {modalOpen && selectedReport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setModalOpen(false)}></div>
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl relative z-10 overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
-            <div className="p-5 border-b border-white-stroke flex items-center justify-between">
-              <h3 className="font-heading font-bold text-lg text-black">Update Report Status</h3>
-              <button onClick={() => setModalOpen(false)} className="text-black-icon hover:text-black" aria-label="Close modal">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <div className="p-5 space-y-4">
-              <div className="p-3 bg-white-bg2 border border-white-stroke rounded-xl flex flex-col gap-1">
-                <span className="text-xs font-semibold text-paragraph">Report ID</span>
-                <span className="text-sm font-bold text-black">{selectedReport.id}</span>
+      {modalOpen && selectedReport && (() => {
+        const currentStatusStr = (selectedReport.status || 'Reported').toLowerCase();
+        const currentTheme = statusConfig[currentStatusStr] || statusConfig.reported;
+        const catName = selectedReport.category ? selectedReport.category.replace(/_/g, ' ') : (selectedReport.title || 'Sanitation Issue');
+        const refId = selectedReport.id ? selectedReport.id.substring(0, 8).toUpperCase() : 'N/A';
+        const newStatusDisplay = newStatus === 'IN_PROGRESS' ? 'In Progress' : newStatus.charAt(0) + newStatus.slice(1).toLowerCase();
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setModalOpen(false)}></div>
+            <div className="bg-white w-full max-w-md rounded-[24px] shadow-2xl relative z-10 overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 p-6 sm:p-8">
+              
+              <h2 className="text-[24px] sm:text-[28px] font-bold text-black mb-2 font-heading tracking-tight">
+                Update Report Status
+              </h2>
+              
+              <div className="text-sm sm:text-base text-paragraph mb-6">
+                Report <span className="font-bold text-primary">#{refId}</span> <span className="capitalize">{catName.toLowerCase()}</span>
               </div>
 
-              <div className="space-y-1.5">
-                <label htmlFor="new-status-select" className="text-sm font-bold text-black">New Status</label>
-                <select
-                  id="new-status-select"
-                  value={newStatus}
-                  onChange={(e) => setNewStatus(e.target.value)}
-                  className="w-full px-4 py-3 bg-white border border-white-stroke rounded-xl text-sm font-medium text-black focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
-                >
-                  <option value="REPORTED">Reported</option>
-                  <option value="ACKNOWLEDGED">Acknowledged</option>
-                  <option value="IN_PROGRESS">In Progress</option>
-                  <option value="RESOLVED">Resolved</option>
-                </select>
-                <p className="text-[11px] text-paragraph leading-tight mt-1">
-                  Transitions must go forward (Reported → Acknowledged → In Progress → Resolved).
-                </p>
+              <div className="flex items-center gap-3 mb-6">
+                <span className="text-sm font-semibold text-black">Current Status</span>
+                <span className={`px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold border capitalize ${currentTheme.bg} ${currentTheme.text} ${currentTheme.bg.replace('bg-', 'border-').replace('Light', 'Stroke')}`}>
+                  {currentTheme.label}
+                </span>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-sm font-bold text-black">Note (Optional)</label>
-                <textarea
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="Explain why the status is changing..."
-                  className="w-full px-4 py-3 bg-white border border-white-stroke rounded-xl text-sm font-medium text-black focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 min-h-[100px] resize-y"
-                  maxLength={500}
-                ></textarea>
-              </div>
-            </div>
+              <div className="space-y-5">
+                <div className="space-y-2">
+                  <label htmlFor="new-status-select" className="text-sm font-semibold text-black">New Status</label>
+                  <select
+                    id="new-status-select"
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value)}
+                    className="w-full px-4 py-3 bg-white border border-white-stroke rounded-xl text-sm font-medium text-black focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-sm appearance-none"
+                    style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em', paddingRight: '2.5rem' }}
+                  >
+                    <option value="REPORTED">Reported</option>
+                    <option value="ACKNOWLEDGED">Acknowledged</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="RESOLVED">Resolved</option>
+                  </select>
+                </div>
 
-            <div className="p-5 border-t border-white-stroke bg-white-bg flex gap-3">
-              <button 
-                onClick={() => setModalOpen(false)}
-                className="flex-1 py-3 bg-white border border-white-stroke rounded-xl text-sm font-bold text-black hover:bg-white-bg2 transition-colors"
-                disabled={isUpdating}
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleStatusUpdate}
-                disabled={isUpdating}
-                className="flex-1 py-3 bg-primary text-white rounded-xl text-sm font-bold shadow-sm hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
-              >
-                {isUpdating ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    Updating...
-                  </>
-                ) : (
-                  'Update Status'
-                )}
-              </button>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-black">Add internal note or public update...</label>
+                  <textarea
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="briefly describe the action being taken"
+                    className="w-full px-4 py-3 bg-white border border-white-stroke rounded-xl text-sm font-medium text-black focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 min-h-[120px] resize-y shadow-sm"
+                    maxLength={500}
+                  ></textarea>
+                </div>
+
+                <div className="flex flex-col gap-3 pt-2">
+                  <button 
+                    onClick={handleStatusUpdate}
+                    disabled={isUpdating}
+                    className="w-full py-3.5 bg-primary text-white rounded-xl text-sm sm:text-base font-semibold shadow-sm hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 active:scale-[0.99]"
+                  >
+                    {isUpdating ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        Updating...
+                      </>
+                    ) : (
+                      'Submit Update'
+                    )}
+                  </button>
+                  <button 
+                    onClick={() => setModalOpen(false)}
+                    className="w-full py-3.5 bg-white border border-primary text-primary rounded-xl text-sm sm:text-base font-semibold hover:bg-primary/5 transition-colors active:scale-[0.99]"
+                    disabled={isUpdating}
+                  >
+                    Cancel
+                  </button>
+                </div>
+
+                <div className="flex items-start gap-2 pt-2">
+                  <Info className="w-4 h-4 text-black-icon shrink-0 mt-0.5" />
+                  <p className="text-xs text-paragraph leading-tight">
+                    Setting the status to <span className="font-semibold text-primary">{newStatusDisplay}</span> will automatically notify the citizen reporter and credit their account with 50 impact points.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
+
+      {/* Success Modal */}
+      {showSuccessModal && selectedReport && (() => {
+        const refId = selectedReport.id ? selectedReport.id.substring(0, 8).toUpperCase() : 'N/A';
+        
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowSuccessModal(false)}></div>
+            <div className="bg-white w-full max-w-sm sm:max-w-md rounded-[24px] shadow-2xl relative z-10 flex flex-col items-center animate-in zoom-in-95 duration-200 p-8 sm:p-10 text-center">
+              
+              <div className="w-24 h-24 mb-6 relative flex items-center justify-center">
+                {/* Simplified Confetti SVG */}
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="50" cy="50" r="28" fill="#127C2F"/>
+                  <path d="M40 50L46 56L60 42" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+                  {/* Confetti particles */}
+                  <path d="M25 25L28 20" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round"/>
+                  <path d="M75 25L72 20" stroke="#f59e0b" strokeWidth="3" strokeLinecap="round"/>
+                  <path d="M85 50L90 48" stroke="#a855f7" strokeWidth="3" strokeLinecap="round"/>
+                  <path d="M80 80L84 84" stroke="#ef4444" strokeWidth="3" strokeLinecap="round"/>
+                  <path d="M20 75L15 78" stroke="#f59e0b" strokeWidth="3" strokeLinecap="round"/>
+                  <path d="M10 50L15 48" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round"/>
+                  <circle cx="30" cy="15" r="2" fill="#22c55e"/>
+                  <circle cx="70" cy="85" r="2" fill="#3b82f6"/>
+                  <circle cx="15" cy="35" r="2" fill="#a855f7"/>
+                  <polygon points="85,30 88,35 82,35" fill="#f59e0b"/>
+                  <polygon points="35,85 38,90 32,90" fill="#22c55e"/>
+                </svg>
+              </div>
+
+              <h2 className="text-xl sm:text-[22px] font-bold text-black mb-3 font-heading tracking-tight">
+                Report Status Updated
+              </h2>
+              
+              <p className="text-sm sm:text-base text-paragraph mb-8 leading-relaxed">
+                You have successfully updated report status with a Reference <span className="font-bold text-primary">#CR-{refId}</span>.
+              </p>
+
+              <div className="w-full flex flex-col gap-3">
+                <button 
+                  onClick={() => setShowSuccessModal(false)}
+                  className="w-full py-3.5 bg-primary text-white rounded-xl text-sm sm:text-base font-bold shadow-sm hover:bg-primary/90 transition-colors active:scale-[0.99]"
+                >
+                  View all Reports
+                </button>
+                <button 
+                  onClick={() => setShowSuccessModal(false)}
+                  className="w-full py-3.5 bg-white border border-primary text-primary rounded-xl text-sm sm:text-base font-bold hover:bg-primary/5 transition-colors active:scale-[0.99]"
+                >
+                  Send a New Report
+                </button>
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
