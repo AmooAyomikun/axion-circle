@@ -4,6 +4,7 @@ import { ChevronRight, ChevronDown, Mail } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AppNavbar from '../../components/AppNavbar';
 import Footer from '../../components/Footer';
+import api from '../../services/api';
 
 // A reusable accessible toggle switch component
 const ToggleSwitch = ({ label, checked, onChange, disabled }) => (
@@ -35,7 +36,21 @@ export default function NotificationsPage() {
     moreActivity: { push: false, email: false, sms: false }
   });
 
+  const [unreadCount, setUnreadCount] = useState(0);
+
   useEffect(() => {
+    // Fetch unread notifications count
+    const fetchUnreadCount = async () => {
+      try {
+        const { data } = await api.get('/notifications/unread-count');
+        const unreadResponse = data.data || data;
+        setUnreadCount(unreadResponse.unreadCount ?? unreadResponse.unread_count ?? 0);
+      } catch (error) {
+        console.error('Failed to fetch unread count:', error);
+      }
+    };
+    fetchUnreadCount();
+
     // Simulate fetching user preferences from an API
     const fetchPreferences = async () => {
       try {
@@ -159,7 +174,9 @@ export default function NotificationsPage() {
                 className="text-left px-4 py-3 rounded-lg bg-gray-100 text-primary font-semibold text-sm flex justify-between items-center transition-colors"
               >
                 Notifications
-                <span className="bg-white border border-gray-200 text-gray-600 py-0.5 px-2.5 rounded-full text-xs font-semibold">2</span>
+                {unreadCount > 0 && (
+                  <span className="bg-white border border-gray-200 text-gray-600 py-0.5 px-2.5 rounded-full text-xs font-semibold">{unreadCount}</span>
+                )}
               </button>
             </div>
           </div>
