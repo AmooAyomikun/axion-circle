@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import MarkerClusterGroup from '@changey/react-leaflet-markercluster';
 import L from 'leaflet';
-import { MapPinned, List, RefreshCw, AlertCircle } from 'lucide-react';
+import { MapPinned, List, RefreshCw, AlertCircle, MapPinOff, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import MapErrorBoundary from './MapErrorBoundary';
 import ReportListView from './ReportListView';
@@ -101,6 +101,22 @@ export default function RegionalActivityMap({ reports, mapStatus, onRetry }) {
   const [activeFilter, setActiveFilter] = useState('All');
   const [viewMode, setViewMode] = useState('map'); // 'map' | 'list'
   const [currentCity, setCurrentCity] = useState('Lagos');
+  const [gpsPermissionDenied, setGpsPermissionDenied] = useState(false);
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        () => {
+          setGpsPermissionDenied(false);
+        },
+        (error) => {
+          if (error.code === error.PERMISSION_DENIED) {
+            setGpsPermissionDenied(true);
+          }
+        }
+      );
+    }
+  }, []);
 
   const filteredReports = reports.filter((r) => {
     if (activeFilter === 'All') return true;
@@ -294,6 +310,52 @@ export default function RegionalActivityMap({ reports, mapStatus, onRetry }) {
           </div>
         )}
       </div>
+
+      {/* GPS Permission Denied Modal */}
+      {gpsPermissionDenied && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setGpsPermissionDenied(false)}></div>
+          <div className="bg-white w-full max-w-sm sm:max-w-md rounded-[24px] shadow-2xl relative z-10 flex flex-col items-center animate-in zoom-in-95 duration-200 p-6 sm:p-8 text-center">
+            <button 
+              onClick={() => setGpsPermissionDenied(false)} 
+              className="absolute top-4 right-4 text-black-icon hover:text-black transition-colors"
+              aria-label="Close modal"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            {/* Concentric red circles with MapPinOff icon */}
+            <div className="w-20 h-20 bg-[#ffeceb] rounded-full flex items-center justify-center mb-6 relative">
+              <div className="absolute inset-0 rounded-full border border-[#fdd8d6] scale-110"></div>
+              <div className="absolute inset-0 rounded-full border border-[#fdd8d6] scale-125 opacity-50"></div>
+              <MapPinOff className="w-8 h-8 text-[#E51B1B]" />
+            </div>
+
+            <h2 className="text-xl sm:text-2xl font-bold text-black mb-3 font-heading tracking-tight">
+              GPS Permission Denied
+            </h2>
+            
+            <p className="text-sm sm:text-base text-paragraph mb-8 leading-relaxed">
+              Live map features and real-time crew tracking are disabled because location access is blocked. Please enable GPS access in your browser settings to continue.
+            </p>
+
+            <div className="w-full flex flex-col gap-3">
+              <button 
+                onClick={() => setGpsPermissionDenied(false)}
+                className="w-full py-3.5 bg-[#E51B1B] text-white rounded-xl text-sm sm:text-base font-bold shadow-sm hover:bg-[#d41919] transition-colors active:scale-[0.99]"
+              >
+                Delete
+              </button>
+              <button 
+                onClick={() => setGpsPermissionDenied(false)}
+                className="w-full py-3.5 bg-white border border-white-stroke text-black rounded-xl text-sm sm:text-base font-bold hover:bg-white-bg2 transition-colors active:scale-[0.99]"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
