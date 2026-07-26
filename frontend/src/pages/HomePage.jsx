@@ -82,6 +82,12 @@ export default function HomePage() {
     resolvedReports: 0,
     totalCreditsEarned: 0
   });
+  const [areaStats, setAreaStats] = useState({
+    treesPlanted: 0,
+    treesTarget: 1000,
+    energyEfficiencyPercentage: 0,
+    moneySaved: 0
+  });
 
   const fetchReports = async () => {
     try {
@@ -98,6 +104,26 @@ export default function HomePage() {
         });
       } catch (err) {
         console.error('Failed to fetch stats:', err);
+      }
+
+      // Fetch area stats
+      try {
+        const areaRes = await api.get('/areas/stats');
+        const areaData = areaRes.data?.data || areaRes.data || {};
+        setAreaStats({
+          treesPlanted: areaData.treesPlanted ?? 512,
+          treesTarget: areaData.treesTarget ?? 1000,
+          energyEfficiencyPercentage: areaData.energyEfficiencyPercentage ?? 14,
+          moneySaved: areaData.moneySaved ?? 12
+        });
+      } catch (err) {
+        console.error('Failed to fetch area stats:', err);
+        setAreaStats({
+          treesPlanted: 512,
+          treesTarget: 1000,
+          energyEfficiencyPercentage: 14,
+          moneySaved: 12
+        });
       }
 
       let apiReports = [];
@@ -444,14 +470,14 @@ export default function HomePage() {
                   <div className="relative z-10">
                     <div className="flex items-baseline justify-between mb-2">
                       <span className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-                        512 / 1,000
+                        {areaStats.treesPlanted.toLocaleString()} / {areaStats.treesTarget.toLocaleString()}
                       </span>
                       <span className="text-xs sm:text-sm text-[#ABEFC6] font-semibold">
                         Trees Planted
                       </span>
                     </div>
                     <div className="w-full h-2.5 bg-white/20 rounded-full overflow-hidden">
-                      <div className="h-full bg-white rounded-full w-[51.2%] transition-all duration-500"></div>
+                      <div className="h-full bg-white rounded-full transition-all duration-500" style={{ width: `${Math.min(100, Math.max(0, (areaStats.treesPlanted / (areaStats.treesTarget || 1)) * 100))}%` }}></div>
                     </div>
                   </div>
 
@@ -472,10 +498,10 @@ export default function HomePage() {
 
                   <div className="flex items-center gap-3.5 relative z-10">
                     <span className="text-2xl sm:text-3xl font-bold text-primary tracking-tight shrink-0">
-                      14%
+                      {areaStats.energyEfficiencyPercentage}%
                     </span>
                     <p className="text-xs sm:text-sm text-primary leading-snug font-semibold">
-                      Efficiency increase since last quarter. You saved $12 this month.
+                      Efficiency increase since last quarter. You saved ${areaStats.moneySaved} this month.
                     </p>
                   </div>
 
