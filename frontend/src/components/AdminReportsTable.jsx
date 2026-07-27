@@ -11,32 +11,29 @@ import {
   MoreVertical,
   Eye,
   Info,
-  FileText
+  FileText,
+  ArrowLeft,
+  ArrowRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 
 const urgencyConfig = {
-  high: { bg: 'bg-alert-errorLight', text: 'text-alert-error' },
-  medium: { bg: 'bg-alert-warningLight', text: 'text-alert-warning' },
-  low: { bg: 'bg-alert-successLight', text: 'text-alert-success' }
+  high: { text: 'text-alert-error', label: 'Critical' },
+  critical: { text: 'text-alert-error', label: 'Critical' },
+  medium: { text: 'text-[#F59E0B]', label: 'Urgent' },
+  urgent: { text: 'text-[#F59E0B]', label: 'Urgent' },
+  low: { text: 'text-[#3B82F6]', label: 'Routine' },
+  routine: { text: 'text-[#3B82F6]', label: 'Routine' }
 };
 
 const statusConfig = {
-  resolved: { bg: 'bg-alert-successLight', text: 'text-primary', label: 'Resolved' },
-  'in progress': { bg: 'bg-alert-inprogressLight', text: 'text-alert-inprogress', label: 'In Progress' },
-  inprogress: { bg: 'bg-alert-inprogressLight', text: 'text-alert-inprogress', label: 'In Progress' },
-  acknowledged: { bg: 'bg-alert-infoLight', text: 'text-alert-info', label: 'Acknowledged' },
-  reported: { bg: 'bg-alert-warningLight', text: 'text-accent', label: 'Reported' },
-  pending: { bg: 'bg-alert-warningLight', text: 'text-accent', label: 'Pending' }
-};
-
-const getCategoryIcon = (category) => {
-  const cat = (category || '').toLowerCase();
-  if (cat.includes('waste') || cat.includes('dump')) return <Trash2 className="w-4 h-4 text-primary" />;
-  if (cat.includes('water') || cat.includes('drain') || cat.includes('plumbing')) return <Droplet className="w-4 h-4 text-[#3b82f6]" />;
-  if (cat.includes('light') || cat.includes('electricity')) return <Zap className="w-4 h-4 text-[#f59e0b]" />;
-  return <FileText className="w-4 h-4 text-paragraph" />;
+  resolved: { bg: 'bg-[#E9FFEA]', text: 'text-[#127C2F]', border: 'border-[#127C2F]/20', dot: 'bg-[#127C2F]', label: 'Resolved' },
+  'in progress': { bg: 'bg-[#F3E8FF]', text: 'text-[#9333EA]', border: 'border-[#9333EA]/20', dot: 'bg-[#9333EA]', label: 'In Progress' },
+  inprogress: { bg: 'bg-[#F3E8FF]', text: 'text-[#9333EA]', border: 'border-[#9333EA]/20', dot: 'bg-[#9333EA]', label: 'In Progress' },
+  acknowledged: { bg: 'bg-[#EFF6FF]', text: 'text-[#3B82F6]', border: 'border-[#3B82F6]/20', dot: 'bg-[#3B82F6]', label: 'Acknowledged' },
+  reported: { bg: 'bg-[#FFF4E5]', text: 'text-[#F59E0B]', border: 'border-[#F59E0B]/20', dot: 'bg-[#F59E0B]', label: 'Pending' },
+  pending: { bg: 'bg-[#FFF4E5]', text: 'text-[#F59E0B]', border: 'border-[#F59E0B]/20', dot: 'bg-[#F59E0B]', label: 'Pending' }
 };
 
 export default function AdminReportsTable({ reports, pageData, filters, onFilterChange, onRefresh }) {
@@ -96,71 +93,103 @@ export default function AdminReportsTable({ reports, pageData, filters, onFilter
   };
 
   return (
-    <div className="bg-white border border-white-stroke rounded-2xl shadow-sm flex flex-col">
-      {/* Table Header / Filters */}
-      <div className="p-4 sm:p-5 border-b border-white-stroke flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h2 className="font-heading font-bold text-lg text-black">All Reports</h2>
-        
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <select 
-            value={filters?.status || ''}
-            onChange={(e) => onFilterChange(prev => ({ ...prev, status: e.target.value, page: 0 }))}
-            className="px-3 py-2 bg-white border border-white-stroke rounded-lg text-sm font-medium text-black outline-none focus:border-primary shadow-sm"
-            aria-label="Filter by status"
-          >
-            <option value="">All Status</option>
-            <option value="REPORTED">Reported</option>
-            <option value="ACKNOWLEDGED">Acknowledged</option>
-            <option value="IN_PROGRESS">In Progress</option>
-            <option value="RESOLVED">Resolved</option>
-          </select>
-          <select 
-            value={filters?.category || ''}
-            onChange={(e) => onFilterChange(prev => ({ ...prev, category: e.target.value, page: 0 }))}
-            className="px-3 py-2 bg-white border border-white-stroke rounded-lg text-sm font-medium text-black outline-none focus:border-primary shadow-sm"
-            aria-label="Filter by category"
-          >
-            <option value="">All Categories</option>
-            <option value="OVERFLOW">Overflow</option>
-            <option value="ILLEGAL_DUMPING">Illegal Dumping</option>
-            <option value="BLOCKED_DRAIN">Blocked Drain</option>
-            <option value="STREET_LITTER">Street Litter</option>
-            <option value="RESIDENTIAL_DUMP">Residential Dump</option>
-            <option value="COMMERCIAL_DUMP">Commercial Dump</option>
-          </select>
-          <button className="px-3 py-2 bg-white border border-white-stroke rounded-lg text-sm font-medium text-black flex items-center gap-2 hover:bg-white-bg shadow-sm">
-            <Filter className="w-4 h-4 text-black-icon" /> Advanced Filter
-          </button>
+    <div className="flex flex-col gap-6 w-full">
+      {/* Filters (Outside the table card) */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="text-sm font-semibold text-black">Status</span>
+            <div className="relative">
+              <select 
+                value={filters?.status || ''}
+                onChange={(e) => onFilterChange(prev => ({ ...prev, status: e.target.value, page: 0 }))}
+                className="appearance-none pl-4 pr-10 py-2.5 bg-white border border-white-stroke rounded-xl text-sm font-medium text-black outline-none focus:border-primary shadow-sm"
+                style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.75rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em 1.2em' }}
+                aria-label="Filter by status"
+              >
+                <option value="">All Status</option>
+                <option value="REPORTED">Reported</option>
+                <option value="ACKNOWLEDGED">Acknowledged</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="RESOLVED">Resolved</option>
+              </select>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="text-sm font-semibold text-black">Category</span>
+            <div className="relative">
+              <select 
+                value={filters?.category || ''}
+                onChange={(e) => onFilterChange(prev => ({ ...prev, category: e.target.value, page: 0 }))}
+                className="appearance-none pl-4 pr-10 py-2.5 bg-white border border-white-stroke rounded-xl text-sm font-medium text-black outline-none focus:border-primary shadow-sm"
+                style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.75rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em 1.2em' }}
+                aria-label="Filter by category"
+              >
+                <option value="">All Categories</option>
+                <option value="OVERFLOW">Overflow</option>
+                <option value="ILLEGAL_DUMPING">Illegal Dumping</option>
+                <option value="BLOCKED_DRAIN">Blocked Drain</option>
+                <option value="STREET_LITTER">Street Litter</option>
+                <option value="RESIDENTIAL_DUMP">Residential Dump</option>
+                <option value="COMMERCIAL_DUMP">Commercial Dump</option>
+              </select>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="text-sm font-semibold text-black">Sort</span>
+            <div className="relative">
+              <select 
+                value={filters?.direction || 'desc'}
+                onChange={(e) => onFilterChange(prev => ({ ...prev, sortBy: 'createdAt', direction: e.target.value, page: 0 }))}
+                className="appearance-none pl-4 pr-10 py-2.5 bg-white border border-white-stroke rounded-xl text-sm font-medium text-black outline-none focus:border-primary shadow-sm"
+                style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.75rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em 1.2em' }}
+                aria-label="Sort by"
+              >
+                <option value="desc">Newest First</option>
+                <option value="asc">Oldest First</option>
+              </select>
+            </div>
+          </div>
         </div>
+        <button className="px-4 py-2.5 bg-white border border-white-stroke rounded-xl text-sm font-medium text-black flex items-center gap-2 hover:bg-white-bg shadow-sm shrink-0">
+          <Filter className="w-4 h-4 text-black-icon" /> Advanced Filter
+        </button>
       </div>
+
+      {/* Table Card */}
+      <div className="bg-white border border-white-stroke rounded-2xl shadow-sm flex flex-col overflow-hidden">
+        {/* Table Header */}
+        <div className="p-4 sm:p-5 border-b border-white-stroke">
+          <h2 className="font-heading font-bold text-lg text-black">Recent Reports</h2>
+        </div>
 
       {/* Table Content */}
       <div className="overflow-x-auto w-full">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-white-bg2 border-b border-white-stroke text-xs font-semibold text-paragraph">
-              <th className="px-5 py-3 cursor-pointer whitespace-nowrap" onClick={() => handleSort('category')}>
+            <tr className="bg-white border-b border-white-stroke text-xs font-semibold text-paragraph">
+              <th className="px-5 py-4 cursor-pointer whitespace-nowrap" onClick={() => handleSort('category')}>
                 <div className="flex items-center gap-2">
                   <input type="checkbox" aria-label="Select all reports" className="w-4 h-4 rounded border-white-stroke text-primary focus:ring-primary" />
                   Category <SortIcon column="category" />
                 </div>
               </th>
-              <th className="px-5 py-3 cursor-pointer whitespace-nowrap" onClick={() => handleSort('reference')}>
+              <th className="px-5 py-4 cursor-pointer whitespace-nowrap" onClick={() => handleSort('reference')}>
                 <div className="flex items-center gap-1">Reference ID <SortIcon column="reference" /></div>
               </th>
-              <th className="px-5 py-3 cursor-pointer whitespace-nowrap" onClick={() => handleSort('urgency')}>
+              <th className="px-5 py-4 cursor-pointer whitespace-nowrap" onClick={() => handleSort('urgency')}>
                 <div className="flex items-center gap-1">Urgency <SortIcon column="urgency" /></div>
               </th>
-              <th className="px-5 py-3 cursor-pointer whitespace-nowrap" onClick={() => handleSort('area')}>
+              <th className="px-5 py-4 cursor-pointer whitespace-nowrap" onClick={() => handleSort('area')}>
                 <div className="flex items-center gap-1">Area <SortIcon column="area" /></div>
               </th>
-              <th className="px-5 py-3 cursor-pointer whitespace-nowrap" onClick={() => handleSort('createdAt')}>
+              <th className="px-5 py-4 cursor-pointer whitespace-nowrap" onClick={() => handleSort('createdAt')}>
                 <div className="flex items-center gap-1">Date Reported <SortIcon column="createdAt" /></div>
               </th>
-              <th className="px-5 py-3 cursor-pointer whitespace-nowrap" onClick={() => handleSort('status')}>
+              <th className="px-5 py-4 cursor-pointer whitespace-nowrap" onClick={() => handleSort('status')}>
                 <div className="flex items-center gap-1">Status <SortIcon column="status" /></div>
               </th>
-              <th className="px-5 py-3 text-center">Action</th>
+              <th className="px-5 py-4 text-center"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white-stroke text-sm">
@@ -186,40 +215,46 @@ export default function AdminReportsTable({ reports, pageData, filters, onFilter
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <input type="checkbox" aria-label={`Select report ${report.id}`} className="w-4 h-4 rounded border-white-stroke text-primary focus:ring-primary" />
-                        <div className="w-8 h-8 rounded-full bg-white-bg2 border border-white-stroke flex items-center justify-center shrink-0">
-                          {getCategoryIcon(catName)}
-                        </div>
+                        <img 
+                          src={(report.images && report.images.length > 0) ? report.images[0] : 'https://placehold.co/100x100/F3F4F6/9CA3AF?text=Report'} 
+                          alt={catName}
+                          className="w-10 h-10 rounded-lg object-cover bg-white-bg2 shrink-0 border border-white-stroke"
+                        />
                         <span className="font-bold text-black capitalize">{catName.toLowerCase()}</span>
                       </div>
                     </td>
                     <td className="px-5 py-4 font-medium text-black-icon">
-                      {report.id ? report.id.substring(0, 8).toUpperCase() : 'N/A'}
+                      {report.id ? `#CR-${report.id.substring(0, 4).toUpperCase()}` : 'N/A'}
                     </td>
                     <td className="px-5 py-4">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold capitalize ${urgencyTheme.bg} ${urgencyTheme.text}`}>
-                        {report.urgency || 'Medium'}
+                      <span className={`text-sm font-medium capitalize ${urgencyTheme.text}`}>
+                        {urgencyTheme.label || report.urgency || 'Medium'}
                       </span>
                     </td>
                     <td className="px-5 py-4 text-black font-medium">
                       {report.areaName || report.address || 'Unknown'}
                     </td>
-                    <td className="px-5 py-4 text-paragraph font-medium">
-                      {formattedDate}
+                    <td className="px-5 py-4">
+                      <div className="flex flex-col">
+                        <span className="text-paragraph font-medium">{formattedDate}</span>
+                        <span className="text-paragraph text-xs">{rawDate ? new Date(rawDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : ''}</span>
+                      </div>
                     </td>
                     <td className="px-5 py-4">
                       <button 
                         onClick={() => openStatusModal(report)}
-                        className={`px-3 py-1 rounded-full text-xs font-bold border cursor-pointer hover:opacity-80 transition-opacity ${statusTheme.bg} ${statusTheme.text} ${statusTheme.bg.replace('bg-', 'border-').replace('Light', 'Stroke')}`}
+                        className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border cursor-pointer hover:opacity-80 transition-opacity ${statusTheme.bg} ${statusTheme.text} ${statusTheme.border}`}
                       >
+                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusTheme.dot}`}></span>
                         {statusTheme.label}
                       </button>
                     </td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center justify-center gap-2">
+                    <td className="px-5 py-4 text-center">
+                      <div className="flex items-center justify-center">
                         <button 
                           onClick={() => openStatusModal(report)}
-                          className="p-1.5 text-paragraph hover:text-primary bg-white-bg hover:bg-primary/10 rounded-lg transition-colors"
-                          title="Update Status"
+                          className="p-1.5 text-black-icon hover:text-primary transition-colors"
+                          title="View Details"
                           aria-label="View or update status"
                         >
                           <Eye className="w-4 h-4" />
@@ -236,56 +271,52 @@ export default function AdminReportsTable({ reports, pageData, filters, onFilter
 
       {/* Pagination Footer */}
       <div className="p-4 sm:p-5 border-t border-white-stroke flex items-center justify-between">
-        <span className="text-sm font-medium text-paragraph">
-          Showing <span className="font-bold text-black">{totalElements > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> to <span className="font-bold text-black">{Math.min(currentPage * itemsPerPage, totalElements)}</span> of <span className="font-bold text-black">{totalElements}</span> entries
-        </span>
-        <div className="flex items-center gap-1.5">
-          <button 
-            disabled={currentPage === 1}
-            onClick={() => onFilterChange(prev => ({ ...prev, page: Math.max(0, prev.page - 1) }))}
-            className="px-3 py-1.5 rounded-lg border border-white-stroke text-sm font-semibold text-black hover:bg-white-bg disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Prev
-          </button>
-          
-          <div className="flex items-center gap-1 hidden sm:flex">
-            {Array.from({ length: totalPages }).map((_, i) => {
-              const page = i + 1;
-              if (
-                page === 1 || 
-                page === totalPages || 
-                (page >= currentPage - 1 && page <= currentPage + 1)
-              ) {
-                return (
-                  <button
-                    key={page}
-                    onClick={() => onFilterChange(prev => ({ ...prev, page: page - 1 }))}
-                    className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-colors ${
-                      currentPage === page 
-                        ? 'bg-primary text-white shadow-sm' 
-                        : 'text-paragraph hover:bg-white-bg'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                );
-              }
-              if (page === currentPage - 2 || page === currentPage + 2) {
-                return <span key={page} className="text-paragraph">...</span>;
-              }
-              return null;
-            })}
-          </div>
-
-          <button 
-            disabled={currentPage === totalPages}
-            onClick={() => onFilterChange(prev => ({ ...prev, page: Math.min(totalPages - 1, prev.page + 1) }))}
-            className="px-3 py-1.5 rounded-lg border border-white-stroke text-sm font-semibold text-black hover:bg-white-bg disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Next
-          </button>
+        <button 
+          disabled={currentPage === 1}
+          onClick={() => onFilterChange(prev => ({ ...prev, page: Math.max(0, prev.page - 1) }))}
+          className="flex items-center gap-2 px-4 py-2 border border-white-stroke rounded-xl text-sm font-semibold text-black hover:bg-white-bg disabled:opacity-50 disabled:cursor-not-allowed transition-colors bg-white"
+        >
+          <ArrowLeft className="w-4 h-4" /> Previous
+        </button>
+        
+        <div className="flex items-center justify-center flex-1 gap-1 hidden sm:flex">
+          {Array.from({ length: totalPages }).map((_, i) => {
+            const page = i + 1;
+            if (
+              page === 1 || 
+              page === totalPages || 
+              (page >= currentPage - 1 && page <= currentPage + 1)
+            ) {
+              return (
+                <button
+                  key={page}
+                  onClick={() => onFilterChange(prev => ({ ...prev, page: page - 1 }))}
+                  className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-colors ${
+                    currentPage === page 
+                      ? 'bg-[#127C2F] text-white shadow-sm' 
+                      : 'text-paragraph hover:bg-white-bg hover:text-black'
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            }
+            if (page === currentPage - 2 || page === currentPage + 2) {
+              return <span key={page} className="text-paragraph px-1">...</span>;
+            }
+            return null;
+          })}
         </div>
+
+        <button 
+          disabled={currentPage === totalPages}
+          onClick={() => onFilterChange(prev => ({ ...prev, page: Math.min(totalPages - 1, prev.page + 1) }))}
+          className="flex items-center gap-2 px-4 py-2 border border-white-stroke rounded-xl text-sm font-semibold text-black hover:bg-white-bg disabled:opacity-50 disabled:cursor-not-allowed transition-colors bg-white"
+        >
+          Next <ArrowRight className="w-4 h-4" />
+        </button>
       </div>
+    </div>
 
       {/* Status Update Modal */}
       {modalOpen && selectedReport && (() => {

@@ -15,9 +15,6 @@ import {
 import api from '../services/api';
 import AdminLayout from '../components/AdminLayout';
 import AdminReportsTable from '../components/AdminReportsTable';
-import ReportListView from '../components/ReportListView';
-
-const RegionalActivityMap = lazy(() => import('../components/RegionalActivityMap'));
 
 export default function AdminReportsPage() {
   const location = useLocation();
@@ -25,7 +22,6 @@ export default function AdminReportsPage() {
   const isReports = location.pathname === '/admin/reports' || location.pathname === '/admin/reports/';
 
   const [reports, setReports] = useState([]);
-  const [mapReports, setMapReports] = useState([]);
   const [status, setStatus] = useState('loading');
   const [stats, setStats] = useState({ total: 0, resolved: 0, pending: 0 });
   const [pageData, setPageData] = useState({ totalElements: 0, totalPages: 1 });
@@ -115,46 +111,6 @@ export default function AdminReportsPage() {
   useEffect(() => {
     fetchAdminReports();
   }, [fetchAdminReports]);
-
-  useEffect(() => {
-    const fetchMap = async () => {
-      try {
-        const res = await api.get('/admin/reports?page=0&size=50&sortBy=createdAt&direction=desc');
-        const content = res.data?.data?.content || [];
-        const apiReports = Array.isArray(content) ? content : [];
-        
-        const lagosLat = 6.5244;
-        const lagosLng = 3.3792;
-        const coordMap = new Map();
-        const allReports = [...apiReports].map((r) => {
-          let lat = r.latitude ? parseFloat(r.latitude) : lagosLat;
-          let lng = r.longitude ? parseFloat(r.longitude) : lagosLng;
-          
-          const key = `${lat},${lng}`;
-          const count = coordMap.get(key) || 0;
-          coordMap.set(key, count + 1);
-  
-          let jitterLat = 0;
-          let jitterLng = 0;
-          if (count > 0) {
-            jitterLat = Math.sin(count * 1234) * 0.0003;
-            jitterLng = Math.cos(count * 1234) * 0.0003;
-          }
-          
-          return {
-            ...r,
-            latitude: lat + jitterLat,
-            longitude: lng + jitterLng,
-            rawDate: r.createdAt ? new Date(r.createdAt).getTime() : (r.date ? 0 : Date.now())
-          };
-        });
-        setMapReports(allReports);
-      } catch (err) {
-        console.error('Failed to fetch map reports', err);
-      }
-    };
-    fetchMap();
-  }, []);
 
   const totalReports = stats.total;
   const resolvedReports = stats.resolved;
@@ -281,57 +237,11 @@ export default function AdminReportsPage() {
 
           </div>
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
-          <div className="lg:col-span-7 flex flex-col">
-            <Suspense fallback={<div className="bg-white border border-white-stroke rounded-2xl shadow-sm flex flex-col overflow-hidden h-[450px] items-center justify-center">Loading map...</div>}>
-              <RegionalActivityMap reports={mapReports} mapStatus={status} onRetry={fetchAdminReports} />
-            </Suspense>
-          </div>
-          <div className="lg:col-span-5 flex flex-col lg:h-[530px]">
-            <div className="bg-white border border-white-stroke rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col justify-between flex-1 h-full min-h-[500px] lg:min-h-0">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-heading font-bold text-base sm:text-lg text-black">Recent Report</h2>
-                <button className="text-xs sm:text-sm font-semibold text-primary hover:underline">view all</button>
-              </div>
-              <div className="flex-1 overflow-y-auto min-h-0 relative">
-                {status === 'loading' && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-                    <span className="text-sm font-semibold text-paragraph">Loading...</span>
-                  </div>
-                )}
-                {status === 'error' && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                    <AlertCircle className="w-8 h-8 text-paragraph mb-2" />
-                    <p className="text-sm text-paragraph mb-4">Backend is asleep or offline</p>
-                    <button onClick={fetchAdminReports} className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg flex items-center gap-2 hover:bg-primary/90">
-                      <RefreshCw className="w-4 h-4" /> Retry
-                    </button>
-                  </div>
-                )}
-                {status === 'forbidden' && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-                    <AlertCircle className="w-8 h-8 text-alert-error mb-2" />
-                    <p className="text-sm text-alert-error font-bold mb-1">Access Denied</p>
-                    <p className="text-xs text-paragraph mb-4">Only administrators can view these reports.</p>
-                  </div>
-                )}
-                {status === 'success' && (
-                  <div className="h-full relative z-10 -mx-4 px-4">
-                    <ReportListView reports={mapReports.slice(0, 10)} />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
         </>
         )}
 
-        {/* The Main Table */}
-        {isReports && (
-          <div className="pb-8">
+        {/* The Main Table (Shown on both Dashboard and Reports Page) */}
+        <div className="pb-8">
           <AdminReportsTable 
             reports={reports} 
             pageData={pageData}
@@ -340,7 +250,6 @@ export default function AdminReportsPage() {
             onRefresh={fetchAdminReports} 
           />
         </div>
-        )}
 
       </div>
     </AdminLayout>
