@@ -250,7 +250,7 @@ export default function AppNavbar({ activeTab = '' }) {
                     </button>
                     <button
                       type="button"
-                      onClick={() => { setIsMenuOpen(false); toast.success('Settings coming soon!'); }}
+                      onClick={() => { setIsMenuOpen(false); navigate('/profile'); }}
                       className="w-full text-left px-4 py-2 text-xs sm:text-sm text-paragraph hover:bg-white-bg flex items-center gap-2.5 transition-colors"
                     >
                       <Settings className="w-4 h-4 text-black-icon" /> Settings
@@ -422,7 +422,7 @@ export default function AppNavbar({ activeTab = '' }) {
                   onClick={() => {
                     setIsMobileMenuOpen(false);
                     setShowMobileUserMenu(false);
-                    toast.success('Settings coming soon!');
+                    navigate('/profile');
                   }}
                   className="w-full flex items-center gap-3.5 font-bold text-sm text-black hover:text-primary transition-colors text-left"
                 >

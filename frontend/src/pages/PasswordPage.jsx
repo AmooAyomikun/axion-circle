@@ -137,13 +137,12 @@ export default function PasswordPage() {
 
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
         
-        {/* Desktop Breadcrumb */}
         <div className="hidden md:flex items-center text-sm mb-10 text-gray-500 font-medium">
           <span className="hover:text-gray-700 cursor-pointer" onClick={() => navigate('/')}>Dashboard</span>
           <ChevronRight className="w-4 h-4 mx-2 text-gray-400" />
           <span className="hover:text-gray-700 cursor-pointer" onClick={() => navigate('/profile')}>Settings</span>
           <ChevronRight className="w-4 h-4 mx-2 text-gray-400" />
-          <span className="text-primary font-semibold">User Profile</span>
+          <span className="text-primary font-semibold">Password</span>
         </div>
 
         {/* Mobile Heading */}
