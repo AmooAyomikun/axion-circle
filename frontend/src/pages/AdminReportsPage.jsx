@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { 
   FileText, 
@@ -19,6 +20,10 @@ import ReportListView from '../components/ReportListView';
 const RegionalActivityMap = lazy(() => import('../components/RegionalActivityMap'));
 
 export default function AdminReportsPage() {
+  const location = useLocation();
+  const isDashboard = location.pathname === '/admin' || location.pathname === '/admin/';
+  const isReports = location.pathname === '/admin/reports' || location.pathname === '/admin/reports/';
+
   const [reports, setReports] = useState([]);
   const [mapReports, setMapReports] = useState([]);
   const [status, setStatus] = useState('loading');
@@ -159,7 +164,9 @@ export default function AdminReportsPage() {
     <AdminLayout>
       <div className="space-y-6 sm:space-y-8">
         
-        {/* System Overview Section */}
+        {isDashboard && (
+          <>
+            {/* System Overview Section */}
         <div>
           <h1 className="font-heading font-bold text-lg sm:text-xl text-black mb-4">System Overview</h1>
           <div className="flex overflow-x-auto snap-x snap-mandatory md:grid md:grid-cols-4 gap-4 pb-2 hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
@@ -318,10 +325,11 @@ export default function AdminReportsPage() {
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* The Main Table */}
-        <div className="pb-8">
+        {isReports && (
+          <div className="pb-8">
           <AdminReportsTable 
             reports={reports} 
             pageData={pageData}
@@ -330,6 +338,7 @@ export default function AdminReportsPage() {
             onRefresh={fetchAdminReports} 
           />
         </div>
+        )}
 
       </div>
     </AdminLayout>
