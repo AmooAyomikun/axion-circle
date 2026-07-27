@@ -13,9 +13,10 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import AdminLayout from '../components/AdminLayout';
-const RegionalActivityMap = lazy(() => import('../components/RegionalActivityMap'));
 import AdminReportsTable from '../components/AdminReportsTable';
 import ReportListView from '../components/ReportListView';
+
+const RegionalActivityMap = lazy(() => import('../components/RegionalActivityMap'));
 
 export default function AdminReportsPage() {
   const [reports, setReports] = useState([]);
