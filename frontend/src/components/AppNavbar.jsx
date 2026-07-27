@@ -191,7 +191,7 @@ export default function AppNavbar({ activeTab = '' }) {
               )}
               <button
                 type="button"
-                onClick={() => toast.success('Settings modal coming soon!')}
+                onClick={() => navigate('/profile')}
                 className="text-black-icon hover:text-black p-1.5 rounded-lg hover:bg-white-bg transition-colors"
                 aria-label="Settings"
               >
