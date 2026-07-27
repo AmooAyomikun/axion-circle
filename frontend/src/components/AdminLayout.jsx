@@ -75,8 +75,8 @@ export default function AdminLayout({ children }) {
   };
 
   const navLinks = [
-    { name: 'Dashboard', icon: LayoutGrid, path: '/admin/reports' },
-    { name: 'Report', icon: FileText, path: '/reports' },
+    { name: 'Dashboard', icon: LayoutGrid, path: '/admin' },
+    { name: 'Report', icon: FileText, path: '/admin/reports' },
     { name: 'Reward Management', icon: Gift, path: '/rewards' },
     { name: 'Profile', icon: User, path: '/profile' }
   ];

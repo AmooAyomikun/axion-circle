@@ -99,7 +99,7 @@ export default function AdminReportsTable({ reports, pageData, filters, onFilter
     <div className="bg-white border border-white-stroke rounded-2xl shadow-sm flex flex-col">
       {/* Table Header / Filters */}
       <div className="p-4 sm:p-5 border-b border-white-stroke flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h2 className="font-heading font-bold text-lg text-black">Recent Reports</h2>
+        <h2 className="font-heading font-bold text-lg text-black">All Reports</h2>
         
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <select 
