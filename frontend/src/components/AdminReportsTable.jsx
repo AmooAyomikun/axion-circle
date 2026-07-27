@@ -10,7 +10,8 @@ import {
   X,
   MoreVertical,
   Eye,
-  Info
+  Info,
+  FileText
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
