@@ -11,7 +11,8 @@ import {
   Settings, 
   LogOut,
   Menu,
-  X
+  X,
+  Calendar
 } from 'lucide-react';
 import NavbarLogo from './NavbarLogo';
 import NotificationBell from './NotificationBell';
@@ -225,9 +226,12 @@ export default function AdminLayout({ children }) {
       <main className="flex-1 lg:ml-64 flex flex-col min-h-screen pt-16 lg:pt-0 overflow-x-hidden">
         {/* Desktop Top Nav */}
         <div className="hidden lg:flex items-center justify-between px-8 py-4 bg-white-bg sticky top-0 z-10">
-          <div className="flex flex-col">
-            <h1 className="text-xl font-heading font-bold text-black mb-0.5">Welcome Back {displayName.split(' ')[0]}!</h1>
-            <p className="text-sm font-medium text-paragraph">{currentDate}</p>
+          <div className="flex items-center gap-4">
+            <h1 className="text-[22px] font-heading font-bold text-black">Welcome Back {displayName.split(' ')[0]}! 👋</h1>
+            <div className="flex items-center gap-2 px-3 py-2 bg-[#F3F4F6] border border-white-stroke rounded-xl shadow-xs">
+               <Calendar className="w-4 h-4 text-paragraph" />
+               <span className="text-sm font-semibold text-paragraph">{currentDate}</span>
+            </div>
           </div>
           
           <div className="flex items-center gap-4">

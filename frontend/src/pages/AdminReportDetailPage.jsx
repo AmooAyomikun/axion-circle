@@ -7,6 +7,7 @@ import {
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import AdminLayout from '../components/AdminLayout';
+import Footer from '../components/Footer';
 import fallbackImage from '../assets/fallback-image.svg';
 
 const ReportDetailMap = lazy(() => import('../components/ReportDetailMap'));
@@ -197,33 +198,35 @@ export default function AdminReportDetailPage() {
             {/* LEFT COLUMN */}
             <div className="flex flex-col gap-6 w-full">
               
-              {/* Action Bar */}
-              <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-white border border-white-stroke rounded-2xl shadow-xs w-full">
-                <div className="flex items-center gap-3 sm:gap-6 shrink-0">
+              {/* Action Bar - Matches Figma */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 w-full">
+                {/* Pills Row */}
+                <div className="flex items-center justify-center lg:justify-start gap-4 lg:gap-6 w-full lg:w-auto">
                   {/* Status Pill */}
                   <div className="flex items-center gap-2 px-4 py-1.5 bg-[#FFF9E6] border border-[#FFD970] rounded-full">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]"></span>
                     <span className="text-[#F59E0B] font-bold text-xs">Pending Review</span>
                   </div>
                   {/* Divider */}
-                  <div className="w-[1px] h-6 bg-white-stroke hidden sm:block"></div>
+                  <div className="w-[1px] h-8 bg-[#E5E7EB]"></div>
                   {/* Urgency Pill */}
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-full bg-[#FEE2E2] flex items-center justify-center shrink-0">
                       <span className="w-2 h-2 rounded-full bg-[#EF4444]"></span>
                     </div>
                     <div className="flex flex-col leading-tight">
-                      <span className="text-[10px] text-paragraph uppercase font-semibold">Urgency Level</span>
+                      <span className="text-[9px] text-paragraph uppercase font-bold tracking-wider">Urgency Level</span>
                       <span className="text-[#EF4444] font-bold text-sm">Critical</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 w-full sm:w-auto mt-2 sm:mt-0">
-                  <button className="flex-1 sm:flex-none px-6 py-2.5 border border-white-stroke bg-white text-black font-semibold text-sm rounded-xl hover:bg-white-bg transition-colors whitespace-nowrap">
+                {/* Buttons Row / Stack */}
+                <div className="flex flex-col lg:flex-row items-center gap-3 w-full lg:w-auto">
+                  <button className="order-2 lg:order-1 w-full lg:w-auto px-8 py-2.5 bg-white border border-[#D1D5DB] text-black font-bold text-sm rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap">
                     Change Status
                   </button>
-                  <button className="flex-1 sm:flex-none px-6 py-2.5 bg-[#127C2F] text-white font-semibold text-sm rounded-xl hover:bg-[#127C2F]/90 transition-colors shadow-sm whitespace-nowrap">
+                  <button className="order-1 lg:order-2 w-full lg:w-auto px-8 py-2.5 bg-[#127C2F] text-white font-bold text-sm rounded-lg hover:bg-[#127C2F]/90 transition-colors shadow-sm whitespace-nowrap">
                     Approve Action
                   </button>
                 </div>
@@ -339,21 +342,12 @@ export default function AdminReportDetailPage() {
                 </div>
               </div>
 
-              {/* Footer Copyright inside layout */}
-              <div className="text-center mt-6 text-black-icon text-[11px] font-semibold tracking-wide">
-                <p>Copyright © CleanReport</p>
-                <div className="flex items-center justify-center gap-4 mt-2">
-                  <a href="/privacy" className="hover:text-black">Privacy</a>
-                  <a href="/terms" className="hover:text-black">Terms</a>
-                  <a href="/cookies" className="hover:text-black">Cookies</a>
-                </div>
-              </div>
-
             </div>
           </div>
           
         </div>
       </div>
+      <Footer />
     </AdminLayout>
   );
 }
