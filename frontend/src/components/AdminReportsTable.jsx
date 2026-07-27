@@ -49,7 +49,7 @@ const CustomFilterSelect = ({ value, onChange, options, ariaLabel }) => {
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-max min-w-full mt-1.5 bg-white border border-white-stroke rounded-xl shadow-xl py-1.5 max-h-60 overflow-auto animate-in fade-in zoom-in-95 duration-150 left-0">
+        <div className="absolute z-50 w-max min-w-full mt-1.5 bg-white border border-white-stroke rounded-xl shadow-xl py-1.5 max-h-60 overflow-auto animate-in fade-in zoom-in-95 duration-150 left-0 top-full">
           {options.map((option) => {
             const isSelected = value === option.value;
             return (
@@ -155,9 +155,9 @@ export default function AdminReportsTable({ reports, pageData, filters, onFilter
   return (
     <div className="flex flex-col gap-6 w-full">
       {/* Filter Bar — Styled like main app */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-2.5 bg-white border border-white-stroke rounded-2xl shadow-xs mb-6 w-full">
+      <div className="flex flex-wrap items-center justify-between gap-4 p-2.5 bg-white border border-white-stroke rounded-2xl shadow-xs mb-6 w-full relative z-20">
         {/* Left Side: Custom Dropdowns */}
-        <div className="flex items-center gap-3 overflow-x-auto pb-1 sm:pb-0 hide-scrollbar flex-1">
+        <div className="flex flex-wrap items-center gap-3 flex-1">
           {/* Status Dropdown */}
           <CustomFilterSelect
             value={filters?.status || ''}
