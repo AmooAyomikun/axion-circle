@@ -20,6 +20,7 @@ const RegionalActivityMap = lazy(() => import('../components/RegionalActivityMap
 
 export default function AdminReportsPage() {
   const [reports, setReports] = useState([]);
+  const [mapReports, setMapReports] = useState([]);
   const [status, setStatus] = useState('loading');
   const [stats, setStats] = useState({ total: 0, resolved: 0, pending: 0 });
   const [pageData, setPageData] = useState({ totalElements: 0, totalPages: 1 });
@@ -109,6 +110,46 @@ export default function AdminReportsPage() {
   useEffect(() => {
     fetchAdminReports();
   }, [fetchAdminReports]);
+
+  useEffect(() => {
+    const fetchMap = async () => {
+      try {
+        const res = await api.get('/admin/reports?page=0&size=50&sortBy=createdAt&direction=desc');
+        const content = res.data?.data?.content || [];
+        const apiReports = Array.isArray(content) ? content : [];
+        
+        const lagosLat = 6.5244;
+        const lagosLng = 3.3792;
+        const coordMap = new Map();
+        const allReports = [...apiReports].map((r) => {
+          let lat = r.latitude ? parseFloat(r.latitude) : lagosLat;
+          let lng = r.longitude ? parseFloat(r.longitude) : lagosLng;
+          
+          const key = `${lat},${lng}`;
+          const count = coordMap.get(key) || 0;
+          coordMap.set(key, count + 1);
+  
+          let jitterLat = 0;
+          let jitterLng = 0;
+          if (count > 0) {
+            jitterLat = Math.sin(count * 1234) * 0.0003;
+            jitterLng = Math.cos(count * 1234) * 0.0003;
+          }
+          
+          return {
+            ...r,
+            latitude: lat + jitterLat,
+            longitude: lng + jitterLng,
+            rawDate: r.createdAt ? new Date(r.createdAt).getTime() : (r.date ? 0 : Date.now())
+          };
+        });
+        setMapReports(allReports);
+      } catch (err) {
+        console.error('Failed to fetch map reports', err);
+      }
+    };
+    fetchMap();
+  }, []);
 
   const totalReports = stats.total;
   const resolvedReports = stats.resolved;
@@ -234,16 +275,15 @@ export default function AdminReportsPage() {
           </div>
         </div>
 
-        {/* Map and Recent Report Side List */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8 bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col h-[500px]">
             <h3 className="text-lg font-bold text-black mb-4">Live Activity Map</h3>
             <Suspense fallback={<div className="flex-1 flex items-center justify-center bg-gray-50 rounded-xl">Loading map...</div>}>
-              <RegionalActivityMap reports={reports} mapStatus={status} onRetry={fetchAdminReports} />
+              <RegionalActivityMap reports={mapReports} mapStatus={status} onRetry={fetchAdminReports} />
             </Suspense>
           </div>
           <div className="lg:col-span-4 flex flex-col">
-            <div className="bg-white border border-white-stroke rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col justify-between flex-1 h-[440px]">
+            <div className="bg-white border border-white-stroke rounded-xl p-4 sm:p-5 shadow-sm flex flex-col justify-between flex-1 h-[500px]">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-heading font-bold text-base sm:text-lg text-black">Recent Report</h2>
                 <button className="text-xs sm:text-sm font-semibold text-primary hover:underline">view all</button>
@@ -273,7 +313,7 @@ export default function AdminReportsPage() {
                 )}
                 {status === 'success' && (
                   <div className="h-full relative z-10 -mx-4 px-4">
-                    <ReportListView reports={reports.slice(0, 10)} />
+                    <ReportListView reports={mapReports.slice(0, 10)} />
                   </div>
                 )}
               </div>
