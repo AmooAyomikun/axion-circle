@@ -96,7 +96,7 @@ const statusConfig = {
   pending: { bg: 'bg-[#FFF4E5]', text: 'text-[#F59E0B]', border: 'border-[#F59E0B]/20', dot: 'bg-[#F59E0B]', label: 'Pending' }
 };
 
-export default function AdminReportsTable({ reports, pageData, filters, onFilterChange, onRefresh }) {
+export default function AdminReportsTable({ reports, pageData, filters, onFilterChange, onRefresh, hasError }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
@@ -252,7 +252,28 @@ export default function AdminReportsTable({ reports, pageData, filters, onFilter
           <tbody className="divide-y divide-white-stroke text-sm">
             {paginatedReports.length === 0 ? (
               <tr>
-                <td colSpan="7" className="px-5 py-8 text-center text-paragraph">No reports found matching criteria</td>
+                <td colSpan="7" className="px-5 py-12 text-center text-paragraph bg-white relative">
+                  {hasError ? (
+                    <div className="flex flex-col items-center justify-center max-w-md mx-auto">
+                      <div className="w-16 h-16 bg-[#FFE8E8] border border-[#fdd8d6] rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+                        <AlertCircle className="w-8 h-8 text-[#DB0404]" />
+                      </div>
+                      <h3 className="font-heading font-bold text-lg text-black mb-3">Unable to load Reports</h3>
+                      <p className="text-sm text-paragraph leading-relaxed mb-6">
+                        Our systems are currently experiencing a disruption. We couldn't retrieve the latest sanitation data from the central database.
+                      </p>
+                      <button 
+                        onClick={onRefresh}
+                        className="bg-primary text-white font-bold text-sm px-6 py-3 rounded-xl shadow-sm hover:bg-primary/90 transition-colors flex items-center gap-2"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        Retry Reconnection
+                      </button>
+                    </div>
+                  ) : (
+                    "No reports found matching criteria"
+                  )}
+                </td>
               </tr>
             ) : (
               paginatedReports.map((report) => {

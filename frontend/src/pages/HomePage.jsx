@@ -23,7 +23,8 @@ import {
   AlertCircle,
   MapPinned,
   List,
-  RefreshCw
+  RefreshCw,
+  FileEdit
 } from 'lucide-react';
 import AppNavbar from '../components/AppNavbar';
 import Footer from '../components/Footer';
@@ -458,7 +459,34 @@ export default function HomePage() {
                     <p className="text-paragraph font-medium">Loading map module...</p>
                   </div>
                 }>
-                  <RegionalActivityMap reports={reports} mapStatus={mapStatus} onRetry={fetchReports} />
+                  <div className="bg-white border border-white-stroke rounded-2xl shadow-sm flex flex-col overflow-hidden relative">
+                    {reports.length === 0 ? (
+                      <div className="h-[450px] w-full flex flex-col items-center justify-center bg-white z-[300] px-4 text-center">
+                        <div className="w-16 h-16 bg-white border border-white-stroke rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+                          <FileEdit className="w-8 h-8 text-black" />
+                        </div>
+                        <h3 className="font-heading font-bold text-lg sm:text-xl text-black mb-2">No Report on Map</h3>
+                        <p className="text-xs sm:text-sm text-paragraph max-w-sm mb-8 leading-relaxed">
+                          There is no map details showing regional activity reporting
+                        </p>
+                        <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto px-4">
+                          <button 
+                            onClick={() => navigate('/report')}
+                            className="w-full sm:w-auto bg-primary text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-xl shadow-sm hover:bg-primary/90 transition-colors"
+                          >
+                            Manually Create a Report
+                          </button>
+                          <button 
+                            className="w-full sm:w-auto bg-white border border-[#22c55e] text-black font-semibold text-xs sm:text-sm px-6 py-3 rounded-xl hover:bg-white-bg transition-colors"
+                          >
+                            View Documentation
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <RegionalActivityMap reports={reports} mapStatus={mapStatus} onRetry={fetchReports} />
+                    )}
+                  </div>
                 </Suspense>
               </LazyRender>
 
@@ -557,7 +585,15 @@ export default function HomePage() {
                       </div>
                     )}
                     {reports.length === 0 && mapStatus === 'success' && (
-                      <div className="py-8 text-center text-sm text-paragraph">No recent reports found</div>
+                      <div className="flex-1 flex flex-col items-center justify-center py-12 text-center px-4">
+                        <div className="w-16 h-16 bg-white border border-white-stroke rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+                          <FileEdit className="w-8 h-8 text-black" />
+                        </div>
+                        <h3 className="font-heading font-bold text-lg text-black mb-3">No Recent Report Yet</h3>
+                        <p className="text-xs sm:text-sm text-paragraph max-w-[280px] mx-auto leading-relaxed mb-6">
+                          When citizens submit sanitation issues through the mobile app, they will appear here in real-time for review and assignment.
+                        </p>
+                      </div>
                     )}
                     {reports.slice(0, 6).map((report, idx) => {
                       const status = (report.status || 'Reported').toLowerCase();
