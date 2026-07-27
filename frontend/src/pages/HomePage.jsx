@@ -83,10 +83,8 @@ export default function HomePage() {
     totalCreditsEarned: 0
   });
   const [areaStats, setAreaStats] = useState({
-    treesPlanted: 0,
-    treesTarget: 1000,
-    energyEfficiencyPercentage: 0,
-    moneySaved: 0
+    topActiveArea: 'Loading...',
+    resolutionRate: 0
   });
 
   const fetchReports = async () => {
@@ -111,18 +109,14 @@ export default function HomePage() {
         const areaRes = await api.get('/areas/stats');
         const areaData = areaRes.data?.data || areaRes.data || {};
         setAreaStats({
-          treesPlanted: areaData.treesPlanted ?? 512,
-          treesTarget: areaData.treesTarget ?? 1000,
-          energyEfficiencyPercentage: areaData.energyEfficiencyPercentage ?? 14,
-          moneySaved: areaData.moneySaved ?? 12
+          topActiveArea: areaData.topActiveArea || areaData.mostActiveArea || 'N/A',
+          resolutionRate: areaData.resolutionRate || areaData.averageResolutionRate || 0
         });
       } catch (err) {
         console.error('Failed to fetch area stats:', err);
         setAreaStats({
-          treesPlanted: 512,
-          treesTarget: 1000,
-          energyEfficiencyPercentage: 14,
-          moneySaved: 12
+          topActiveArea: 'Unavailable',
+          resolutionRate: 0
         });
       }
 
@@ -454,59 +448,53 @@ export default function HomePage() {
                 </Suspense>
               </LazyRender>
 
-              {/* 2. Bottom Two Cards (Local Goals + Energy Saving) placed inside Left Column right under Regional Activity */}
+              {/* 2. Bottom Two Cards (Area Stats) placed inside Left Column right under Regional Activity */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {/* Local Goals (Dark Card) */}
+                {/* Top Active Area (Dark Card) */}
                 <div className="bg-[#001310] text-white rounded-2xl p-6 sm:p-7 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[170px] border border-white/10">
                   <div className="relative z-10 mb-6">
                     <h3 className="font-heading font-bold text-base sm:text-lg text-white mb-1">
-                      Local Goals
+                      Top Active Area
                     </h3>
                     <p className="text-xs sm:text-sm text-white/80 font-medium">
-                      Progress on the Green District Initiative.
+                      Area with the most community reports.
                     </p>
                   </div>
 
                   <div className="relative z-10">
                     <div className="flex items-baseline justify-between mb-2">
-                      <span className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-                        {areaStats.treesPlanted.toLocaleString()} / {areaStats.treesTarget.toLocaleString()}
+                      <span className="text-2xl sm:text-3xl font-bold tracking-tight text-white truncate max-w-[200px]">
+                        {areaStats.topActiveArea}
                       </span>
-                      <span className="text-xs sm:text-sm text-[#ABEFC6] font-semibold">
-                        Trees Planted
-                      </span>
-                    </div>
-                    <div className="w-full h-2.5 bg-white/20 rounded-full overflow-hidden">
-                      <div className="h-full bg-white rounded-full transition-all duration-500" style={{ width: `${Math.min(100, Math.max(0, (areaStats.treesPlanted / (areaStats.treesTarget || 1)) * 100))}%` }}></div>
                     </div>
                   </div>
 
-                  {/* Decorative Watermark Sprout — #ABEFC6 mint outline matching Figma */}
-                  <Sprout className="w-28 h-28 absolute -bottom-6 -right-6 text-[#ABEFC6]/15 pointer-events-none" />
+                  {/* Decorative Watermark */}
+                  <MapPinned className="w-28 h-28 absolute -bottom-6 -right-6 text-[#ABEFC6]/15 pointer-events-none" />
                 </div>
 
-                {/* Energy Saving (Light Card) */}
+                {/* Resolution Rate (Light Card) */}
                 <div className="bg-white border border-white-stroke rounded-2xl p-6 sm:p-7 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[170px]">
                   <div className="relative z-10 mb-6">
                     <h3 className="font-heading font-bold text-base sm:text-lg text-primary mb-1">
-                      Energy Saving
+                      Resolution Rate
                     </h3>
                     <p className="text-xs sm:text-sm text-paragraph font-medium">
-                      Community effort to reduce street light waste.
+                      Average resolution rate across areas.
                     </p>
                   </div>
 
                   <div className="flex items-center gap-3.5 relative z-10">
                     <span className="text-2xl sm:text-3xl font-bold text-primary tracking-tight shrink-0">
-                      {areaStats.energyEfficiencyPercentage}%
+                      {areaStats.resolutionRate}%
                     </span>
                     <p className="text-xs sm:text-sm text-primary leading-snug font-semibold">
-                      Efficiency increase since last quarter. You saved ${areaStats.moneySaved} this month.
+                      Reports successfully resolved.
                     </p>
                   </div>
 
-                  {/* Decorative Watermark Lightning */}
-                  <Zap className="w-24 h-24 absolute -bottom-5 -right-5 text-primary/15 pointer-events-none" />
+                  {/* Decorative Watermark */}
+                  <Activity className="w-24 h-24 absolute -bottom-5 -right-5 text-primary/15 pointer-events-none" />
                 </div>
               </div>
             </div>

@@ -114,6 +114,16 @@ export default function ProfilePage() {
       
       setFormData(prev => ({ ...prev, avatarUrl: secureUrl }));
       
+      // Try to immediately sync the new avatarUrl to the backend
+      try {
+        await api.patch('/users/me', {
+          avatarUrl: secureUrl,
+          displayName: user?.displayName || ''
+        });
+      } catch (apiError) {
+        console.log('Backend PATCH /users/me endpoint not yet available, falling back to local storage update.', apiError);
+      }
+
       // Update local storage immediately for avatar
       if (user) {
         const updatedUser = { ...user, avatarUrl: secureUrl };
@@ -155,10 +165,19 @@ export default function ProfilePage() {
       // MOCK API CALL DELAY
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // TODO: Replace with real API call when backend endpoint is available
-      // Example: await api.put('/users/me', formData);
+      const updatedDisplayName = `${formData.firstName} ${formData.lastName}`.trim();
+      
+      // Try calling the backend endpoint (will work once the backend dev adds it this week)
+      try {
+        await api.patch('/users/me', {
+          avatarUrl: formData.avatarUrl,
+          displayName: updatedDisplayName
+        });
+      } catch (apiError) {
+        console.log('Backend PATCH /users/me endpoint not yet available, falling back to local storage update.', apiError);
+      }
 
-      // Save to local storage to mock persistence
+      // Save to local storage to mock persistence (or keep it in sync)
       const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
       const updatedUser = {
         ...storedUser,
