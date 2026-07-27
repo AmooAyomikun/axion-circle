@@ -184,54 +184,53 @@ export default function AdminReportDetailPage() {
 
   return (
     <AdminLayout>
-      <div className="flex-1 bg-white-bg sm:bg-[#F9FAFB] p-4 sm:p-8 overflow-y-auto">
-        <div className="max-w-6xl mx-auto">
-          
-          {/* Header */}
-          <div className="mb-6 sm:mb-8">
-            <h1 className="text-[28px] font-bold text-black mb-1.5 font-heading">Report Details</h1>
-            <p className="text-paragraph text-sm sm:text-base">Manually log a sanitation issue identified by field personnel.</p>
+      <div className="flex flex-col min-h-full w-full max-w-7xl mx-auto">
+        
+        {/* Header */}
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-[28px] font-bold text-black mb-1.5 font-heading">Report Details</h1>
+          <p className="text-paragraph text-sm sm:text-base">Manually log a sanitation issue identified by field personnel.</p>
+        </div>
+
+        {/* Action Bar - Matches Figma */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 w-full mb-6 sm:mb-8">
+          {/* Pills Row */}
+          <div className="flex items-center justify-center lg:justify-start gap-4 lg:gap-6 w-full lg:w-auto">
+            {/* Status Pill */}
+            <div className="flex items-center gap-2 px-4 py-1.5 bg-[#FFF9E6] border border-[#FFD970] rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]"></span>
+              <span className="text-[#F59E0B] font-bold text-xs">Pending Review</span>
+            </div>
+            {/* Divider */}
+            <div className="w-[1px] h-8 bg-[#E5E7EB]"></div>
+            {/* Urgency Pill */}
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-[#FEE2E2] flex items-center justify-center shrink-0">
+                <span className="w-2 h-2 rounded-full bg-[#EF4444]"></span>
+              </div>
+              <div className="flex flex-col leading-tight">
+                <span className="text-[9px] text-paragraph uppercase font-bold tracking-wider">Urgency Level</span>
+                <span className="text-[#EF4444] font-bold text-sm">Critical</span>
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-6 sm:gap-8 items-start">
-            
-            {/* LEFT COLUMN */}
-            <div className="flex flex-col gap-6 w-full">
+          {/* Buttons Row / Stack */}
+          <div className="flex flex-col lg:flex-row items-center gap-3 w-full lg:w-auto">
+            <button className="order-2 lg:order-1 w-full lg:w-auto px-8 py-2.5 bg-white border border-[#D1D5DB] text-black font-bold text-sm rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap">
+              Change Status
+            </button>
+            <button className="order-1 lg:order-2 w-full lg:w-auto px-8 py-2.5 bg-[#127C2F] text-white font-bold text-sm rounded-lg hover:bg-[#127C2F]/90 transition-colors shadow-sm whitespace-nowrap">
+              Approve Action
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-6 sm:gap-8 items-start mb-10">
+          
+          {/* LEFT COLUMN */}
+          <div className="flex flex-col gap-6 w-full">
               
-              {/* Action Bar - Matches Figma */}
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 w-full">
-                {/* Pills Row */}
-                <div className="flex items-center justify-center lg:justify-start gap-4 lg:gap-6 w-full lg:w-auto">
-                  {/* Status Pill */}
-                  <div className="flex items-center gap-2 px-4 py-1.5 bg-[#FFF9E6] border border-[#FFD970] rounded-full">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]"></span>
-                    <span className="text-[#F59E0B] font-bold text-xs">Pending Review</span>
-                  </div>
-                  {/* Divider */}
-                  <div className="w-[1px] h-8 bg-[#E5E7EB]"></div>
-                  {/* Urgency Pill */}
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-[#FEE2E2] flex items-center justify-center shrink-0">
-                      <span className="w-2 h-2 rounded-full bg-[#EF4444]"></span>
-                    </div>
-                    <div className="flex flex-col leading-tight">
-                      <span className="text-[9px] text-paragraph uppercase font-bold tracking-wider">Urgency Level</span>
-                      <span className="text-[#EF4444] font-bold text-sm">Critical</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Buttons Row / Stack */}
-                <div className="flex flex-col lg:flex-row items-center gap-3 w-full lg:w-auto">
-                  <button className="order-2 lg:order-1 w-full lg:w-auto px-8 py-2.5 bg-white border border-[#D1D5DB] text-black font-bold text-sm rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap">
-                    Change Status
-                  </button>
-                  <button className="order-1 lg:order-2 w-full lg:w-auto px-8 py-2.5 bg-[#127C2F] text-white font-bold text-sm rounded-lg hover:bg-[#127C2F]/90 transition-colors shadow-sm whitespace-nowrap">
-                    Approve Action
-                  </button>
-                </div>
-              </div>
-
               {/* Report Information (Image) */}
               <div className="bg-white border border-white-stroke rounded-2xl overflow-hidden shadow-xs">
                 <div className="flex items-center justify-between px-5 py-4 bg-[#F8F9FA] border-b border-white-stroke">
@@ -342,12 +341,13 @@ export default function AdminReportDetailPage() {
                 </div>
               </div>
 
-            </div>
           </div>
-          
+        </div>
+        
+        <div className="mt-auto -mx-4 sm:-mx-6 lg:-mx-8">
+          <Footer />
         </div>
       </div>
-      <Footer />
     </AdminLayout>
   );
 }
