@@ -107,10 +107,29 @@ export default function HomePage() {
       // Fetch area stats
       try {
         const areaRes = await api.get('/areas/stats');
-        const areaData = areaRes.data?.data || areaRes.data || {};
+        const areaData = areaRes.data?.data || areaRes.data || [];
+        
+        let topArea = 'N/A';
+        let avgResolutionRate = 0;
+        
+        if (Array.isArray(areaData) && areaData.length > 0) {
+          topArea = areaData[0].areaName || 'N/A';
+          
+          let totalRes = 0;
+          let totalRep = 0;
+          areaData.forEach(area => {
+            totalRes += (area.resolvedReports || 0);
+            totalRep += (area.totalReports || 0);
+          });
+          
+          if (totalRep > 0) {
+            avgResolutionRate = Math.round((totalRes / totalRep) * 100);
+          }
+        }
+
         setAreaStats({
-          topActiveArea: areaData.topActiveArea || areaData.mostActiveArea || 'N/A',
-          resolutionRate: areaData.resolutionRate || areaData.averageResolutionRate || 0
+          topActiveArea: topArea,
+          resolutionRate: avgResolutionRate
         });
       } catch (err) {
         console.error('Failed to fetch area stats:', err);
