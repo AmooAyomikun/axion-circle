@@ -94,66 +94,67 @@ export default function AdminReportsTable({ reports, pageData, filters, onFilter
 
   return (
     <div className="flex flex-col gap-6 w-full">
-      {/* Filters (Outside the table card) */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <span className="text-sm font-semibold text-black">Status</span>
-            <div className="relative">
-              <select 
-                value={filters?.status || ''}
-                onChange={(e) => onFilterChange(prev => ({ ...prev, status: e.target.value, page: 0 }))}
-                className="appearance-none pl-4 pr-10 py-2.5 bg-white border border-white-stroke rounded-xl text-sm font-medium text-black outline-none focus:border-primary shadow-sm"
-                style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.75rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em 1.2em' }}
-                aria-label="Filter by status"
-              >
-                <option value="">All Status</option>
-                <option value="REPORTED">Reported</option>
-                <option value="ACKNOWLEDGED">Acknowledged</option>
-                <option value="IN_PROGRESS">In Progress</option>
-                <option value="RESOLVED">Resolved</option>
-              </select>
-            </div>
+      {/* Filter Bar — Styled like main app */}
+      <div className="flex flex-wrap items-center justify-between gap-4 p-2.5 bg-white border border-white-stroke rounded-2xl shadow-xs mb-6 w-full">
+        {/* Left Side: Native Selects Styled as Buttons */}
+        <div className="flex items-center gap-3 overflow-x-auto pb-1 sm:pb-0 hide-scrollbar flex-1">
+          {/* Status Dropdown */}
+          <div className="relative shrink-0">
+            <select 
+              value={filters?.status || ''}
+              onChange={(e) => onFilterChange(prev => ({ ...prev, status: e.target.value, page: 0 }))}
+              className="appearance-none pl-3.5 pr-8 py-2 border border-white-stroke rounded-xl text-xs sm:text-sm bg-white font-medium text-paragraph hover:bg-white-bg transition-colors shadow-2xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+              style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em 1.2em' }}
+              aria-label="Filter by status"
+            >
+              <option value="">Status: All Status</option>
+              <option value="REPORTED">Status: Reported</option>
+              <option value="ACKNOWLEDGED">Status: Acknowledged</option>
+              <option value="IN_PROGRESS">Status: In Progress</option>
+              <option value="RESOLVED">Status: Resolved</option>
+            </select>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <span className="text-sm font-semibold text-black">Category</span>
-            <div className="relative">
-              <select 
-                value={filters?.category || ''}
-                onChange={(e) => onFilterChange(prev => ({ ...prev, category: e.target.value, page: 0 }))}
-                className="appearance-none pl-4 pr-10 py-2.5 bg-white border border-white-stroke rounded-xl text-sm font-medium text-black outline-none focus:border-primary shadow-sm"
-                style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.75rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em 1.2em' }}
-                aria-label="Filter by category"
-              >
-                <option value="">All Categories</option>
-                <option value="OVERFLOW">Overflow</option>
-                <option value="ILLEGAL_DUMPING">Illegal Dumping</option>
-                <option value="BLOCKED_DRAIN">Blocked Drain</option>
-                <option value="STREET_LITTER">Street Litter</option>
-                <option value="RESIDENTIAL_DUMP">Residential Dump</option>
-                <option value="COMMERCIAL_DUMP">Commercial Dump</option>
-              </select>
-            </div>
+
+          {/* Category Dropdown */}
+          <div className="relative shrink-0">
+            <select 
+              value={filters?.category || ''}
+              onChange={(e) => onFilterChange(prev => ({ ...prev, category: e.target.value, page: 0 }))}
+              className="appearance-none pl-3.5 pr-8 py-2 border border-white-stroke rounded-xl text-xs sm:text-sm bg-white font-medium text-paragraph hover:bg-white-bg transition-colors shadow-2xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+              style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em 1.2em' }}
+              aria-label="Filter by category"
+            >
+              <option value="">Category: All Categories</option>
+              <option value="OVERFLOW">Category: Overflow</option>
+              <option value="ILLEGAL_DUMPING">Category: Illegal Dumping</option>
+              <option value="BLOCKED_DRAIN">Category: Blocked Drain</option>
+              <option value="STREET_LITTER">Category: Street Litter</option>
+              <option value="RESIDENTIAL_DUMP">Category: Residential Dump</option>
+              <option value="COMMERCIAL_DUMP">Category: Commercial Dump</option>
+            </select>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <span className="text-sm font-semibold text-black">Sort</span>
-            <div className="relative">
-              <select 
-                value={filters?.direction || 'desc'}
-                onChange={(e) => onFilterChange(prev => ({ ...prev, sortBy: 'createdAt', direction: e.target.value, page: 0 }))}
-                className="appearance-none pl-4 pr-10 py-2.5 bg-white border border-white-stroke rounded-xl text-sm font-medium text-black outline-none focus:border-primary shadow-sm"
-                style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.75rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em 1.2em' }}
-                aria-label="Sort by"
-              >
-                <option value="desc">Newest First</option>
-                <option value="asc">Oldest First</option>
-              </select>
-            </div>
+
+          {/* Sort Dropdown */}
+          <div className="relative shrink-0">
+            <select 
+              value={filters?.direction || 'desc'}
+              onChange={(e) => onFilterChange(prev => ({ ...prev, sortBy: 'createdAt', direction: e.target.value, page: 0 }))}
+              className="appearance-none pl-3.5 pr-8 py-2 border border-white-stroke rounded-xl text-xs sm:text-sm bg-white font-medium text-paragraph hover:bg-white-bg transition-colors shadow-2xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+              style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em 1.2em' }}
+              aria-label="Sort by"
+            >
+              <option value="desc">Sort: Newest First</option>
+              <option value="asc">Sort: Oldest First</option>
+            </select>
           </div>
         </div>
-        <button className="px-4 py-2.5 bg-white border border-white-stroke rounded-xl text-sm font-medium text-black flex items-center gap-2 hover:bg-white-bg shadow-sm shrink-0">
-          <Filter className="w-4 h-4 text-black-icon" /> Advanced Filter
-        </button>
+
+        {/* Right Side: Advanced Filter */}
+        <div className="shrink-0 flex items-center">
+          <button className="px-3.5 py-2 border border-white-stroke rounded-xl text-xs sm:text-sm bg-white font-medium text-paragraph flex items-center gap-2 hover:bg-white-bg transition-colors shadow-2xs">
+            <Filter className="w-3.5 h-3.5 text-black-icon" /> Advanced Filter
+          </button>
+        </div>
       </div>
 
       {/* Table Card */}
@@ -216,7 +217,7 @@ export default function AdminReportsTable({ reports, pageData, filters, onFilter
                       <div className="flex items-center gap-3">
                         <input type="checkbox" aria-label={`Select report ${report.id}`} className="w-4 h-4 rounded border-white-stroke text-primary focus:ring-primary" />
                         <img 
-                          src={(report.images && report.images.length > 0) ? report.images[0] : 'https://placehold.co/100x100/F3F4F6/9CA3AF?text=Report'} 
+                          src={(report.photoUrl || report.imageUrl || (report.images && report.images[0])) ? (report.photoUrl || report.imageUrl || report.images[0]) : fallbackImage} 
                           alt={catName}
                           className="w-10 h-10 rounded-lg object-cover bg-white-bg2 shrink-0 border border-white-stroke"
                         />

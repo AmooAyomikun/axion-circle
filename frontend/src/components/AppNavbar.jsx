@@ -191,7 +191,7 @@ export default function AppNavbar({ activeTab = '' }) {
               )}
               <button
                 type="button"
-                onClick={() => navigate('/profile')}
+                onClick={() => navigate('/settings/password')}
                 className="text-black-icon hover:text-black p-1.5 rounded-lg hover:bg-white-bg transition-colors"
                 aria-label="Settings"
               >
@@ -250,7 +250,7 @@ export default function AppNavbar({ activeTab = '' }) {
                     </button>
                     <button
                       type="button"
-                      onClick={() => { setIsMenuOpen(false); navigate('/profile'); }}
+                      onClick={() => { setIsMenuOpen(false); navigate('/settings/password'); }}
                       className="w-full text-left px-4 py-2 text-xs sm:text-sm text-paragraph hover:bg-white-bg flex items-center gap-2.5 transition-colors"
                     >
                       <Settings className="w-4 h-4 text-black-icon" /> Settings
@@ -422,7 +422,7 @@ export default function AppNavbar({ activeTab = '' }) {
                   onClick={() => {
                     setIsMobileMenuOpen(false);
                     setShowMobileUserMenu(false);
-                    navigate('/profile');
+                    navigate('/settings/password');
                   }}
                   className="w-full flex items-center gap-3.5 font-bold text-sm text-black hover:text-primary transition-colors text-left"
                 >
