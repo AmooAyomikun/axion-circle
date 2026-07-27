@@ -275,15 +275,14 @@ export default function AdminReportsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-8 bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col h-[500px]">
-            <h3 className="text-lg font-bold text-black mb-4">Live Activity Map</h3>
-            <Suspense fallback={<div className="flex-1 flex items-center justify-center bg-gray-50 rounded-xl">Loading map...</div>}>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
+          <div className="lg:col-span-7 flex flex-col">
+            <Suspense fallback={<div className="bg-white border border-white-stroke rounded-2xl shadow-sm flex flex-col overflow-hidden h-[450px] items-center justify-center">Loading map...</div>}>
               <RegionalActivityMap reports={mapReports} mapStatus={status} onRetry={fetchAdminReports} />
             </Suspense>
           </div>
-          <div className="lg:col-span-4 flex flex-col">
-            <div className="bg-white border border-white-stroke rounded-xl p-4 sm:p-5 shadow-sm flex flex-col justify-between flex-1 h-[500px]">
+          <div className="lg:col-span-5 flex flex-col">
+            <div className="bg-white border border-white-stroke rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col justify-between flex-1 h-full min-h-[500px] lg:min-h-0">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-heading font-bold text-base sm:text-lg text-black">Recent Report</h2>
                 <button className="text-xs sm:text-sm font-semibold text-primary hover:underline">view all</button>
