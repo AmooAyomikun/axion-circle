@@ -19,6 +19,7 @@ import {
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import ReportsFilterModal from './ReportsFilterModal';
+import { Link } from 'react-router-dom';
 
 const CustomFilterSelect = ({ value, onChange, options, ariaLabel }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -307,14 +308,14 @@ export default function AdminReportsTable({ reports, pageData, filters, onFilter
                     </td>
                     <td className="px-5 py-4 text-center">
                       <div className="flex items-center justify-center">
-                        <button 
-                          onClick={() => openStatusModal(report)}
+                        <Link 
+                          to={`/admin/reports/${report.id}`}
                           className="p-1.5 text-black-icon hover:text-primary transition-colors"
                           title="View Details"
-                          aria-label="View or update status"
+                          aria-label="View report details"
                         >
                           <Eye className="w-4 h-4" />
-                        </button>
+                        </Link>
                       </div>
                     </td>
                   </tr>

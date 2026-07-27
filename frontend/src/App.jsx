@@ -17,6 +17,7 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const PasswordPage = lazy(() => import('./pages/PasswordPage'));
 const NotificationsPage = lazy(() => import('./pages/settings/NotificationsPage'));
 const AdminReportsPage = lazy(() => import('./pages/AdminReportsPage'));
+const AdminReportDetailPage = lazy(() => import('./pages/AdminReportDetailPage'));
 const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'));
@@ -126,6 +127,7 @@ function App() {
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminRoute><AdminReportsPage /></AdminRoute>} />
           <Route path="/admin/reports" element={<AdminRoute><AdminReportsPage /></AdminRoute>} />
+          <Route path="/admin/reports/:id" element={<AdminRoute><AdminReportDetailPage /></AdminRoute>} />
 
           {/* 404 */}
           <Route path="*" element={<NotFoundPage />} />
