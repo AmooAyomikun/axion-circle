@@ -92,6 +92,7 @@ export default function HomePage() {
       setMapStatus('loading');
 
       // Fetch stats
+      let globalResolutionRate = 0;
       try {
         const statsRes = await api.get('/reports/stats');
         const statsData = statsRes.data?.data || statsRes.data || {};
@@ -100,43 +101,11 @@ export default function HomePage() {
           resolvedReports: statsData.resolvedReports || 0,
           totalCreditsEarned: statsData.totalCreditsEarned || 0,
         });
+        if (statsData.totalReports > 0) {
+          globalResolutionRate = Math.round(((statsData.resolvedReports || 0) / statsData.totalReports) * 100);
+        }
       } catch (err) {
         console.error('Failed to fetch stats:', err);
-      }
-
-      // Fetch area stats
-      try {
-        const areaRes = await api.get('/areas/stats');
-        const areaData = areaRes.data?.data || areaRes.data || [];
-        
-        let topArea = 'N/A';
-        let avgResolutionRate = 0;
-        
-        if (Array.isArray(areaData) && areaData.length > 0) {
-          topArea = areaData[0].areaName || 'N/A';
-          
-          let totalRes = 0;
-          let totalRep = 0;
-          areaData.forEach(area => {
-            totalRes += (area.resolvedReports || 0);
-            totalRep += (area.totalReports || 0);
-          });
-          
-          if (totalRep > 0) {
-            avgResolutionRate = Math.round((totalRes / totalRep) * 100);
-          }
-        }
-
-        setAreaStats({
-          topActiveArea: topArea,
-          resolutionRate: avgResolutionRate
-        });
-      } catch (err) {
-        console.error('Failed to fetch area stats:', err);
-        setAreaStats({
-          topActiveArea: 'Unavailable',
-          resolutionRate: 0
-        });
       }
 
       let apiReports = [];
@@ -149,6 +118,32 @@ export default function HomePage() {
         setMapStatus('error');
         return;
       }
+      
+      // Calculate Area Stats dynamically as fallback/primary
+      let topArea = 'Unavailable';
+      if (apiReports.length > 0) {
+        const areaCounts = {};
+        apiReports.forEach(r => {
+          const area = r.areaName || r.address || 'Unknown';
+          const cleanArea = area.split(',')[0].trim(); // Get primary area from address
+          areaCounts[cleanArea] = (areaCounts[cleanArea] || 0) + 1;
+        });
+        
+        let maxCount = 0;
+        for (const [area, count] of Object.entries(areaCounts)) {
+          if (count > maxCount && !area.toLowerCase().includes('location') && area !== 'Unknown') {
+            maxCount = count;
+            topArea = area;
+          }
+        }
+      }
+      
+      setAreaStats({
+        topActiveArea: topArea !== 'Unavailable' ? topArea : 'N/A',
+        resolutionRate: globalResolutionRate
+      });
+
+
 
       const lagosLat = 6.5244;
       const lagosLng = 3.3792;
