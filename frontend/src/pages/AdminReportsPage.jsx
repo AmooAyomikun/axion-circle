@@ -281,7 +281,7 @@ export default function AdminReportsPage() {
               <RegionalActivityMap reports={mapReports} mapStatus={status} onRetry={fetchAdminReports} />
             </Suspense>
           </div>
-          <div className="lg:col-span-5 flex flex-col">
+          <div className="lg:col-span-5 flex flex-col lg:h-[530px]">
             <div className="bg-white border border-white-stroke rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col justify-between flex-1 h-full min-h-[500px] lg:min-h-0">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-heading font-bold text-base sm:text-lg text-black">Recent Report</h2>
