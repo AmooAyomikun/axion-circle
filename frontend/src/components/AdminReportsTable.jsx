@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { 
   ChevronDown, 
   ChevronUp,
@@ -13,10 +13,69 @@ import {
   Info,
   FileText,
   ArrowLeft,
-  ArrowRight
+  ArrowRight,
+  Check
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
+import ReportsFilterModal from './ReportsFilterModal';
+
+const CustomFilterSelect = ({ value, onChange, options, ariaLabel }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(opt => opt.value === value) || options[0];
+
+  return (
+    <div className="relative shrink-0" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        aria-label={ariaLabel}
+        className="pl-3.5 pr-8 py-2 border border-white-stroke rounded-xl text-xs sm:text-sm bg-white font-medium text-paragraph hover:bg-white-bg transition-colors shadow-2xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 flex items-center justify-between gap-2"
+        style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em 1.2em' }}
+      >
+        <span>{selectedOption.label}</span>
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-50 w-max min-w-full mt-1.5 bg-white border border-white-stroke rounded-xl shadow-xl py-1.5 max-h-60 overflow-auto animate-in fade-in zoom-in-95 duration-150 left-0">
+          {options.map((option) => {
+            const isSelected = value === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  onChange(option.value);
+                  setIsOpen(false);
+                }}
+                className={`w-full px-3.5 py-2.5 text-sm flex items-center justify-between text-left transition-colors ${
+                  isSelected
+                    ? 'bg-primary/10 text-primary font-semibold'
+                    : 'text-paragraph hover:bg-white-bg hover:text-black'
+                }`}
+              >
+                <span>{option.label}</span>
+                {isSelected && <Check className="w-4 h-4 text-primary shrink-0" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const urgencyConfig = {
   high: { text: 'text-alert-error', label: 'Critical' },
@@ -38,6 +97,7 @@ const statusConfig = {
 
 export default function AdminReportsTable({ reports, pageData, filters, onFilterChange, onRefresh }) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
   const [newStatus, setNewStatus] = useState('');
   const [note, setNote] = useState('');
@@ -96,62 +156,57 @@ export default function AdminReportsTable({ reports, pageData, filters, onFilter
     <div className="flex flex-col gap-6 w-full">
       {/* Filter Bar — Styled like main app */}
       <div className="flex flex-wrap items-center justify-between gap-4 p-2.5 bg-white border border-white-stroke rounded-2xl shadow-xs mb-6 w-full">
-        {/* Left Side: Native Selects Styled as Buttons */}
+        {/* Left Side: Custom Dropdowns */}
         <div className="flex items-center gap-3 overflow-x-auto pb-1 sm:pb-0 hide-scrollbar flex-1">
           {/* Status Dropdown */}
-          <div className="relative shrink-0">
-            <select 
-              value={filters?.status || ''}
-              onChange={(e) => onFilterChange(prev => ({ ...prev, status: e.target.value, page: 0 }))}
-              className="appearance-none pl-3.5 pr-8 py-2 border border-white-stroke rounded-xl text-xs sm:text-sm bg-white font-medium text-paragraph hover:bg-white-bg transition-colors shadow-2xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
-              style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em 1.2em' }}
-              aria-label="Filter by status"
-            >
-              <option value="">Status: All Status</option>
-              <option value="REPORTED">Status: Reported</option>
-              <option value="ACKNOWLEDGED">Status: Acknowledged</option>
-              <option value="IN_PROGRESS">Status: In Progress</option>
-              <option value="RESOLVED">Status: Resolved</option>
-            </select>
-          </div>
+          <CustomFilterSelect
+            value={filters?.status || ''}
+            onChange={(val) => onFilterChange(prev => ({ ...prev, status: val, page: 0 }))}
+            ariaLabel="Filter by status"
+            options={[
+              { value: '', label: 'Status: All Status' },
+              { value: 'REPORTED', label: 'Status: Reported' },
+              { value: 'ACKNOWLEDGED', label: 'Status: Acknowledged' },
+              { value: 'IN_PROGRESS', label: 'Status: In Progress' },
+              { value: 'RESOLVED', label: 'Status: Resolved' },
+            ]}
+          />
 
           {/* Category Dropdown */}
-          <div className="relative shrink-0">
-            <select 
-              value={filters?.category || ''}
-              onChange={(e) => onFilterChange(prev => ({ ...prev, category: e.target.value, page: 0 }))}
-              className="appearance-none pl-3.5 pr-8 py-2 border border-white-stroke rounded-xl text-xs sm:text-sm bg-white font-medium text-paragraph hover:bg-white-bg transition-colors shadow-2xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
-              style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em 1.2em' }}
-              aria-label="Filter by category"
-            >
-              <option value="">Category: All Categories</option>
-              <option value="OVERFLOW">Category: Overflow</option>
-              <option value="ILLEGAL_DUMPING">Category: Illegal Dumping</option>
-              <option value="BLOCKED_DRAIN">Category: Blocked Drain</option>
-              <option value="STREET_LITTER">Category: Street Litter</option>
-              <option value="RESIDENTIAL_DUMP">Category: Residential Dump</option>
-              <option value="COMMERCIAL_DUMP">Category: Commercial Dump</option>
-            </select>
-          </div>
+          <CustomFilterSelect
+            value={filters?.category || ''}
+            onChange={(val) => onFilterChange(prev => ({ ...prev, category: val, page: 0 }))}
+            ariaLabel="Filter by category"
+            options={[
+              { value: '', label: 'Category: All Categories' },
+              { value: 'OVERFLOW', label: 'Category: Overflow' },
+              { value: 'ILLEGAL_DUMPING', label: 'Category: Illegal Dumping' },
+              { value: 'BLOCKED_DRAIN', label: 'Category: Blocked Drain' },
+              { value: 'STREET_LITTER', label: 'Category: Street Litter' },
+              { value: 'RESIDENTIAL_DUMP', label: 'Category: Residential Dump' },
+              { value: 'COMMERCIAL_DUMP', label: 'Category: Commercial Dump' },
+            ]}
+          />
 
           {/* Sort Dropdown */}
-          <div className="relative shrink-0">
-            <select 
-              value={filters?.direction || 'desc'}
-              onChange={(e) => onFilterChange(prev => ({ ...prev, sortBy: 'createdAt', direction: e.target.value, page: 0 }))}
-              className="appearance-none pl-3.5 pr-8 py-2 border border-white-stroke rounded-xl text-xs sm:text-sm bg-white font-medium text-paragraph hover:bg-white-bg transition-colors shadow-2xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
-              style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em 1.2em' }}
-              aria-label="Sort by"
-            >
-              <option value="desc">Sort: Newest First</option>
-              <option value="asc">Sort: Oldest First</option>
-            </select>
-          </div>
+          <CustomFilterSelect
+            value={filters?.direction || 'desc'}
+            onChange={(val) => onFilterChange(prev => ({ ...prev, sortBy: 'createdAt', direction: val, page: 0 }))}
+            ariaLabel="Sort by"
+            options={[
+              { value: 'desc', label: 'Sort: Newest First' },
+              { value: 'asc', label: 'Sort: Oldest First' },
+            ]}
+          />
         </div>
 
         {/* Right Side: Advanced Filter */}
         <div className="shrink-0 flex items-center">
-          <button className="px-3.5 py-2 border border-white-stroke rounded-xl text-xs sm:text-sm bg-white font-medium text-paragraph flex items-center gap-2 hover:bg-white-bg transition-colors shadow-2xs">
+          <button 
+            type="button"
+            onClick={() => setIsFilterModalOpen(true)}
+            className="px-3.5 py-2 border border-white-stroke rounded-xl text-xs sm:text-sm bg-white font-medium text-paragraph flex items-center gap-2 hover:bg-white-bg transition-colors shadow-2xs"
+          >
             <Filter className="w-3.5 h-3.5 text-black-icon" /> Advanced Filter
           </button>
         </div>
@@ -467,6 +522,20 @@ export default function AdminReportsTable({ reports, pageData, filters, onFilter
           </div>
         );
       })()}
+
+      {/* Advanced Filter Modal */}
+      <ReportsFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApply={(filterData) => {
+          onFilterChange(prev => ({
+            ...prev,
+            advancedCategoryFilters: filterData.categories || [],
+            advancedUrgencyFilters: filterData.urgencies || [],
+            page: 0
+          }));
+        }}
+      />
     </div>
   );
 }
