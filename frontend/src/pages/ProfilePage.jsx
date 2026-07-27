@@ -114,15 +114,10 @@ export default function ProfilePage() {
       
       setFormData(prev => ({ ...prev, avatarUrl: secureUrl }));
       
-      // Try to immediately sync the new avatarUrl to the backend
-      try {
-        await api.patch('/users/me', {
-          avatarUrl: secureUrl,
-          displayName: user?.displayName || ''
-        });
-      } catch (apiError) {
-        console.log('Backend PATCH /users/me endpoint not yet available, falling back to local storage update.', apiError);
-      }
+      // Sync the new avatarUrl to the backend
+      await api.patch('/users/me', {
+        avatarUrl: secureUrl
+      });
 
       // Update local storage immediately for avatar
       if (user) {
@@ -142,13 +137,24 @@ export default function ProfilePage() {
     }
   };
 
-  const handleImageDelete = () => {
+  const handleImageDelete = async () => {
     if (window.confirm('Are you sure you want to remove your profile photo?')) {
-      setFormData(prev => ({ ...prev, avatarUrl: '' }));
-      if (user) {
-        const updatedUser = { ...user, avatarUrl: '' };
-        setUser(updatedUser);
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+      try {
+        const loadingToast = toast.loading('Removing profile picture...');
+        await api.patch('/users/me', { avatarUrl: '' });
+        
+        setFormData(prev => ({ ...prev, avatarUrl: '' }));
+        if (user) {
+          const updatedUser = { ...user, avatarUrl: '' };
+          setUser(updatedUser);
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
+        toast.dismiss(loadingToast);
+        toast.success('Profile picture removed');
+      } catch (error) {
+        console.error('Avatar delete error:', error);
+        toast.dismiss();
+        toast.error('Failed to remove profile picture. Please try again.');
       }
     }
   };
@@ -162,27 +168,19 @@ export default function ProfilePage() {
     try {
       setIsSaving(true);
       
-      // MOCK API CALL DELAY
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
       const updatedDisplayName = `${formData.firstName} ${formData.lastName}`.trim();
       
-      // Try calling the backend endpoint (will work once the backend dev adds it this week)
-      try {
-        await api.patch('/users/me', {
-          avatarUrl: formData.avatarUrl,
-          displayName: updatedDisplayName
-        });
-      } catch (apiError) {
-        console.log('Backend PATCH /users/me endpoint not yet available, falling back to local storage update.', apiError);
-      }
+      // Call the backend endpoint
+      await api.patch('/users/me', {
+        displayName: updatedDisplayName
+      });
 
-      // Save to local storage to mock persistence (or keep it in sync)
+      // Save to local storage to keep it in sync
       const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
       const updatedUser = {
         ...storedUser,
         ...formData,
-        displayName: `${formData.firstName} ${formData.lastName}`.trim()
+        displayName: updatedDisplayName
       };
       
       localStorage.setItem('user', JSON.stringify(updatedUser));
@@ -192,6 +190,7 @@ export default function ProfilePage() {
       setIsSuccess(true);
       setIsEditing(false);
     } catch (error) {
+      console.error('Profile update error:', error);
       toast.error("Failed to update profile. Please try again.");
     } finally {
       setIsSaving(false);
