@@ -26,7 +26,7 @@ const ReportListView = React.memo(function ReportListView({ reports }) {
   }
 
   return (
-    <div className="w-full h-full bg-[#f0ede5] p-4 sm:p-6 overflow-y-auto space-y-3 z-0">
+    <div className="w-full h-full bg-[#f0ede5] p-2 sm:p-4 overflow-y-auto space-y-3 z-0">
       {reports.map((report) => {
         const status = (report.status || 'reported').toLowerCase().replace(' ', '');
         const isResolved = status === 'resolved';
@@ -39,9 +39,9 @@ const ReportListView = React.memo(function ReportListView({ reports }) {
                             'bg-alert-warningLight text-[#8B4500]';
 
         return (
-          <div key={report.id} className="bg-white rounded-xl p-4 shadow-sm border border-white-stroke flex flex-col sm:flex-row gap-4 relative">
+          <div key={report.id} className="bg-white rounded-xl p-3 shadow-sm border border-white-stroke flex flex-col sm:flex-row gap-3 relative">
             {report.photoUrl && (
-              <div className="w-full sm:w-24 h-32 sm:h-24 rounded-lg overflow-hidden shrink-0">
+              <div className="w-full h-32 sm:w-16 sm:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-lg overflow-hidden shrink-0">
                 <img 
                   src={optimizeCloudinaryUrl(report.photoUrl, 200)} 
                   alt="Thumbnail evidence for report list item" 

@@ -242,7 +242,7 @@ export default function AdminReportsPage() {
             </Suspense>
           </div>
           <div className="lg:col-span-4 flex flex-col">
-            <div className="bg-white border border-white-stroke rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between flex-1 h-[440px]">
+            <div className="bg-white border border-white-stroke rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col justify-between flex-1 h-[440px]">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-heading font-bold text-base sm:text-lg text-black">Recent Report</h2>
                 <button className="text-xs sm:text-sm font-semibold text-primary hover:underline">view all</button>
