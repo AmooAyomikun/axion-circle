@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import AdminRoute from './components/AdminRoute';
 import ConnectionLostModal from './components/ConnectionLostModal';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const ReportPage = lazy(() => import('./pages/ReportPage'));
@@ -99,9 +100,10 @@ function App() {
     <>
       <Toaster position="top-right" />
       <ConnectionLostModal />
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          {/* Public Routes */}
+      <ErrorBoundary>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
           <Route path="/report" element={<ReportPage />} />
           <Route path="/reports" element={<ReportsPage />} />
@@ -129,10 +131,11 @@ function App() {
           <Route path="/admin/reports" element={<AdminRoute><AdminReportsPage /></AdminRoute>} />
           <Route path="/admin/reports/:id" element={<AdminRoute><AdminReportDetailPage /></AdminRoute>} />
 
-          {/* 404 */}
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </Suspense>
+            {/* 404 */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
     </>
   );
 }
