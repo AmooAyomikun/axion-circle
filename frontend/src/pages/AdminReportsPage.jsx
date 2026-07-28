@@ -333,36 +333,34 @@ export default function AdminReportsPage() {
           /* Map and Recent Reports Layout for Dashboard Route */
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
             {/* Left Column: Regional Activity Map */}
-            <div className="lg:col-span-7 flex flex-col gap-6">
-              <div className="bg-white border border-white-stroke rounded-2xl shadow-sm flex flex-col overflow-hidden relative">
-                {reports.length === 0 ? (
-                  <div className="h-[450px] w-full flex flex-col items-center justify-center bg-white z-[300] px-4 text-center">
-                    <div className="w-16 h-16 bg-white border border-white-stroke rounded-2xl flex items-center justify-center mb-6 shadow-sm">
-                      <FileEdit className="w-8 h-8 text-black" />
-                    </div>
-                    <h3 className="font-heading font-bold text-lg sm:text-xl text-black mb-2">No Report on Map</h3>
-                    <p className="text-xs sm:text-sm text-paragraph max-w-sm mb-8 leading-relaxed">
-                      There is no map details showing regional activity reporting
-                    </p>
-                    <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto px-4">
-                      <button 
-                        className="w-full sm:w-auto bg-primary text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-xl shadow-sm hover:bg-primary/90 transition-colors"
-                      >
-                        Manually Create a Report
-                      </button>
-                      <button 
-                        className="w-full sm:w-auto bg-white border border-[#22c55e] text-black font-semibold text-xs sm:text-sm px-6 py-3 rounded-xl hover:bg-white-bg transition-colors"
-                      >
-                        View Documentation
-                      </button>
-                    </div>
+            <div className="lg:col-span-7 flex flex-col h-full">
+              {reports.length === 0 ? (
+                <div className="bg-white border border-white-stroke rounded-2xl shadow-sm h-[450px] w-full flex flex-col items-center justify-center z-[300] px-4 text-center">
+                  <div className="w-16 h-16 bg-white border border-white-stroke rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+                    <FileEdit className="w-8 h-8 text-black" />
                   </div>
-                ) : (
-                  <Suspense fallback={<div className="h-[450px] w-full bg-white-bg animate-pulse"></div>}>
-                    <RegionalActivityMap reports={reports} mapStatus={status} onRetry={fetchAdminReports} />
-                  </Suspense>
-                )}
-              </div>
+                  <h3 className="font-heading font-bold text-lg sm:text-xl text-black mb-2">No Report on Map</h3>
+                  <p className="text-xs sm:text-sm text-paragraph max-w-sm mb-8 leading-relaxed">
+                    There is no map details showing regional activity reporting
+                  </p>
+                  <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto px-4">
+                    <button 
+                      className="w-full sm:w-auto bg-primary text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-xl shadow-sm hover:bg-primary/90 transition-colors"
+                    >
+                      Manually Create a Report
+                    </button>
+                    <button 
+                      className="w-full sm:w-auto bg-white border border-[#22c55e] text-black font-semibold text-xs sm:text-sm px-6 py-3 rounded-xl hover:bg-white-bg transition-colors"
+                    >
+                      View Documentation
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <Suspense fallback={<div className="bg-white border border-white-stroke rounded-2xl shadow-sm h-[450px] w-full bg-white-bg animate-pulse"></div>}>
+                  <RegionalActivityMap reports={reports} mapStatus={status} onRetry={fetchAdminReports} />
+                </Suspense>
+              )}
             </div>
 
             {/* Right Column: Recent Report */}
