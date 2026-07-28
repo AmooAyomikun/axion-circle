@@ -1,19 +1,16 @@
 import { useState, useEffect } from 'react';
 
 export default function useIsPWA() {
-  const [isPWA, setIsPWA] = useState(false);
+  const [isPWA, setIsPWA] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true ||
+      document.referrer.includes('android-app://')
+    );
+  });
 
   useEffect(() => {
-    const checkIsPWA = () => {
-      return (
-        window.matchMedia('(display-mode: standalone)').matches ||
-        window.navigator.standalone === true ||
-        document.referrer.includes('android-app://')
-      );
-    };
-
-    setIsPWA(checkIsPWA());
-
     // Listen for changes in display mode (e.g., if user installs while app is open)
     const mediaQuery = window.matchMedia('(display-mode: standalone)');
     const handleChange = (e) => {
