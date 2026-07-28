@@ -41,6 +41,7 @@ export default function MyReportsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [reports, setReports] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [credits, setCredits] = useState(0);
 
   const mapBackendReportToFrontend = (report) => {
     const formatEnum = (str) => {
@@ -115,7 +116,17 @@ export default function MyReportsPage() {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const response = await api.get(`/reports/my?t=${Date.now()}`);
+        const [response, creditsRes] = await Promise.all([
+          api.get(`/reports/my?t=${Date.now()}`),
+          api.get('/credits/balance').catch(() => ({ data: { data: { creditBalance: 0 } } }))
+        ]);
+        
+        if (creditsRes?.data?.data?.creditBalance !== undefined) {
+          setCredits(creditsRes.data.data.creditBalance);
+        } else if (creditsRes?.data?.creditBalance !== undefined) {
+          setCredits(creditsRes.data.creditBalance);
+        }
+
         const data = response.data?.data;
         let backendReports = Array.isArray(data) ? data : (data?.content || []);
         
@@ -183,7 +194,6 @@ export default function MyReportsPage() {
   }, []);
 
   const handleRetrieveReward = () => {
-    toast.success('You have earned +50 Eco-Points from your reports! Check Rewards.');
     navigate('/rewards');
   };
 
@@ -289,7 +299,7 @@ export default function MyReportsPage() {
                 onClick={handleRetrieveReward}
                 className="px-4 py-2.5 rounded-xl border border-white-stroke bg-white text-black font-semibold text-xs sm:text-sm shadow-2xs hover:bg-white-bg transition-all flex items-center gap-2 active:scale-95 cursor-pointer"
               >
-                <Gift className="w-4 h-4 text-black-icon" /> Retrieve Reward
+                <Gift className="w-4 h-4 text-black-icon" /> {credits > 0 ? `${credits} Eco-Points` : 'Rewards'}
               </button>
               <Link
                 to="/report"

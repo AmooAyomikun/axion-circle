@@ -62,45 +62,62 @@ export default function AdminReportDetailPage() {
   const [newStatus, setNewStatus] = useState('In Progress');
   const [internalNote, setInternalNote] = useState('');
 
-  const handleApproveAction = () => {
-    // Mock approve action
-    setIsApproveSuccessModalOpen(true);
+  const fetchReportData = React.useCallback(async () => {
+    setIsLoading(true);
+    setNotFound(false);
+    try {
+      const [reportRes, statusRes] = await Promise.all([
+        api.get(`/reports/${id}`),
+        api.get(`/reports/${id}/status`).catch(() => ({ data: { data: [] } }))
+      ]);
+
+      setReport(reportRes.data?.data || reportRes.data);
+      setStatusHistory(statusRes.data?.data || statusRes.data || []);
+    } catch (error) {
+      if (error.response?.status === 404) {
+        setNotFound(true);
+      } else {
+        toast.error('Failed to load report details.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [id]);
+
+  const handleApproveAction = async () => {
+    try {
+      await api.put(`/reports/${id}/status`, {
+        status: 'RESOLVED',
+        note: 'Approved by admin'
+      });
+      setIsApproveSuccessModalOpen(true);
+      fetchReportData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to approve report.');
+    }
   };
 
-  const handleSubmitUpdate = (e) => {
+  const handleSubmitUpdate = async (e) => {
     e.preventDefault();
-    // Mock update status action
-    setIsChangeStatusModalOpen(false);
-    setIsUpdateSuccessModalOpen(true);
+    try {
+      const formattedStatus = newStatus.toUpperCase().replace(' ', '_');
+      await api.put(`/reports/${id}/status`, {
+        status: formattedStatus,
+        note: internalNote
+      });
+      setIsChangeStatusModalOpen(false);
+      setIsUpdateSuccessModalOpen(true);
+      fetchReportData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update status.');
+    }
   };
 
   useEffect(() => {
-    const fetchReportData = async () => {
-      setIsLoading(true);
-      setNotFound(false);
-      try {
-        const [reportRes, statusRes] = await Promise.all([
-          api.get(`/reports/${id}`),
-          api.get(`/reports/${id}/status`).catch(() => ({ data: { data: [] } }))
-        ]);
-
-        setReport(reportRes.data?.data || reportRes.data);
-        setStatusHistory(statusRes.data?.data || statusRes.data || []);
-      } catch (error) {
-        if (error.response?.status === 404) {
-          setNotFound(true);
-        } else {
-          toast.error('Failed to load report details.');
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     if (id) {
       fetchReportData();
     }
-  }, [id]);
+  }, [id, fetchReportData]);
 
   useEffect(() => {
     if (report && report.latitude && report.longitude && !geoAddress) {
