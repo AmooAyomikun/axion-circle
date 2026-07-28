@@ -20,6 +20,7 @@ import { uploadToCloudinary } from '../services/cloudinary';
 import AppNavbar from '../components/AppNavbar';
 import ReactGA from 'react-ga4';
 import Footer from '../components/Footer';
+import SEO from '../components/SEO';
 
 const ReportFormMap = React.lazy(() => import('../components/ReportFormMap'));
 
@@ -393,6 +394,7 @@ export default function ReportPage() {
 
   return (
     <div className="min-h-screen bg-white font-body flex flex-col justify-between relative">
+      <SEO title="Place a Request" description="Place a new clean request on CleanReport." />
       <div>
         <AppNavbar activeTab="reports" />
 

@@ -126,7 +126,7 @@ export default function AdminLayout({ children }) {
         <div className="p-4 mt-auto border-t border-white-stroke">
           <div className="flex items-center justify-between mb-2 cursor-pointer p-2 rounded-xl hover:bg-white-bg transition-colors" onClick={() => navigate('/profile')}>
             <div className="flex items-center gap-3 overflow-hidden">
-              <img 
+              <img loading="lazy" 
                 src={avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=random`} 
                 alt="Admin profile avatar in sidebar" 
                 width="40"
@@ -250,7 +250,7 @@ export default function AdminLayout({ children }) {
             <div className="bg-white rounded-xl border border-white-stroke shadow-sm flex items-center justify-center">
               <NotificationBell />
             </div>
-            <img 
+            <img loading="lazy" 
               src={avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=random`} 
               alt="Admin profile avatar in top navbar" 
               width="40"

@@ -13,6 +13,7 @@ import api from '../services/api';
 import AppNavbar from '../components/AppNavbar';
 import Footer from '../components/Footer';
 import fallbackImage from '../assets/fallback-image.svg';
+import SEO from '../components/SEO';
 
 const getMarkerIcon = (status) => {
   let color = '#006FED'; // default blue
@@ -321,6 +322,7 @@ export default function ReportDetailPage() {
 
   return (
     <div className="min-h-screen bg-white-bg font-body flex flex-col">
+      <SEO title={report.title ? report.title : "Report Details"} description={report.description ? report.description.substring(0, 150) : "View sanitation report details."} />
       <AppNavbar />
 
       <main className="flex-1 w-full pb-8">
@@ -363,7 +365,7 @@ export default function ReportDetailPage() {
               {/* Overlapping Reporter Avatar */}
               <div className="absolute -bottom-5 left-3">
                 <div className="w-14 h-14 rounded-full bg-white p-1 shadow-sm">
-                  <img 
+                  <img loading="lazy" 
                     src={(isAuthor && loggedInUserAvatar) ? loggedInUserAvatar : (report.reporterAvatarUrl || report.reporterAvatar || report.reporter?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(report.reporterName || report.reporter?.displayName || report.reporter?.name || report.reporter?.fullName || report.reporter?.firstName || 'U')}&background=random`)} 
                     alt="Reporter" 
                     width="56"
@@ -443,7 +445,7 @@ export default function ReportDetailPage() {
                     <div key={comment.id} className="flex gap-3">
                       <div className={`w-9 h-9 rounded-full border border-white-stroke flex items-center justify-center shrink-0 overflow-hidden ${comment.isModerator ? 'bg-[#C2F5CB]' : 'bg-white-bg2'}`}>
                         {comment.isModerator ? (
-                           <img src="/logo.svg" alt="Mod" width="20" height="20" className="w-5 h-5 object-contain" />
+                           <img loading="lazy" src="/logo.svg" alt="Mod" width="20" height="20" className="w-5 h-5 object-contain" />
                         ) : (
                            <img 
                              src={(comment.authorId === loggedInUserId && loggedInUserAvatar) ? loggedInUserAvatar : (comment.authorAvatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.authorName || 'U')}&background=random`)} 
@@ -568,7 +570,7 @@ export default function ReportDetailPage() {
               <p className="text-[12px] text-paragraph leading-relaxed mb-5 max-w-[240px]">
                 When you send a report, your reward appears here after the report have been resolved.
               </p>
-              <button className="bg-[#118B33] text-white text-[12px] font-bold px-6 py-3 rounded-xl shadow-sm hover:bg-[#0e742a] transition-colors w-[200px]">
+              <button className="bg-[#118B33] text-white text-[12px] font-bold px-6 py-3 rounded-xl shadow-sm hover:bg-[#0e742a] transition-colors w-full max-w-[200px]">
                 See Your Rewards
               </button>
             </div>

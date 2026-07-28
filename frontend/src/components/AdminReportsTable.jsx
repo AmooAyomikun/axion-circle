@@ -292,7 +292,7 @@ export default function AdminReportsTable({ reports, pageData, filters, onFilter
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <input type="checkbox" aria-label={`Select report ${report.id}`} className="w-4 h-4 rounded border-white-stroke text-primary focus:ring-primary" />
-                        <img 
+                        <img loading="lazy" 
                           src={(report.photoUrl || report.imageUrl || (report.images && report.images[0])) ? (report.photoUrl || report.imageUrl || report.images[0]) : fallbackImage} 
                           alt={catName}
                           className="w-10 h-10 rounded-lg object-cover bg-white-bg2 shrink-0 border border-white-stroke"
