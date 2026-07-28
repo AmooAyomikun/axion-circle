@@ -29,9 +29,9 @@ export default function SplashScreen({ onComplete }) {
         isFadingOut ? 'opacity-0' : 'opacity-100'
       }`}
     >
-      {/* Background Decorative Image (contains logo) */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <img src={splashBg} alt="" className="w-full h-full object-cover" />
+      {/* Background Image (contains logo) */}
+      <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center">
+        <img src={splashBg} alt="" className="w-full h-full object-cover md:object-contain md:max-w-md mx-auto" />
       </div>
     </div>
   );
