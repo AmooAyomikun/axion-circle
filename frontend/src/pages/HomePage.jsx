@@ -88,6 +88,7 @@ export default function HomePage() {
     resolvedReports: 0,
     totalCreditsEarned: 0
   });
+  const [credits, setCredits] = useState(0);
   const [areaStats, setAreaStats] = useState({
     topActiveArea: 'Loading...',
     resolutionRate: 0
@@ -112,6 +113,17 @@ export default function HomePage() {
         }
       } catch (err) {
         console.error('Failed to fetch stats:', err);
+      }
+
+      try {
+        const creditsRes = await api.get('/credits/balance');
+        if (creditsRes?.data?.data?.creditBalance !== undefined) {
+          setCredits(creditsRes.data.data.creditBalance);
+        } else if (creditsRes?.data?.creditBalance !== undefined) {
+          setCredits(creditsRes.data.creditBalance);
+        }
+      } catch (err) {
+        // user not logged in or endpoint failed
       }
 
       let apiReports = [];
@@ -297,10 +309,10 @@ export default function HomePage() {
               <div className="flex items-center gap-3 shrink-0">
                 <button
                   type="button"
-                  onClick={() => toast.success('Reward balance check coming soon!')}
+                  onClick={() => navigate('/rewards')}
                   className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-white-stroke bg-white text-black font-semibold text-xs sm:text-sm shadow-xs hover:bg-white-bg transition-colors"
                 >
-                  <Gift className="w-4 h-4 text-primary" /> Retrieve Reward
+                  <Gift className="w-4 h-4 text-primary" /> {credits > 0 ? `${credits} Eco-Points` : 'Retrieve Reward'}
                 </button>
                 <Link
                   to="/report"
