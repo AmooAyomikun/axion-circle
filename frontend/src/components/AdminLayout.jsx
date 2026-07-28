@@ -12,7 +12,8 @@ import {
   LogOut,
   Menu,
   X,
-  Calendar
+  Calendar,
+  BarChart2
 } from 'lucide-react';
 import NavbarLogo from './NavbarLogo';
 import NotificationBell from './NotificationBell';
@@ -80,6 +81,7 @@ export default function AdminLayout({ children }) {
     { name: 'Dashboard', icon: LayoutGrid, path: '/admin' },
     { name: 'Report', icon: FileText, path: '/admin/reports' },
     { name: 'Reward Management', icon: Gift, path: '/rewards' },
+    { name: 'Analytics', icon: BarChart2, path: '/admin/analytics' },
     { name: 'Profile', icon: User, path: '/profile' }
   ];
 
