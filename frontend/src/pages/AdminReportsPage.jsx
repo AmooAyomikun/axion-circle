@@ -25,7 +25,7 @@ export default function AdminReportsPage() {
 
   const [reports, setReports] = useState([]);
   const [status, setStatus] = useState('loading');
-  const [stats, setStats] = useState({ total: 0, resolved: 0, pending: 0 });
+  const [stats, setStats] = useState({ total: 0, resolved: 0, acknowledged: 0 });
   const [pageData, setPageData] = useState({ totalElements: 0, totalPages: 1 });
   
   const [filters, setFilters] = useState({
@@ -47,7 +47,7 @@ export default function AdminReportsPage() {
         setStats({
           total: statsRes.data.data.totalReports || 0,
           resolved: statsRes.data.data.resolvedReports || 0,
-          pending: statsRes.data.data.pendingReports || 0
+          acknowledged: statsRes.data.data.acknowledgedReports || 0
         });
       }
 
@@ -116,7 +116,7 @@ export default function AdminReportsPage() {
 
   const totalReports = stats.total;
   const resolvedReports = stats.resolved;
-  const pendingReports = stats.pending;
+  const acknowledgedReports = stats.acknowledged;
 
   return (
     <AdminLayout>
@@ -221,7 +221,7 @@ export default function AdminReportsPage() {
             )}
           </div>
 
-          {/* 3. Pending Reports */}
+          {/* 3. Acknowledged Reports */}
           <div className="bg-white border border-white-stroke rounded-2xl p-5 shadow-sm relative overflow-hidden flex flex-col min-h-[140px] w-[85vw] sm:w-[240px] md:w-auto shrink-0 snap-center">
             {status === 'error' && !isDashboard ? (
               <div className="w-full h-full flex flex-col justify-between animate-pulse">
@@ -245,14 +245,14 @@ export default function AdminReportsPage() {
                     <div className="w-10 h-10 rounded-xl bg-[#F59E0B] flex items-center justify-center text-white shadow-sm shrink-0">
                       <Clock className="w-5 h-5" />
                     </div>
-                    <span className="text-sm font-semibold text-black">Pending Reports</span>
+                    <span className="text-sm font-semibold text-black">Acknowledged Reports</span>
                   </div>
                   <button className="text-black-icon hover:text-black shrink-0" aria-label="More options">
                     <MoreVertical className="w-4 h-4" />
                   </button>
                 </div>
                 <div className="flex items-baseline gap-3 mt-auto relative z-10">
-                  <span className="text-[28px] font-bold text-black tracking-tight leading-none">{status === 'loading' ? '...' : pendingReports}</span>
+                  <span className="text-[28px] font-bold text-black tracking-tight leading-none">{status === 'loading' ? '...' : acknowledgedReports}</span>
                   <span className="inline-flex items-center gap-0.5 text-primary text-xs font-bold">
                     <ArrowUpRight className="w-3.5 h-3.5" /> 5%
                   </span>
