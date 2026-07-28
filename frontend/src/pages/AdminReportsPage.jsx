@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { 
   FileText, 
@@ -386,8 +386,31 @@ export default function AdminReportsPage() {
                     </p>
                   </div>
                 ) : (
-                  <div className="flex-1 overflow-auto">
-                    {/* Render recent reports list here if reports exist */}
+                  <div className="flex-1 overflow-auto pr-2 custom-scrollbar">
+                    <div className="space-y-4">
+                      {reports.slice(0, 5).map((report) => (
+                        <Link 
+                          key={report.id || report._id} 
+                          to={`/admin/reports/${report.id || report._id}`}
+                          className="flex items-center justify-between p-3 rounded-xl border border-white-stroke hover:border-primary/30 hover:bg-white-bg transition-colors group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-2 h-2 rounded-full shrink-0 ${(report.status || '').toLowerCase() === 'resolved' ? 'bg-[#127C2F]' : (report.status || '').toLowerCase() === 'inprogress' ? 'bg-[#9333EA]' : 'bg-[#F59E0B]'}`}></div>
+                            <div className="flex flex-col">
+                              <span className="font-bold text-black text-sm capitalize group-hover:text-primary transition-colors">
+                                {report.category ? report.category.replace(/_/g, ' ').toLowerCase() : (report.title || 'Sanitation Issue')}
+                              </span>
+                              <span className="text-xs text-paragraph">
+                                {report.id ? `#CR-${report.id.toString().substring(0, 4).toUpperCase()}` : 'N/A'} • {report.createdAt ? new Date(report.createdAt).toLocaleDateString() : 'Recent'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="text-black-icon group-hover:text-primary transition-colors">
+                            <ArrowUpRight className="w-4 h-4" />
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
