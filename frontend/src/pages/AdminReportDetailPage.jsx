@@ -12,7 +12,14 @@ import fallbackImage from '../assets/fallback-image.svg';
 
 const ReportDetailMap = lazy(() => import('../components/ReportDetailMap'));
 
-// Use a simplified generic timeline icon based on status
+const statusConfig = {
+  reported: { bg: 'bg-[#FFF4E5]', text: 'text-[#F59E0B]', border: 'border-[#F59E0B]/20', dot: 'bg-[#F59E0B]', label: 'Reported' },
+  resolved: { bg: 'bg-[#ECFDF3]', text: 'text-[#10B981]', border: 'border-[#10B981]/20', dot: 'bg-[#10B981]', label: 'Resolved' },
+  'in progress': { bg: 'bg-[#F3E8FF]', text: 'text-[#9333EA]', border: 'border-[#9333EA]/20', dot: 'bg-[#9333EA]', label: 'In Progress' },
+  inprogress: { bg: 'bg-[#F3E8FF]', text: 'text-[#9333EA]', border: 'border-[#9333EA]/20', dot: 'bg-[#9333EA]', label: 'In Progress' },
+  acknowledged: { bg: 'bg-[#EFF6FF]', text: 'text-[#3B82F6]', border: 'border-[#3B82F6]/20', dot: 'bg-[#3B82F6]', label: 'Acknowledged' }
+};
+
 const getTimelineIcon = (status, isPast) => {
   const s = (status || '').toLowerCase();
   if (s === 'reported' && isPast) {
@@ -143,6 +150,9 @@ export default function AdminReportDetailPage() {
   const categoryName = report.category ? report.category.replace(/_/g, ' ') : (report.title || 'Sanitation Issue');
   const imageUrl = report.photoUrl || report.imageUrl || (report.images && report.images[0]) || fallbackImage;
 
+  const currentStatusStr = (report?.status || 'REPORTED').toLowerCase();
+  const currentStatusConfig = statusConfig[currentStatusStr] || statusConfig['reported'];
+
   // Build the timeline. We'll ensure there are 4 steps as in the design to match it exactly, or map actual history.
   // The design showed: Reported, Acknowledged, Resolved, Resolved. 
   // Let's create a dynamic list based on history, and pad it to match the general feel.
@@ -223,9 +233,9 @@ export default function AdminReportDetailPage() {
           {/* Pills Row */}
           <div className="flex items-center justify-center lg:justify-start gap-4 lg:gap-6 w-full lg:w-auto">
             {/* Status Pill */}
-            <div className="flex items-center gap-2 px-4 py-1.5 bg-[#FFF9E6] border border-[#FFD970] rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]"></span>
-              <span className="text-[#F59E0B] font-bold text-xs">Pending Review</span>
+            <div className={`flex items-center gap-2 px-4 py-1.5 ${currentStatusConfig.bg} ${currentStatusConfig.border} border rounded-full`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${currentStatusConfig.dot}`}></span>
+              <span className={`${currentStatusConfig.text} font-bold text-xs`}>{currentStatusConfig.label}</span>
             </div>
             {/* Divider */}
             <div className="w-[1px] h-8 bg-[#E5E7EB]"></div>
@@ -391,8 +401,8 @@ export default function AdminReportDetailPage() {
             <form onSubmit={handleSubmitUpdate} className="flex flex-col gap-4">
               <div>
                 <label className="block text-xs font-semibold text-black mb-1.5">Current Status</label>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-alert-infoLight border border-alert-infoStroke rounded-full">
-                  <span className="text-alert-info font-bold text-[10px]">Acknowledged</span>
+                <div className={`inline-flex items-center gap-1.5 px-3 py-1 ${currentStatusConfig.bg} border ${currentStatusConfig.border} rounded-full`}>
+                  <span className={`${currentStatusConfig.text} font-bold text-[10px]`}>{currentStatusConfig.label}</span>
                 </div>
               </div>
 

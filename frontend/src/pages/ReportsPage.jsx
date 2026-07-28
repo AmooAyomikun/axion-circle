@@ -132,7 +132,7 @@ export default function ReportsPage() {
     fetchReports();
   }, []);
 
-  const statusTabs = ['All', 'Reported', 'Resolved', 'In Progress', 'Pending'];
+  const statusTabs = ['All', 'Reported', 'Acknowledged', 'In Progress', 'Resolved'];
 
   const handleRetrieveReward = () => {
     toast.success('Rewards system check: Please check your active points balance in Rewards!');

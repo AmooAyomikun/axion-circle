@@ -31,7 +31,7 @@ const getCardPhotoUrl = (report) => {
   return 'https://placehold.co/600x400/eeeeee/999999?text=No+Image';
 };
 
-const statusTabs = ['All', 'Reported', 'In Progress', 'Resolved', 'Acknowledged'];
+const statusTabs = ['All', 'Reported', 'Acknowledged', 'In Progress', 'Resolved'];
 
 import api from '../services/api';
 
