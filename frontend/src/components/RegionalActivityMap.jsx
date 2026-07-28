@@ -194,7 +194,7 @@ export default function RegionalActivityMap({ reports, mapStatus, onRetry }) {
       </div>
 
       {/* Map Area (Edge to Edge) */}
-      <div className="w-full flex-1 min-h-[350px] bg-[#f0ede5] relative overflow-hidden flex items-center justify-center bg-cover bg-center z-0">
+      <div className="w-full flex-1 min-h-[350px] bg-[#f0ede5] relative overflow-hidden bg-cover bg-center z-0 block">
         {mapStatus === 'loading' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm z-20">
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-2"></div>
@@ -221,7 +221,7 @@ export default function RegionalActivityMap({ reports, mapStatus, onRetry }) {
               center={[6.5244, 3.3792]} // Lagos
               zoom={12}
               scrollWheelZoom={false}
-              className="w-full h-full z-0"
+              className="absolute inset-0 z-0"
               style={{ height: '100%', width: '100%' }}
               maxZoom={17}
             >
