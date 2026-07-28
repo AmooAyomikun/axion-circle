@@ -2,17 +2,10 @@ import { useEffect, useState } from 'react';
 import NavbarLogo from './NavbarLogo';
 
 export default function SplashScreen({ onComplete }) {
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
   const [isVisible, setIsVisible] = useState(true);
   const [isFadingOut, setIsFadingOut] = useState(false);
 
   useEffect(() => {
-    // Only show the custom splash screen on mobile devices
-    if (!isMobile) {
-      onComplete();
-      return;
-    }
-
     const timer1 = setTimeout(() => {
       setIsFadingOut(true);
     }, 2500); // Wait 2.5 seconds before fading out
@@ -26,9 +19,9 @@ export default function SplashScreen({ onComplete }) {
       clearTimeout(timer1);
       clearTimeout(timer2);
     };
-  }, [isMobile, onComplete]);
+  }, [onComplete]);
 
-  if (!isMobile || !isVisible) return null;
+  if (!isVisible) return null;
 
   return (
     <div 
