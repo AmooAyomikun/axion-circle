@@ -57,6 +57,67 @@ export function generateTrendData(metricName, currentTotal, maxPoints = 7) {
   };
 }
 
+export function calculateTrendFromReports(reports, metricName, currentTotal, maxPoints = 7) {
+  if (!reports || reports.length === 0) {
+    return generateTrendData(metricName, currentTotal, maxPoints);
+  }
+
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+  
+  const dailyCounts = new Array(maxPoints).fill(0);
+  
+  reports.forEach(report => {
+    const reportDate = report.createdAt ? new Date(report.createdAt) : new Date(report.date || Date.now());
+    const diffTime = today - reportDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays >= 0 && diffDays < maxPoints) {
+      const idx = maxPoints - 1 - diffDays;
+      if (metricName === 'total' || metricName === 'homeTotal') {
+        dailyCounts[idx]++;
+      } else if (metricName === 'resolved' || metricName === 'homeResolved') {
+        if (report.status === 'RESOLVED' || report.status === 'Resolved') {
+          dailyCounts[idx]++;
+        }
+      } else if (metricName === 'acknowledged') {
+        if (report.status === 'ACKNOWLEDGED' || report.status === 'Acknowledged') {
+          dailyCounts[idx]++;
+        }
+      } else if (metricName === 'homeCredits' || metricName === 'credits') {
+        if (report.status === 'RESOLVED' || report.status === 'Resolved') {
+          dailyCounts[idx] += 10;
+        }
+      }
+    }
+  });
+
+  const growthInPeriod = dailyCounts.reduce((a, b) => a + b, 0);
+  let runningTotal = Math.max(0, currentTotal - growthInPeriod);
+  
+  const dataPoints = [];
+  for (let i = 0; i < maxPoints; i++) {
+    runningTotal += dailyCounts[i];
+    dataPoints.push(runningTotal);
+  }
+  
+  const first = dataPoints[0];
+  const last = dataPoints[dataPoints.length - 1];
+  
+  let percentage = 0;
+  if (first > 0) {
+    percentage = Math.round(((last - first) / first) * 100);
+  } else if (last > 0) {
+    percentage = 100;
+  }
+  
+  return {
+    percentage: Math.abs(percentage),
+    isPositive: percentage >= 0,
+    dataPoints
+  };
+}
+
 export function generateSparklinePath(dataPoints, width = 120, height = 48) {
   if (!dataPoints || dataPoints.length === 0) return { path: '', fillPath: '' };
   
