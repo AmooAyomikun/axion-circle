@@ -194,7 +194,7 @@ export default function RegionalActivityMap({ reports, mapStatus, onRetry }) {
       </div>
 
       {/* Map Area (Edge to Edge) */}
-      <div className="w-full h-80 sm:h-[380px] bg-[#f0ede5] relative overflow-hidden flex items-center justify-center bg-cover bg-center z-0">
+      <div className="w-full flex-1 min-h-[350px] bg-[#f0ede5] relative overflow-hidden flex items-center justify-center bg-cover bg-center z-0">
         {mapStatus === 'loading' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm z-20">
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-2"></div>
