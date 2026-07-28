@@ -35,6 +35,7 @@ import ReportListView from '../components/ReportListView';
 const RegionalActivityMap = lazy(() => import('../components/RegionalActivityMap'));
 import fallbackImage from '../assets/fallback-image.svg';
 import { timeAgo } from '../utils/timeAgo';
+import AdminStatCard from '../components/AdminStatCard';
 import useInstallPrompt from '../hooks/useInstallPrompt';
 import useIsPWA from '../hooks/useIsPWA';
 import { generateTrendData, calculateTrendFromReports, generateSparklinePath } from '../utils/trendUtils';
@@ -335,94 +336,37 @@ export default function HomePage() {
           <div className="flex overflow-x-auto snap-x snap-mandatory md:grid md:grid-cols-3 gap-4 mb-8 pb-2 hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
 
             {/* 1. Total Reports */}
-            <div className="bg-white border border-white-stroke rounded-2xl p-5 shadow-sm relative overflow-hidden flex flex-col min-h-[140px] w-[85vw] sm:w-[280px] md:w-auto shrink-0 snap-center">
-              {/* Sparkline — full-width absolute background, bottom half */}
-              <div className="absolute bottom-0 right-0 w-2/3 h-16 pointer-events-none opacity-60">
-                <svg viewBox="0 0 120 48" preserveAspectRatio="none" className="w-full h-full">
-                  <path d={totalReportsPaths.fillPath} fill="#E9FFEA" />
-                  <path d={totalReportsPaths.path} fill="none" stroke="#127C2F" strokeWidth="1.5" strokeOpacity="0.4" />
-                </svg>
-              </div>
-              {/* Header row */}
-              <div className="flex items-center justify-between mb-4 relative z-10">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-xl bg-[#006FED] flex items-center justify-center text-white shadow-sm shrink-0">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <span className="text-sm font-semibold text-black">Total Reports</span>
-                </div>
-                <button className="text-black-icon hover:text-black shrink-0" aria-label="More options for Total Reports">
-                  <MoreVertical className="w-4 h-4" />
-                </button>
-              </div>
-              {/* Number + badge — same row, bottom */}
-              <div className="flex items-baseline gap-3 mt-auto relative z-10">
-                <span className="text-[28px] font-bold text-black tracking-tight leading-none">{stats.totalReports.toLocaleString()}</span>
-                <span className={`inline-flex items-center gap-0.5 text-xs font-bold ${totalReportsTrend.isPositive ? 'text-primary' : 'text-alert-error'}`}>
-                  {totalReportsTrend.isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />} {totalReportsTrend.percentage}%
-                </span>
-              </div>
-            </div>
+            <AdminStatCard 
+               title="Total Reports" 
+               value={stats.totalReports.toLocaleString()} 
+               trend={totalReportsTrend} 
+               paths={totalReportsPaths} 
+               icon={FileText} 
+               iconColorClass="text-[#127C2F]" 
+               iconBgClass="bg-[#006FED] text-white" 
+            />
 
             {/* 2. Resolved Report */}
-            <div className="bg-white border border-white-stroke rounded-2xl p-5 shadow-sm relative overflow-hidden flex flex-col min-h-[140px] w-[85vw] sm:w-[280px] md:w-auto shrink-0 snap-center">
-              {/* Sparkline — full-width absolute background */}
-              <div className="absolute bottom-0 right-0 w-2/3 h-16 pointer-events-none opacity-60">
-                <svg viewBox="0 0 120 48" preserveAspectRatio="none" className="w-full h-full">
-                  <path d={resolvedReportsPaths.fillPath} fill="#FFE8E8" />
-                  <path d={resolvedReportsPaths.path} fill="none" stroke="#DB0404" strokeWidth="1.5" strokeOpacity="0.4" />
-                </svg>
-              </div>
-              {/* Header row */}
-              <div className="flex items-center justify-between mb-4 relative z-10">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-sm shrink-0">
-                    <CheckCircle2 className="w-5 h-5" />
-                  </div>
-                  <span className="text-sm font-semibold text-black">Resolved Reports</span>
-                </div>
-                <button className="text-black-icon hover:text-black shrink-0" aria-label="More options for Resolved Reports">
-                  <MoreVertical className="w-4 h-4" />
-                </button>
-              </div>
-              {/* Number + badge — same row */}
-              <div className="flex items-baseline gap-3 mt-auto relative z-10">
-                <span className="text-[28px] font-bold text-black tracking-tight leading-none">{stats.resolvedReports.toLocaleString()}</span>
-                <span className={`inline-flex items-center gap-0.5 text-xs font-bold ${resolvedReportsTrend.isPositive ? 'text-primary' : 'text-alert-error'}`}>
-                  {resolvedReportsTrend.isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />} {resolvedReportsTrend.percentage}%
-                </span>
-              </div>
-            </div>
+            <AdminStatCard 
+               title="Resolved Reports" 
+               value={stats.resolvedReports.toLocaleString()} 
+               trend={resolvedReportsTrend} 
+               paths={resolvedReportsPaths} 
+               icon={CheckCircle2} 
+               iconColorClass="text-[#DB0404]" 
+               iconBgClass="bg-primary text-white" 
+            />
 
             {/* 3. Community Points */}
-            <div className="bg-white border border-white-stroke rounded-2xl p-5 shadow-sm relative overflow-hidden flex flex-col min-h-[140px] w-[85vw] sm:w-[280px] md:w-auto shrink-0 snap-center">
-              {/* Sparkline — full-width absolute background */}
-              <div className="absolute bottom-0 right-0 w-2/3 h-16 pointer-events-none opacity-60">
-                <svg viewBox="0 0 120 48" preserveAspectRatio="none" className="w-full h-full">
-                  <path d={creditsPaths.fillPath} fill="#E9FFEA" />
-                  <path d={creditsPaths.path} fill="none" stroke="#127C2F" strokeWidth="1.5" strokeOpacity="0.4" />
-                </svg>
-              </div>
-              {/* Header row */}
-              <div className="flex items-center justify-between mb-4 relative z-10">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-black shadow-sm shrink-0">
-                    <Award className="w-5 h-5" />
-                  </div>
-                  <span className="text-sm font-semibold text-black">Community Points</span>
-                </div>
-                <button className="text-black-icon hover:text-black shrink-0" aria-label="More options for Community Points">
-                  <MoreVertical className="w-4 h-4" />
-                </button>
-              </div>
-              {/* Number + badge — same row */}
-              <div className="flex items-baseline gap-3 mt-auto relative z-10">
-                <span className="text-[28px] font-bold text-black tracking-tight leading-none">{stats.totalCreditsEarned.toLocaleString()}</span>
-                <span className={`inline-flex items-center gap-0.5 text-xs font-bold ${creditsTrend.isPositive ? 'text-primary' : 'text-alert-error'}`}>
-                  {creditsTrend.isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />} {creditsTrend.percentage}%
-                </span>
-              </div>
-            </div>
+            <AdminStatCard 
+               title="Community Points" 
+               value={stats.totalCreditsEarned.toLocaleString()} 
+               trend={creditsTrend} 
+               paths={creditsPaths} 
+               icon={Award} 
+               iconColorClass="text-[#127C2F]" 
+               iconBgClass="bg-accent text-black" 
+            />
 
           </div>
 
