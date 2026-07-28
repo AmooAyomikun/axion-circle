@@ -19,6 +19,7 @@ import AdminLayout from '../components/AdminLayout';
 import AdminReportsTable from '../components/AdminReportsTable';
 const RegionalActivityMap = lazy(() => import('../components/RegionalActivityMap'));
 import SEO from '../components/SEO';
+import { generateTrendData, generateSparklinePath } from '../utils/trendUtils';
 
 export default function AdminReportsPage() {
   const location = useLocation();
@@ -120,6 +121,19 @@ export default function AdminReportsPage() {
   const resolvedReports = stats.resolved;
   const acknowledgedReports = stats.acknowledged;
 
+  // Generate dynamic trends based on the current stats
+  const totalTrend = generateTrendData('total', totalReports);
+  const resolvedTrend = generateTrendData('resolved', resolvedReports);
+  const acknowledgedTrend = generateTrendData('acknowledged', acknowledgedReports);
+  
+  // For Avg Response Time, since we don't have real data, base it on 24 (2.4h)
+  const responseTimeTrend = generateTrendData('responseTime', 24); 
+  
+  const totalPaths = generateSparklinePath(totalTrend.dataPoints);
+  const resolvedPaths = generateSparklinePath(resolvedTrend.dataPoints);
+  const acknowledgedPaths = generateSparklinePath(acknowledgedTrend.dataPoints);
+  const responseTimePaths = generateSparklinePath(responseTimeTrend.dataPoints);
+
   return (
     <AdminLayout>
       <SEO title={isDashboard ? "Admin Dashboard" : "Admin Reports"} description="Admin dashboard and reports management for CleanReport." />
@@ -159,8 +173,8 @@ export default function AdminReportsPage() {
               <>
                 <div className="absolute bottom-0 right-0 w-2/3 h-16 pointer-events-none opacity-60">
                   <svg viewBox="0 0 120 48" preserveAspectRatio="none" className="w-full h-full">
-                    <path d="M0,40 Q30,32 50,22 T90,10 T120,4 L120,48 L0,48 Z" fill="#E9FFEA" />
-                    <path d="M0,40 Q30,32 50,22 T90,10 T120,4" fill="none" stroke="#127C2F" strokeWidth="1.5" strokeOpacity="0.4" />
+                    <path d={totalPaths.fillPath} fill="#E9FFEA" />
+                    <path d={totalPaths.path} fill="none" stroke="#127C2F" strokeWidth="1.5" strokeOpacity="0.4" />
                   </svg>
                 </div>
                 <div className="flex items-center justify-between mb-4 relative z-10">
@@ -176,8 +190,8 @@ export default function AdminReportsPage() {
                 </div>
                 <div className="flex items-baseline gap-3 mt-auto relative z-10">
                   <span className="text-[28px] font-bold text-black tracking-tight leading-none">{status === 'loading' ? '...' : totalReports}</span>
-                  <span className="inline-flex items-center gap-0.5 text-primary text-xs font-bold">
-                    <ArrowUpRight className="w-3.5 h-3.5" /> 40%
+                  <span className={`inline-flex items-center gap-0.5 text-xs font-bold ${totalTrend.isPositive ? 'text-primary' : 'text-alert-error'}`}>
+                    {totalTrend.isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />} {totalTrend.percentage}%
                   </span>
                 </div>
               </>
@@ -199,8 +213,8 @@ export default function AdminReportsPage() {
               <>
                 <div className="absolute bottom-0 right-0 w-2/3 h-16 pointer-events-none opacity-60">
                   <svg viewBox="0 0 120 48" preserveAspectRatio="none" className="w-full h-full">
-                    <path d="M0,10 Q30,18 55,28 T90,36 T120,30 L120,48 L0,48 Z" fill="#FFE8E8" />
-                    <path d="M0,10 Q30,18 55,28 T90,36 T120,30" fill="none" stroke="#DB0404" strokeWidth="1.5" strokeOpacity="0.4" />
+                    <path d={resolvedPaths.fillPath} fill="#FFE8E8" />
+                    <path d={resolvedPaths.path} fill="none" stroke="#DB0404" strokeWidth="1.5" strokeOpacity="0.4" />
                   </svg>
                 </div>
                 <div className="flex items-center justify-between mb-4 relative z-10">
@@ -216,8 +230,8 @@ export default function AdminReportsPage() {
                 </div>
                 <div className="flex items-baseline gap-3 mt-auto relative z-10">
                   <span className="text-[28px] font-bold text-black tracking-tight leading-none">{status === 'loading' ? '...' : resolvedReports}</span>
-                  <span className="inline-flex items-center gap-0.5 text-alert-error text-xs font-bold">
-                    <ArrowDownRight className="w-3.5 h-3.5" /> 10%
+                  <span className={`inline-flex items-center gap-0.5 text-xs font-bold ${resolvedTrend.isPositive ? 'text-primary' : 'text-alert-error'}`}>
+                    {resolvedTrend.isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />} {resolvedTrend.percentage}%
                   </span>
                 </div>
               </>
@@ -239,8 +253,8 @@ export default function AdminReportsPage() {
               <>
                 <div className="absolute bottom-0 right-0 w-2/3 h-16 pointer-events-none opacity-60">
                   <svg viewBox="0 0 120 48" preserveAspectRatio="none" className="w-full h-full">
-                    <path d="M0,20 Q30,15 50,30 T90,20 T120,10 L120,48 L0,48 Z" fill="#FFF4E5" />
-                    <path d="M0,20 Q30,15 50,30 T90,20 T120,10" fill="none" stroke="#F59E0B" strokeWidth="1.5" strokeOpacity="0.4" />
+                    <path d={acknowledgedPaths.fillPath} fill="#FFF4E5" />
+                    <path d={acknowledgedPaths.path} fill="none" stroke="#F59E0B" strokeWidth="1.5" strokeOpacity="0.4" />
                   </svg>
                 </div>
                 <div className="flex items-center justify-between mb-4 relative z-10">
@@ -256,8 +270,8 @@ export default function AdminReportsPage() {
                 </div>
                 <div className="flex items-baseline gap-3 mt-auto relative z-10">
                   <span className="text-[28px] font-bold text-black tracking-tight leading-none">{status === 'loading' ? '...' : acknowledgedReports}</span>
-                  <span className="inline-flex items-center gap-0.5 text-primary text-xs font-bold">
-                    <ArrowUpRight className="w-3.5 h-3.5" /> 5%
+                  <span className={`inline-flex items-center gap-0.5 text-xs font-bold ${acknowledgedTrend.isPositive ? 'text-primary' : 'text-alert-error'}`}>
+                    {acknowledgedTrend.isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />} {acknowledgedTrend.percentage}%
                   </span>
                 </div>
               </>
@@ -279,8 +293,8 @@ export default function AdminReportsPage() {
               <>
                 <div className="absolute bottom-0 right-0 w-2/3 h-16 pointer-events-none opacity-60">
                   <svg viewBox="0 0 120 48" preserveAspectRatio="none" className="w-full h-full">
-                    <path d="M0,30 Q30,25 50,35 T90,20 T120,15 L120,48 L0,48 Z" fill="#F3F4F6" />
-                    <path d="M0,30 Q30,25 50,35 T90,20 T120,15" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeOpacity="0.4" />
+                    <path d={responseTimePaths.fillPath} fill="#F3F4F6" />
+                    <path d={responseTimePaths.path} fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeOpacity="0.4" />
                   </svg>
                 </div>
                 <div className="flex items-center justify-between mb-4 relative z-10">
@@ -296,8 +310,8 @@ export default function AdminReportsPage() {
                 </div>
                 <div className="flex items-baseline gap-3 mt-auto relative z-10">
                   <span className="text-[28px] font-bold text-black tracking-tight leading-none">2.4h</span>
-                  <span className="inline-flex items-center gap-0.5 text-primary text-xs font-bold">
-                    <ArrowUpRight className="w-3.5 h-3.5" /> 12%
+                  <span className={`inline-flex items-center gap-0.5 text-xs font-bold ${!responseTimeTrend.isPositive ? 'text-primary' : 'text-alert-error'}`}>
+                    {!responseTimeTrend.isPositive ? <ArrowDownRight className="w-3.5 h-3.5" /> : <ArrowUpRight className="w-3.5 h-3.5" />} {responseTimeTrend.percentage}%
                   </span>
                 </div>
               </>
