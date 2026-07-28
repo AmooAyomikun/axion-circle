@@ -36,7 +36,7 @@ export default function ConnectionLostModal() {
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsDismissed(true)}></div>
-      <div className="bg-white w-full max-w-sm sm:max-w-md rounded-[24px] shadow-2xl relative z-10 flex flex-col items-center animate-in zoom-in-95 duration-200 p-6 sm:p-8 text-center">
+      <div className="bg-white w-full max-w-sm sm:max-w-md rounded-[24px] shadow-2xl relative z-10 flex flex-col items-center animate-in zoom-in-95 duration-200 p-6 sm:p-8 text-center max-h-[90vh] overflow-y-auto">
         <button 
           onClick={() => setIsDismissed(true)} 
           className="absolute top-4 right-4 text-black-icon hover:text-black transition-colors"

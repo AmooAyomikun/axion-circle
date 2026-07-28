@@ -17,6 +17,7 @@ import api from '../services/api';
 import AdminLayout from '../components/AdminLayout';
 import AdminReportsTable from '../components/AdminReportsTable';
 const RegionalActivityMap = lazy(() => import('../components/RegionalActivityMap'));
+import SEO from '../components/SEO';
 
 export default function AdminReportsPage() {
   const location = useLocation();
@@ -120,6 +121,7 @@ export default function AdminReportsPage() {
 
   return (
     <AdminLayout>
+      <SEO title={isDashboard ? "Admin Dashboard" : "Admin Reports"} description="Admin dashboard and reports management for CleanReport." />
       <div className="space-y-6 sm:space-y-8">
         
         {/* Header Section (Different title depending on route) */}

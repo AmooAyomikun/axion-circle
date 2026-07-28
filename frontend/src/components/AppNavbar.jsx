@@ -166,7 +166,7 @@ export default function AppNavbar({ activeTab = '' }) {
           <button
             type="button"
             onClick={handleMobileAppClick}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-alert-successStroke bg-alert-successLight text-primary text-xs font-bold hover:bg-alert-successLight/80 transition-colors shrink-0 shadow-xs"
+            className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-alert-successStroke bg-alert-successLight text-primary text-xs font-bold hover:bg-alert-successLight/80 transition-colors shrink-0 shadow-xs"
           >
             <Smartphone className="w-3.5 h-3.5" /> Use App on Mobile
           </button>
@@ -204,7 +204,7 @@ export default function AppNavbar({ activeTab = '' }) {
                 onClick={() => setIsMenuOpen((prev) => !prev)}
                 className="flex items-center gap-2 cursor-pointer p-1 rounded-xl hover:bg-white-bg transition-colors border border-transparent hover:border-white-stroke"
               >
-                <img 
+                <img loading="lazy" 
                   src={avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName || 'U')}&background=random`} 
                   alt="User profile avatar" 
                   width="36"

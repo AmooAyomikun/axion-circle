@@ -24,6 +24,7 @@ import Footer from '../components/Footer';
 import ReportsFilterModal from '../components/ReportsFilterModal';
 import fallbackImage from '../assets/fallback-image.svg';
 import { optimizeCloudinaryUrl } from '../utils/cloudinary';
+import SEO from '../components/SEO';
 
 export const getCardPhotoUrl = (report) => {
   if (
@@ -229,6 +230,7 @@ export default function ReportsPage() {
 
   return (
     <div className="min-h-screen bg-white-bg sm:bg-white font-body flex flex-col justify-between relative">
+      <SEO title="Community Reports" description="Browse and track community sanitation issues across the city." />
       <div>
         <AppNavbar activeTab="reports" />
 

@@ -9,6 +9,7 @@ import api from '../services/api';
 import AdminLayout from '../components/AdminLayout';
 import Footer from '../components/Footer';
 import fallbackImage from '../assets/fallback-image.svg';
+import SEO from '../components/SEO';
 
 const ReportDetailMap = lazy(() => import('../components/ReportDetailMap'));
 
@@ -213,6 +214,7 @@ export default function AdminReportDetailPage() {
 
   return (
     <AdminLayout>
+      <SEO title={report.title ? `Admin: ${report.title}` : "Admin Report Details"} description="View and manage sanitation report details." />
       <div className="flex flex-col min-h-full w-full max-w-7xl mx-auto">
         
         {/* Header */}
@@ -278,7 +280,7 @@ export default function AdminReportDetailPage() {
                   <button className="text-paragraph hover:text-black text-xs font-semibold">view all</button>
                 </div>
                 <div className="p-4 sm:p-5">
-                  <img 
+                  <img loading="lazy" 
                     src={imageUrl} 
                     alt={categoryName} 
                     className="w-full h-[300px] sm:h-[400px] object-cover rounded-xl"
@@ -340,10 +342,10 @@ export default function AdminReportDetailPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button className="w-8 h-8 rounded-full border border-white-stroke bg-white hover:bg-white-bg flex items-center justify-center text-paragraph transition-colors shadow-2xs">
+                    <button aria-label="Email Inspector" className="w-8 h-8 rounded-full border border-white-stroke bg-white hover:bg-white-bg flex items-center justify-center text-paragraph transition-colors shadow-2xs">
                       <Mail className="w-3.5 h-3.5" />
                     </button>
-                    <button className="w-8 h-8 rounded-full border border-white-stroke bg-white hover:bg-white-bg flex items-center justify-center text-paragraph transition-colors shadow-2xs">
+                    <button aria-label="Call Inspector" className="w-8 h-8 rounded-full border border-white-stroke bg-white hover:bg-white-bg flex items-center justify-center text-paragraph transition-colors shadow-2xs">
                       <Phone className="w-3.5 h-3.5" />
                     </button>
                   </div>
