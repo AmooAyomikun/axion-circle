@@ -5,6 +5,7 @@ import AdminRoute from './components/AdminRoute';
 import ConnectionLostModal from './components/ConnectionLostModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import SplashScreen from './components/SplashScreen';
+import useIsPWA from './hooks/useIsPWA';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const ReportPage = lazy(() => import('./pages/ReportPage'));
@@ -42,7 +43,10 @@ const PageLoader = () => (
 
 function App() {
   const location = useLocation();
-  const [isSplashComplete, setIsSplashComplete] = useState(false);
+  const isPWA = useIsPWA();
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+  const shouldShowSplash = isPWA || isMobile;
+  const [isSplashComplete, setIsSplashComplete] = useState(!shouldShowSplash);
 
   useEffect(() => {
     window.scrollTo(0, 0);

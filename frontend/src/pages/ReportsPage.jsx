@@ -135,11 +135,6 @@ export default function ReportsPage() {
 
   const statusTabs = ['All', 'Reported', 'Acknowledged', 'In Progress', 'Resolved'];
 
-  const handleRetrieveReward = () => {
-    toast.success('Rewards system check: Please check your active points balance in Rewards!');
-    navigate('/rewards');
-  };
-
   // Filter cards based on activeTab, searchQuery, category, and urgency
   const filteredReports = reportsList.filter((report) => {
     const matchesStatus = activeTab === 'All' || report.status.toLowerCase() === activeTab.toLowerCase();
@@ -248,16 +243,9 @@ export default function ReportsPage() {
             </div>
 
             <div className="flex items-center gap-3 shrink-0">
-              <button
-                type="button"
-                onClick={handleRetrieveReward}
-                className="px-4 py-2.5 rounded-xl border border-white-stroke bg-white text-black font-semibold text-xs sm:text-sm shadow-2xs hover:bg-white-bg transition-all flex items-center gap-2 active:scale-95"
-              >
-                <Gift className="w-4 h-4 text-black-icon" /> Retrieve Reward
-              </button>
               <Link
                 to="/report"
-                className="px-4 py-2.5 rounded-xl bg-primary text-white font-semibold text-xs sm:text-sm shadow-sm hover:bg-primary/90 transition-all flex items-center gap-1.5 active:scale-95"
+                className="px-4 py-2.5 rounded-xl bg-primary text-white font-semibold text-xs sm:text-sm shadow-sm hover:bg-primary/90 transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
               >
                 <Plus className="w-4 h-4" /> Add New Report
               </Link>
