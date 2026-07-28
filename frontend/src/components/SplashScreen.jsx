@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import NavbarLogo from './NavbarLogo';
+import splashLogo from '../assets/splash logo.png';
 
 export default function SplashScreen({ onComplete }) {
   const [isVisible, setIsVisible] = useState(true);
@@ -43,8 +43,8 @@ export default function SplashScreen({ onComplete }) {
       </div>
 
       {/* Main Logo Container */}
-      <div className="relative z-10 animate-in fade-in zoom-in duration-700 delay-150">
-        <NavbarLogo className="w-64 sm:w-80 h-auto object-contain" />
+      <div className="relative z-10 animate-in fade-in zoom-in duration-700 delay-150 flex justify-center items-center px-6">
+        <img src={splashLogo} alt="CleanReport Splash" className="w-64 sm:w-[320px] md:w-[400px] lg:w-[500px] h-auto object-contain" />
       </div>
     </div>
   );
