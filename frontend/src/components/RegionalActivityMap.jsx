@@ -127,7 +127,7 @@ export default function RegionalActivityMap({ reports, mapStatus, onRetry }) {
   });
 
   return (
-    <div className="bg-white border border-white-stroke rounded-2xl shadow-sm flex flex-col overflow-hidden">
+    <div className="bg-white border border-white-stroke rounded-2xl shadow-sm flex flex-col overflow-hidden h-full">
       {/* Header */}
       <div className="p-4 sm:p-5 border-b border-white-stroke flex items-center justify-between bg-white z-10 relative">
         <h2 className="font-heading font-bold text-base sm:text-lg text-black">
