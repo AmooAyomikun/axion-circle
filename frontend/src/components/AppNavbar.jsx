@@ -21,11 +21,13 @@ import {
 import NavbarLogo from './NavbarLogo';
 import NotificationBell from './NotificationBell';
 import { useOnlineSync } from '../hooks/useOnlineSync';
+import useInstallPrompt from '../hooks/useInstallPrompt';
 export default function AppNavbar({ activeTab = '' }) {
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
   
   const { isOnline, pendingCount } = useOnlineSync();
+  const { canInstall, promptInstall } = useInstallPrompt();
 
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
@@ -100,8 +102,12 @@ export default function AppNavbar({ activeTab = '' }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleMobileAppClick = () => {
-    toast.success('CleanReport mobile app installation link sent!');
+  const handleMobileAppClick = async () => {
+    if (canInstall) {
+      await promptInstall();
+    } else {
+      toast('App is already installed or install not available in this browser.', { icon: 'ℹ️' });
+    }
   };
 
   const handleLogout = () => {
