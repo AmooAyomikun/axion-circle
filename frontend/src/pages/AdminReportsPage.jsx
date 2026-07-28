@@ -387,29 +387,38 @@ export default function AdminReportsPage() {
                   </div>
                 ) : (
                   <div className="flex-1 overflow-auto pr-2 custom-scrollbar">
-                    <div className="space-y-4">
-                      {reports.slice(0, 5).map((report) => (
-                        <Link 
-                          key={report.id || report._id} 
-                          to={`/admin/reports/${report.id || report._id}`}
-                          className="flex items-center justify-between p-3 rounded-xl border border-white-stroke hover:border-primary/30 hover:bg-white-bg transition-colors group"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className={`w-2 h-2 rounded-full shrink-0 ${(report.status || '').toLowerCase() === 'resolved' ? 'bg-[#127C2F]' : (report.status || '').toLowerCase() === 'inprogress' ? 'bg-[#9333EA]' : 'bg-[#F59E0B]'}`}></div>
-                            <div className="flex flex-col">
+                    <div className="flex flex-col">
+                      {reports.slice(0, 5).map((report, idx) => {
+                        const statusLower = (report.status || '').toLowerCase();
+                        let bg, text, label;
+                        if (statusLower === 'resolved') {
+                           bg = 'bg-[#ECFDF3]'; text = 'text-[#10B981]'; label = 'Resolved';
+                        } else if (statusLower === 'in progress' || statusLower === 'inprogress') {
+                           bg = 'bg-[#F3E8FF]'; text = 'text-[#9333EA]'; label = 'In Progress';
+                        } else {
+                           bg = 'bg-[#FFF4E5]'; text = 'text-[#F59E0B]'; label = 'Reported';
+                        }
+
+                        return (
+                          <Link 
+                            key={report.id || report._id || idx} 
+                            to={`/admin/reports/${report.id || report._id}`}
+                            className="flex flex-col gap-3 py-4 border-b border-white-stroke last:border-0 hover:bg-white-bg transition-colors"
+                          >
+                            <div className={`self-start px-3 py-1 rounded-full text-xs font-bold ${bg} ${text}`}>
+                              {label}
+                            </div>
+                            <div className="flex flex-col gap-1">
                               <span className="font-bold text-black text-sm capitalize group-hover:text-primary transition-colors">
                                 {report.category ? report.category.replace(/_/g, ' ').toLowerCase() : (report.title || 'Sanitation Issue')}
                               </span>
-                              <span className="text-xs text-paragraph">
-                                {report.id ? `#CR-${report.id.toString().substring(0, 4).toUpperCase()}` : 'N/A'} • {report.createdAt ? new Date(report.createdAt).toLocaleDateString() : 'Recent'}
+                              <span className="text-xs text-paragraph truncate">
+                                {report.address || report.areaName || 'Location is currently being processed'}
                               </span>
                             </div>
-                          </div>
-                          <div className="text-black-icon group-hover:text-primary transition-colors">
-                            <ArrowUpRight className="w-4 h-4" />
-                          </div>
-                        </Link>
-                      ))}
+                          </Link>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

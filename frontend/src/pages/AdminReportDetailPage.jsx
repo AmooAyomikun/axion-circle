@@ -387,7 +387,7 @@ export default function AdminReportDetailPage() {
         </div>
         
         <div className="mt-auto -mx-4 sm:-mx-6 lg:-mx-8">
-          <Footer />
+          {/* Footer is already rendered by AdminLayout */}
         </div>
       </div>
 
