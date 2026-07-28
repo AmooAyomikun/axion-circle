@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import NavbarLogo from './NavbarLogo';
 import NotificationBell from './NotificationBell';
+import Footer from './Footer';
 
 export default function AdminLayout({ children }) {
   const location = useLocation();
@@ -267,6 +268,8 @@ export default function AdminLayout({ children }) {
         <div className="flex-1 p-4 sm:p-6 lg:p-8">
           {children}
         </div>
+        
+        <Footer />
       </main>
     </div>
   );

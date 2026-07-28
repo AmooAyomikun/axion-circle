@@ -366,7 +366,7 @@ export default function ReportDetailPage() {
               <div className="absolute -bottom-5 left-3">
                 <div className="w-14 h-14 rounded-full bg-white p-1 shadow-sm">
                   <img loading="lazy" 
-                    src={(isAuthor && loggedInUserAvatar) ? loggedInUserAvatar : (report.reporterAvatarUrl || report.reporterAvatar || report.reporter?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(report.reporterName || report.reporter?.displayName || report.reporter?.name || report.reporter?.fullName || report.reporter?.firstName || 'U')}&background=random`)} 
+                    src={report.reporterAvatarUrl || report.reporterAvatar || report.reporter?.avatarUrl || (isAuthor ? loggedInUserAvatar : null) || `https://ui-avatars.com/api/?name=${encodeURIComponent(report.reporterName || report.reporter?.displayName || report.reporter?.name || report.reporter?.fullName || report.reporter?.firstName || 'U')}&background=random`} 
                     alt="Reporter" 
                     width="56"
                     height="56"
@@ -448,13 +448,13 @@ export default function ReportDetailPage() {
                            <img loading="lazy" src="/logo.svg" alt="Mod" width="20" height="20" className="w-5 h-5 object-contain" />
                         ) : (
                            <img 
-                             src={(comment.authorId === loggedInUserId && loggedInUserAvatar) ? loggedInUserAvatar : (comment.authorAvatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.authorName || 'U')}&background=random`)} 
+                             src={comment.authorAvatarUrl || comment.author?.avatarUrl || (comment.authorId === loggedInUserId ? loggedInUserAvatar : null) || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.authorName || comment.author?.displayName || 'U')}&background=random`} 
                              alt="Avatar" 
                              width="36"
                              height="36"
                              loading="lazy"
                              className="w-full h-full object-cover"
-                             onError={(e) => { e.target.onerror = null; e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.authorName || 'U')}&background=random`; }}
+                             onError={(e) => { e.target.onerror = null; e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.authorName || comment.author?.displayName || 'U')}&background=random`; }}
                            />
                         )}
                       </div>
@@ -656,7 +656,7 @@ export default function ReportDetailPage() {
                 <div className="w-20 h-20 sm:w-[112px] sm:h-[112px] rounded-full bg-white flex items-center justify-center overflow-hidden shrink-0 -mt-10 sm:-mt-[56px] shadow-sm ring-4 ring-white">
                   <div className="w-full h-full rounded-full border border-white-stroke overflow-hidden shrink-0">
                     <img 
-                      src={(isAuthor && loggedInUserAvatar) ? loggedInUserAvatar : (report.reporterAvatarUrl || report.reporterAvatar || report.reporter?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(report.reporterName || report.reporter?.displayName || report.reporter?.name || report.reporter?.fullName || report.reporter?.firstName || 'U')}&background=random`)} 
+                      src={report.reporterAvatarUrl || report.reporterAvatar || report.reporter?.avatarUrl || (isAuthor ? loggedInUserAvatar : null) || `https://ui-avatars.com/api/?name=${encodeURIComponent(report.reporterName || report.reporter?.displayName || report.reporter?.name || report.reporter?.fullName || report.reporter?.firstName || 'U')}&background=random`} 
                       alt="Reporter" 
                       width="112"
                       height="112"
@@ -763,7 +763,7 @@ export default function ReportDetailPage() {
                         <div className="w-10 h-10 rounded-full bg-white-bg2 border border-white-stroke flex items-center justify-center shrink-0 overflow-hidden">
                           <div className="w-10 h-10 rounded-full border border-white-stroke overflow-hidden shrink-0">
                             <img 
-                              src={(cAuthorId === loggedInUserId && loggedInUserAvatar) ? loggedInUserAvatar : (comment.authorAvatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.authorName || 'U')}&background=random`)} 
+                              src={comment.authorAvatarUrl || comment.author?.avatarUrl || (cAuthorId === loggedInUserId ? loggedInUserAvatar : null) || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.authorName || comment.author?.displayName || 'U')}&background=random`} 
                               alt="Avatar" 
                               width="40"
                               height="40"
@@ -771,7 +771,7 @@ export default function ReportDetailPage() {
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 e.target.onerror = null;
-                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.authorName || 'U')}&background=random`;
+                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.authorName || comment.author?.displayName || 'U')}&background=random`;
                               }}
                             />
                           </div>
