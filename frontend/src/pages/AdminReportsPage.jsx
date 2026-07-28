@@ -11,7 +11,8 @@ import {
   ArrowDownRight,
   RefreshCw,
   AlertCircle,
-  FileEdit
+  FileEdit,
+  MapPin
 } from 'lucide-react';
 import api from '../services/api';
 import AdminLayout from '../components/AdminLayout';
@@ -366,7 +367,7 @@ export default function AdminReportsPage() {
 
             {/* Right Column: Recent Report */}
             <div className="lg:col-span-5 flex flex-col">
-              <div className="bg-white border border-white-stroke rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between h-[450px]">
+              <div className="bg-white border border-white-stroke rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between h-full">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="font-heading font-bold text-base sm:text-lg text-black">
                     Recent Report
@@ -403,19 +404,23 @@ export default function AdminReportsPage() {
                           <Link 
                             key={report.id || report._id || idx} 
                             to={`/admin/reports/${report.id || report._id}`}
-                            className="flex flex-col gap-3 py-4 border-b border-white-stroke last:border-0 hover:bg-white-bg transition-colors"
+                            className="flex flex-col gap-2 py-3.5 border-b border-white-stroke last:border-0 hover:bg-white-bg transition-colors group"
                           >
-                            <div className={`self-start px-3 py-1 rounded-full text-xs font-bold ${bg} ${text}`}>
-                              {label}
-                            </div>
-                            <div className="flex flex-col gap-1">
-                              <span className="font-bold text-black text-sm capitalize group-hover:text-primary transition-colors">
-                                {report.category ? report.category.replace(/_/g, ' ').toLowerCase() : (report.title || 'Sanitation Issue')}
-                              </span>
-                              <span className="text-xs text-paragraph truncate">
-                                {report.address || report.areaName || 'Location is currently being processed'}
+                            <div className="flex items-center justify-between w-full">
+                              <div className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${bg} ${text}`}>
+                                {label}
+                              </div>
+                              <span className="text-[10px] text-paragraph font-medium">
+                                {new Date(report.createdAt || report.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                               </span>
                             </div>
+                            <span className="font-extrabold text-black text-[13px] leading-tight group-hover:text-primary transition-colors capitalize">
+                              {report.title || (report.category ? report.category.replace(/_/g, ' ').toLowerCase() : 'Sanitation Issue')}
+                            </span>
+                            <span className="text-[11px] text-paragraph truncate flex items-center gap-1.5">
+                              <MapPin className="w-3.5 h-3.5 shrink-0" />
+                              {report.address || report.areaName || 'Location is currently being processed'}
+                            </span>
                           </Link>
                         );
                       })}

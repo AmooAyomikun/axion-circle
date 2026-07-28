@@ -9,9 +9,17 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'auto',
       includeAssets: ['favicon.svg', 'robots.txt'],
       workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'], // Precache app shell
+        navigateFallback: '/index.html',
         runtimeCaching: [
+          {
+            // Explicitly EXCLUDE the Render API from being cached
+            urlPattern: /^https:\/\/cleanreport-api\.onrender\.com\/.*/i,
+            handler: 'NetworkOnly',
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',
@@ -33,8 +41,8 @@ export default defineConfig({
         name: 'CleanReport',
         short_name: 'CleanReport',
         description: 'Community Waste & Sanitation Issue Reporting',
-        theme_color: '#0E7C66',
-        background_color: '#ffffff',
+        theme_color: '#127C2F',
+        background_color: '#FFFFFF',
         display: 'standalone',
         start_url: '/',
         icons: [
