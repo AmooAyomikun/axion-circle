@@ -22,12 +22,15 @@ import NavbarLogo from './NavbarLogo';
 import NotificationBell from './NotificationBell';
 import { useOnlineSync } from '../hooks/useOnlineSync';
 import useInstallPrompt from '../hooks/useInstallPrompt';
+import useIsPWA from '../hooks/useIsPWA';
+
 export default function AppNavbar({ activeTab = '' }) {
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
   
   const { isOnline, pendingCount } = useOnlineSync();
   const { canInstall, promptInstall } = useInstallPrompt();
+  const isPWA = useIsPWA();
 
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
@@ -169,13 +172,15 @@ export default function AppNavbar({ activeTab = '' }) {
         )}
 
         <div className="flex items-center gap-3 lg:gap-4">
-          <button
-            type="button"
-            onClick={handleMobileAppClick}
-            className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-alert-successStroke bg-alert-successLight text-primary text-xs font-bold hover:bg-alert-successLight/80 transition-colors shrink-0 shadow-xs"
-          >
-            <Smartphone className="w-3.5 h-3.5" /> Use App on Mobile
-          </button>
+          {!isPWA && (
+            <button
+              type="button"
+              onClick={handleMobileAppClick}
+              className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-alert-successStroke bg-alert-successLight text-primary text-xs font-bold hover:bg-alert-successLight/80 transition-colors shrink-0 shadow-xs"
+            >
+              <Smartphone className="w-3.5 h-3.5" /> Use App on Mobile
+            </button>
+          )}
 
           {!isLoggedIn ? (
             <Link
@@ -345,16 +350,18 @@ export default function AppNavbar({ activeTab = '' }) {
                 Get Started
               </Link>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  handleMobileAppClick();
-                }}
-                className="w-full bg-alert-success text-primary border border-primary/20 font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2.5 hover:bg-alert-success/80 active:scale-95 transition-all text-sm"
-              >
-                <Smartphone className="w-4 h-4" /> Use App on Mobile
-              </button>
+              {!isPWA && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    handleMobileAppClick();
+                  }}
+                  className="w-full bg-alert-success text-primary border border-primary/20 font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2.5 hover:bg-alert-success/80 active:scale-95 transition-all text-sm"
+                >
+                  <Smartphone className="w-4 h-4" /> Use App on Mobile
+                </button>
+              )}
             </div>
           </div>
         </div>

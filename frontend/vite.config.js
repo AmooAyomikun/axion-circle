@@ -41,8 +41,8 @@ export default defineConfig({
         name: 'CleanReport',
         short_name: 'CleanReport',
         description: 'Community Waste & Sanitation Issue Reporting',
-        theme_color: '#127C2F',
-        background_color: '#FFFFFF',
+        theme_color: '#001310',
+        background_color: '#001310',
         display: 'standalone',
         start_url: '/',
         icons: [

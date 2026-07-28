@@ -1,9 +1,10 @@
-import React, { useEffect, Suspense, lazy } from 'react';
+import React, { useEffect, Suspense, lazy, useState } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import AdminRoute from './components/AdminRoute';
 import ConnectionLostModal from './components/ConnectionLostModal';
 import ErrorBoundary from './components/ErrorBoundary';
+import SplashScreen from './components/SplashScreen';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const ReportPage = lazy(() => import('./pages/ReportPage'));
@@ -41,6 +42,7 @@ const PageLoader = () => (
 
 function App() {
   const location = useLocation();
+  const [isSplashComplete, setIsSplashComplete] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -98,6 +100,7 @@ function App() {
 
   return (
     <>
+      {!isSplashComplete && <SplashScreen onComplete={() => setIsSplashComplete(true)} />}
       <Toaster position="top-right" />
       <ConnectionLostModal />
       <ErrorBoundary>

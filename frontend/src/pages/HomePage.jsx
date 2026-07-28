@@ -36,6 +36,7 @@ const RegionalActivityMap = lazy(() => import('../components/RegionalActivityMap
 import fallbackImage from '../assets/fallback-image.svg';
 import { timeAgo } from '../utils/timeAgo';
 import useInstallPrompt from '../hooks/useInstallPrompt';
+import useIsPWA from '../hooks/useIsPWA';
 
 const LazyRender = ({ children, fallback }) => {
   const [isIntersecting, setIntersecting] = useState(false);
@@ -79,6 +80,7 @@ export default function HomePage() {
   }, [location.pathname]);
   const [isBannerDismissed, setIsBannerDismissed] = useState(false);
   const { canInstall, promptInstall } = useInstallPrompt();
+  const isPWA = useIsPWA();
   const [reports, setReports] = useState([]);
   const [mapStatus, setMapStatus] = useState('loading'); // 'loading' | 'success' | 'error'
   const [stats, setStats] = useState({
@@ -271,12 +273,14 @@ export default function HomePage() {
                   >
                     Get Started
                   </Link>
-                  <button 
-                    onClick={handleInstallClick}
-                    className="w-full px-4 py-3.5 bg-white text-paragraph font-bold rounded-xl text-center shadow-sm text-[15px] border border-white-stroke hover:bg-white-bg transition-all active:scale-95"
-                  >
-                    Use App on Mobile
-                  </button>
+                  {!isPWA && (
+                    <button 
+                      onClick={handleInstallClick}
+                      className="w-full px-4 py-3.5 bg-white text-paragraph font-bold rounded-xl text-center shadow-sm text-[15px] border border-white-stroke hover:bg-white-bg transition-all active:scale-95"
+                    >
+                      Use App on Mobile
+                    </button>
+                  )}
                 </div>
               </div>
             </>
@@ -403,7 +407,7 @@ export default function HomePage() {
           </div>
 
           {/* Dark Promo Banner — exact Figma colors and structure */}
-          {!isBannerDismissed && (
+          {!isBannerDismissed && !isPWA && (
           <div className="bg-[#001310] rounded-2xl p-5 sm:p-7 text-white relative overflow-hidden shadow-md mb-8">
             {/* X close button — top-right, exact Figma */}
             <button
