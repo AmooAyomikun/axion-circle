@@ -35,6 +35,7 @@ import ReportListView from '../components/ReportListView';
 const RegionalActivityMap = lazy(() => import('../components/RegionalActivityMap'));
 import fallbackImage from '../assets/fallback-image.svg';
 import { timeAgo } from '../utils/timeAgo';
+import useInstallPrompt from '../hooks/useInstallPrompt';
 
 const LazyRender = ({ children, fallback }) => {
   const [isIntersecting, setIntersecting] = useState(false);
@@ -77,6 +78,7 @@ export default function HomePage() {
     setIsLoggedIn(Boolean(token && token !== 'undefined' && token !== 'null'));
   }, [location.pathname]);
   const [isBannerDismissed, setIsBannerDismissed] = useState(false);
+  const { canInstall, promptInstall } = useInstallPrompt();
   const [reports, setReports] = useState([]);
   const [mapStatus, setMapStatus] = useState('loading'); // 'loading' | 'success' | 'error'
   const [stats, setStats] = useState({
@@ -222,6 +224,14 @@ export default function HomePage() {
 
   const firstName = getUserFirstName();
 
+  const handleInstallClick = async () => {
+    if (canInstall) {
+      await promptInstall();
+    } else {
+      toast('App is already installed or install not available in this browser.', { icon: 'ℹ️' });
+    }
+  };
+
 
 
   return (
@@ -261,12 +271,12 @@ export default function HomePage() {
                   >
                     Get Started
                   </Link>
-                  <Link 
-                    to="/login"
+                  <button 
+                    onClick={handleInstallClick}
                     className="w-full px-4 py-3.5 bg-white text-paragraph font-bold rounded-xl text-center shadow-sm text-[15px] border border-white-stroke hover:bg-white-bg transition-all active:scale-95"
                   >
                     Use App on Mobile
-                  </Link>
+                  </button>
                 </div>
               </div>
             </>
@@ -423,7 +433,7 @@ export default function HomePage() {
                 {/* Install App — bg-[#ABEFC6] fill, #001310 text — exact Figma */}
                 <button
                   type="button"
-                  onClick={() => toast.success('CleanReport mobile app installation link sent!')}
+                  onClick={handleInstallClick}
                   className="inline-flex items-center gap-2 bg-[#ABEFC6] text-[#001310] font-bold px-4 py-2.5 rounded-xl text-sm border border-[#ABEFC6] hover:bg-[#ABEFC6]/90 transition-colors shadow-sm"
                 >
                   <Smartphone className="w-4 h-4 text-[#001310]" /> Install App
