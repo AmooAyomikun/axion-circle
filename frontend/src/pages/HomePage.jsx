@@ -248,43 +248,37 @@ export default function HomePage() {
           {!isLoggedIn ? (
             /* Logged Out Hero Section: No action buttons below subtext */
             <>
-              {/* Desktop Hero Section */}
-              <div className="hidden lg:block mb-6 sm:mb-8">
+              {/* Unified Hero Section for Logged Out Users */}
+              <div className="mb-6 sm:mb-8">
                 <h1 className="font-heading text-[30px] font-semibold leading-[38px] text-black mb-1 sm:mb-1.5 tracking-tight">
                   Clean and Report Waste Dumps
                 </h1>
                 <p className="text-xs sm:text-sm text-paragraph font-medium">
                   Report, track and monitor waste collection in your community
                 </p>
-              </div>
 
-              {/* Mobile Splash Screen */}
-              <div className="lg:hidden fixed inset-0 z-[100] bg-white flex flex-col p-6 pb-12 justify-between">
-                <div>
-                  <div className="flex flex-col items-start pt-4">
-                    <img loading="lazy" src="/logo.svg" alt="CleanReport Logo Mobile Splash" width="56" height="56" className="w-14 h-14 object-contain mb-1" onError={(e) => { e.target.style.display = 'none'; }} />
-                    <span className="font-heading font-bold text-xl text-primary mt-2">CleanReport</span>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-3">
+                {/* Mobile-only action buttons below the text */}
+                <div className="lg:hidden mt-6 flex flex-col gap-3">
                   <Link 
                     to="/register" 
-                    className="w-full px-4 py-3.5 bg-primary text-white font-bold rounded-xl text-center shadow-sm text-[15px] hover:bg-primary/90 transition-all active:scale-95"
+                    className="w-full px-4 py-3 bg-primary text-white font-bold rounded-xl text-center shadow-sm text-[15px] hover:bg-primary/90 transition-all active:scale-95"
                   >
                     Get Started
+                  </Link>
+                  <Link 
+                    to="/login" 
+                    className="w-full px-4 py-3 bg-white text-paragraph font-bold rounded-xl text-center shadow-sm text-[15px] border border-white-stroke hover:bg-white-bg transition-all active:scale-95"
+                  >
+                    Sign In
                   </Link>
                   {!isPWA && (
                     <button 
                       onClick={handleInstallClick}
-                      className="w-full px-4 py-3.5 bg-white text-paragraph font-bold rounded-xl text-center shadow-sm text-[15px] border border-white-stroke hover:bg-white-bg transition-all active:scale-95"
+                      className="w-full mt-2 text-sm text-primary font-bold underline hover:text-primary-hover text-center"
                     >
-                      Use App on Mobile
+                      Install App
                     </button>
                   )}
-                  <div className="text-center mt-2">
-                    <span className="text-sm text-paragraph font-medium">Already have an account? </span>
-                    <Link to="/login" className="text-sm font-bold text-primary hover:underline transition-all">Sign In</Link>
-                  </div>
                 </div>
               </div>
             </>

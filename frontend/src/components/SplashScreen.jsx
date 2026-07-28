@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import splashLogo from '../assets/splash logo.png';
 import splashBg from '../assets/image copy.png';
 
 export default function SplashScreen({ onComplete }) {
@@ -30,14 +29,9 @@ export default function SplashScreen({ onComplete }) {
         isFadingOut ? 'opacity-0' : 'opacity-100'
       }`}
     >
-      {/* Background Decorative Image */}
+      {/* Background Decorative Image (contains logo) */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <img src={splashBg} alt="" className="w-full h-full object-cover" />
-      </div>
-
-      {/* Main Logo Container */}
-      <div className="relative z-10 animate-in fade-in zoom-in duration-700 delay-150 flex justify-center items-center px-6">
-        <img src={splashLogo} alt="CleanReport Splash" className="w-64 sm:w-[320px] md:w-[400px] lg:w-[500px] h-auto object-contain" />
       </div>
     </div>
   );
