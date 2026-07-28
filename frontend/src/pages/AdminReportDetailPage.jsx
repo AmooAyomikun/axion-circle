@@ -391,8 +391,8 @@ export default function AdminReportDetailPage() {
 
       {/* Change Status Modal */}
       {isChangeStatusModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl p-6 sm:p-8 max-w-[480px] w-full flex flex-col">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-xl p-6 sm:p-8 max-w-[480px] w-full flex flex-col max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold text-black mb-1 font-heading">Update Report Status</h2>
             <p className="text-xs text-paragraph mb-6">
               Report <span className="text-[#127C2F] font-semibold">#{report?.id?.substring(0, 7).toUpperCase() || 'CR-8821'}</span> {categoryName}
@@ -456,8 +456,8 @@ export default function AdminReportDetailPage() {
 
       {/* Approve Success Modal */}
       {isApproveSuccessModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-2xl p-8 max-w-[400px] w-full flex flex-col items-center text-center">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-[400px] w-full flex flex-col items-center text-center max-h-[90vh] overflow-y-auto">
             {/* Success Checkmark Icon */}
             <div className="w-[100px] h-[100px] mb-4 relative flex items-center justify-center">
               <div className="absolute inset-0 bg-[#127C2F] rounded-full flex items-center justify-center z-10 m-3 shadow-md">
@@ -499,8 +499,8 @@ export default function AdminReportDetailPage() {
 
       {/* Update Status Success Modal */}
       {isUpdateSuccessModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-2xl p-8 max-w-[400px] w-full flex flex-col items-center text-center">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-[400px] w-full flex flex-col items-center text-center max-h-[90vh] overflow-y-auto">
             {/* Success Checkmark Icon */}
             <div className="w-[100px] h-[100px] mb-4 relative flex items-center justify-center">
               <div className="absolute inset-0 bg-[#127C2F] rounded-full flex items-center justify-center z-10 m-3 shadow-md">
