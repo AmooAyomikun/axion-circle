@@ -37,6 +37,7 @@ import fallbackImage from '../assets/fallback-image.svg';
 import { timeAgo } from '../utils/timeAgo';
 import useInstallPrompt from '../hooks/useInstallPrompt';
 import useIsPWA from '../hooks/useIsPWA';
+import { generateTrendData, generateSparklinePath } from '../utils/trendUtils';
 
 const LazyRender = ({ children, fallback }) => {
   const [isIntersecting, setIntersecting] = useState(false);
@@ -246,7 +247,13 @@ export default function HomePage() {
     }
   };
 
-
+  const totalReportsTrend = generateTrendData('homeTotal', stats.totalReports);
+  const resolvedReportsTrend = generateTrendData('homeResolved', stats.resolvedReports);
+  const creditsTrend = generateTrendData('homeCredits', stats.totalCreditsEarned);
+  
+  const totalReportsPaths = generateSparklinePath(totalReportsTrend.dataPoints);
+  const resolvedReportsPaths = generateSparklinePath(resolvedReportsTrend.dataPoints);
+  const creditsPaths = generateSparklinePath(creditsTrend.dataPoints);
 
   return (
     <div className="min-h-screen bg-white-bg sm:bg-white font-body flex flex-col justify-between relative">
@@ -332,8 +339,8 @@ export default function HomePage() {
               {/* Sparkline — full-width absolute background, bottom half */}
               <div className="absolute bottom-0 right-0 w-2/3 h-16 pointer-events-none opacity-60">
                 <svg viewBox="0 0 120 48" preserveAspectRatio="none" className="w-full h-full">
-                  <path d="M0,40 Q30,32 50,22 T90,10 T120,4 L120,48 L0,48 Z" fill="#E9FFEA" />
-                  <path d="M0,40 Q30,32 50,22 T90,10 T120,4" fill="none" stroke="#127C2F" strokeWidth="1.5" strokeOpacity="0.4" />
+                  <path d={totalReportsPaths.fillPath} fill="#E9FFEA" />
+                  <path d={totalReportsPaths.path} fill="none" stroke="#127C2F" strokeWidth="1.5" strokeOpacity="0.4" />
                 </svg>
               </div>
               {/* Header row */}
@@ -351,8 +358,8 @@ export default function HomePage() {
               {/* Number + badge — same row, bottom */}
               <div className="flex items-baseline gap-3 mt-auto relative z-10">
                 <span className="text-[28px] font-bold text-black tracking-tight leading-none">{stats.totalReports.toLocaleString()}</span>
-                <span className="inline-flex items-center gap-0.5 text-primary text-xs font-bold">
-                  <ArrowUpRight className="w-3.5 h-3.5" /> 100%
+                <span className={`inline-flex items-center gap-0.5 text-xs font-bold ${totalReportsTrend.isPositive ? 'text-primary' : 'text-alert-error'}`}>
+                  {totalReportsTrend.isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />} {totalReportsTrend.percentage}%
                 </span>
               </div>
             </div>
@@ -362,8 +369,8 @@ export default function HomePage() {
               {/* Sparkline — full-width absolute background */}
               <div className="absolute bottom-0 right-0 w-2/3 h-16 pointer-events-none opacity-60">
                 <svg viewBox="0 0 120 48" preserveAspectRatio="none" className="w-full h-full">
-                  <path d="M0,10 Q30,18 55,28 T90,36 T120,30 L120,48 L0,48 Z" fill="#FFE8E8" />
-                  <path d="M0,10 Q30,18 55,28 T90,36 T120,30" fill="none" stroke="#DB0404" strokeWidth="1.5" strokeOpacity="0.4" />
+                  <path d={resolvedReportsPaths.fillPath} fill="#FFE8E8" />
+                  <path d={resolvedReportsPaths.path} fill="none" stroke="#DB0404" strokeWidth="1.5" strokeOpacity="0.4" />
                 </svg>
               </div>
               {/* Header row */}
@@ -381,8 +388,8 @@ export default function HomePage() {
               {/* Number + badge — same row */}
               <div className="flex items-baseline gap-3 mt-auto relative z-10">
                 <span className="text-[28px] font-bold text-black tracking-tight leading-none">{stats.resolvedReports.toLocaleString()}</span>
-                <span className="inline-flex items-center gap-0.5 text-alert-success text-xs font-bold">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> {stats.totalReports > 0 ? Math.round((stats.resolvedReports / stats.totalReports) * 100) : 0}%
+                <span className={`inline-flex items-center gap-0.5 text-xs font-bold ${resolvedReportsTrend.isPositive ? 'text-primary' : 'text-alert-error'}`}>
+                  {resolvedReportsTrend.isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />} {resolvedReportsTrend.percentage}%
                 </span>
               </div>
             </div>
@@ -392,8 +399,8 @@ export default function HomePage() {
               {/* Sparkline — full-width absolute background */}
               <div className="absolute bottom-0 right-0 w-2/3 h-16 pointer-events-none opacity-60">
                 <svg viewBox="0 0 120 48" preserveAspectRatio="none" className="w-full h-full">
-                  <path d="M0,36 Q30,28 55,18 T90,8 T120,4 L120,48 L0,48 Z" fill="#E9FFEA" />
-                  <path d="M0,36 Q30,28 55,18 T90,8 T120,4" fill="none" stroke="#127C2F" strokeWidth="1.5" strokeOpacity="0.4" />
+                  <path d={creditsPaths.fillPath} fill="#E9FFEA" />
+                  <path d={creditsPaths.path} fill="none" stroke="#127C2F" strokeWidth="1.5" strokeOpacity="0.4" />
                 </svg>
               </div>
               {/* Header row */}
@@ -411,6 +418,9 @@ export default function HomePage() {
               {/* Number + badge — same row */}
               <div className="flex items-baseline gap-3 mt-auto relative z-10">
                 <span className="text-[28px] font-bold text-black tracking-tight leading-none">{stats.totalCreditsEarned.toLocaleString()}</span>
+                <span className={`inline-flex items-center gap-0.5 text-xs font-bold ${creditsTrend.isPositive ? 'text-primary' : 'text-alert-error'}`}>
+                  {creditsTrend.isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />} {creditsTrend.percentage}%
+                </span>
               </div>
             </div>
 
