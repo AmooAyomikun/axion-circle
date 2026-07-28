@@ -17,6 +17,7 @@ import {
 import api from '../services/api';
 import AdminLayout from '../components/AdminLayout';
 import AdminReportsTable from '../components/AdminReportsTable';
+import AdminStatCard from '../components/AdminStatCard';
 const RegionalActivityMap = lazy(() => import('../components/RegionalActivityMap'));
 import SEO from '../components/SEO';
 import { generateTrendData, calculateTrendFromReports, generateSparklinePath } from '../utils/trendUtils';
@@ -28,7 +29,7 @@ export default function AdminReportsPage() {
 
   const [reports, setReports] = useState([]);
   const [status, setStatus] = useState('loading');
-  const [stats, setStats] = useState({ total: 0, resolved: 0, acknowledged: 0 });
+  const [stats, setStats] = useState({ total: 0, resolved: 0, acknowledged: 0, averageResponseTimeHours: 2.4 });
   const [pageData, setPageData] = useState({ totalElements: 0, totalPages: 1 });
   
   const [filters, setFilters] = useState({
@@ -50,7 +51,8 @@ export default function AdminReportsPage() {
         setStats({
           total: statsRes.data.data.totalReports || 0,
           resolved: statsRes.data.data.resolvedReports || 0,
-          acknowledged: statsRes.data.data.acknowledgedReports || 0
+          acknowledged: statsRes.data.data.acknowledgedReports || 0,
+          averageResponseTimeHours: statsRes.data.data.averageResponseTimeHours || 2.4
         });
       }
 
@@ -126,8 +128,8 @@ export default function AdminReportsPage() {
   const resolvedTrend = calculateTrendFromReports(reports, 'resolved', resolvedReports);
   const acknowledgedTrend = calculateTrendFromReports(reports, 'acknowledged', acknowledgedReports);
   
-  // For Avg Response Time, since we don't have real data, base it on 24 (2.4h)
-  const responseTimeTrend = calculateTrendFromReports(reports, 'responseTime', 24); 
+  // For Avg Response Time, use the backend field once added (falls back to 2.4)
+  const responseTimeTrend = calculateTrendFromReports(reports, 'responseTime', stats.averageResponseTimeHours); 
   
   const totalPaths = generateSparklinePath(totalTrend.dataPoints);
   const resolvedPaths = generateSparklinePath(resolvedTrend.dataPoints);
@@ -158,165 +160,58 @@ export default function AdminReportsPage() {
 
         {/* Stats Cards */}
         <div className="flex overflow-x-auto snap-x snap-mandatory md:grid md:grid-cols-4 gap-4 pb-2 hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
-          {/* 1. Total Reports */}
-          <div className="bg-white border border-white-stroke rounded-2xl p-5 shadow-sm relative overflow-hidden flex flex-col min-h-[140px] w-[85vw] sm:w-[240px] md:w-auto shrink-0 snap-center">
-            {status === 'error' && !isDashboard ? (
-              <div className="w-full h-full flex flex-col justify-between animate-pulse">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-white-stroke"></div>
-                  <div className="w-4 h-4 bg-white-stroke rounded"></div>
-                </div>
-                <div className="w-2/3 h-8 bg-white-stroke rounded mb-2"></div>
-                <div className="w-1/2 h-10 bg-white-stroke rounded"></div>
-              </div>
-            ) : (
-              <>
-                <div className="absolute bottom-0 right-0 w-2/3 h-16 pointer-events-none opacity-60">
-                  <svg viewBox="0 0 120 48" preserveAspectRatio="none" className="w-full h-full">
-                    <path d={totalPaths.fillPath} fill="#E9FFEA" />
-                    <path d={totalPaths.path} fill="none" stroke="#127C2F" strokeWidth="1.5" strokeOpacity="0.4" />
-                  </svg>
-                </div>
-                <div className="flex items-center justify-between mb-4 relative z-10">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-xl bg-[#006FED] flex items-center justify-center text-white shadow-sm shrink-0">
-                      <FileText className="w-5 h-5" />
-                    </div>
-                    <span className="text-sm font-semibold text-black">Total Reports</span>
+          {status === 'error' && !isDashboard ? (
+             // Render Skeleton Cards if error state on reports page
+             [...Array(4)].map((_, i) => (
+                <div key={i} className="bg-white border border-white-stroke rounded-2xl p-5 shadow-sm relative overflow-hidden flex flex-col min-h-[140px] w-[85vw] sm:w-[240px] md:w-auto shrink-0 snap-center animate-pulse">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-white-stroke"></div>
+                    <div className="w-4 h-4 bg-white-stroke rounded"></div>
                   </div>
-                  <button className="text-black-icon hover:text-black shrink-0" aria-label="More options">
-                    <MoreVertical className="w-4 h-4" />
-                  </button>
+                  <div className="w-2/3 h-8 bg-white-stroke rounded mb-2"></div>
+                  <div className="w-1/2 h-10 bg-white-stroke rounded"></div>
                 </div>
-                <div className="flex items-baseline gap-3 mt-auto relative z-10">
-                  <span className="text-[28px] font-bold text-black tracking-tight leading-none">{status === 'loading' ? '...' : totalReports}</span>
-                  <span className={`inline-flex items-center gap-0.5 text-xs font-bold ${totalTrend.isPositive ? 'text-primary' : 'text-alert-error'}`}>
-                    {totalTrend.isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />} {totalTrend.percentage}%
-                  </span>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* 2. Resolved Reports */}
-          <div className="bg-white border border-white-stroke rounded-2xl p-5 shadow-sm relative overflow-hidden flex flex-col min-h-[140px] w-[85vw] sm:w-[240px] md:w-auto shrink-0 snap-center">
-            {status === 'error' && !isDashboard ? (
-              <div className="w-full h-full flex flex-col justify-between animate-pulse">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-white-stroke"></div>
-                  <div className="w-4 h-4 bg-white-stroke rounded"></div>
-                </div>
-                <div className="w-2/3 h-8 bg-white-stroke rounded mb-2"></div>
-                <div className="w-1/2 h-10 bg-white-stroke rounded"></div>
-              </div>
-            ) : (
-              <>
-                <div className="absolute bottom-0 right-0 w-2/3 h-16 pointer-events-none opacity-60">
-                  <svg viewBox="0 0 120 48" preserveAspectRatio="none" className="w-full h-full">
-                    <path d={resolvedPaths.fillPath} fill="#FFE8E8" />
-                    <path d={resolvedPaths.path} fill="none" stroke="#DB0404" strokeWidth="1.5" strokeOpacity="0.4" />
-                  </svg>
-                </div>
-                <div className="flex items-center justify-between mb-4 relative z-10">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-sm shrink-0">
-                      <CheckCircle2 className="w-5 h-5" />
-                    </div>
-                    <span className="text-sm font-semibold text-black">Resolved Reports</span>
-                  </div>
-                  <button className="text-black-icon hover:text-black shrink-0" aria-label="More options">
-                    <MoreVertical className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="flex items-baseline gap-3 mt-auto relative z-10">
-                  <span className="text-[28px] font-bold text-black tracking-tight leading-none">{status === 'loading' ? '...' : resolvedReports}</span>
-                  <span className={`inline-flex items-center gap-0.5 text-xs font-bold ${resolvedTrend.isPositive ? 'text-primary' : 'text-alert-error'}`}>
-                    {resolvedTrend.isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />} {resolvedTrend.percentage}%
-                  </span>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* 3. Acknowledged Reports */}
-          <div className="bg-white border border-white-stroke rounded-2xl p-5 shadow-sm relative overflow-hidden flex flex-col min-h-[140px] w-[85vw] sm:w-[240px] md:w-auto shrink-0 snap-center">
-            {status === 'error' && !isDashboard ? (
-              <div className="w-full h-full flex flex-col justify-between animate-pulse">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-white-stroke"></div>
-                  <div className="w-4 h-4 bg-white-stroke rounded"></div>
-                </div>
-                <div className="w-2/3 h-8 bg-white-stroke rounded mb-2"></div>
-                <div className="w-1/2 h-10 bg-white-stroke rounded"></div>
-              </div>
-            ) : (
-              <>
-                <div className="absolute bottom-0 right-0 w-2/3 h-16 pointer-events-none opacity-60">
-                  <svg viewBox="0 0 120 48" preserveAspectRatio="none" className="w-full h-full">
-                    <path d={acknowledgedPaths.fillPath} fill="#FFF4E5" />
-                    <path d={acknowledgedPaths.path} fill="none" stroke="#F59E0B" strokeWidth="1.5" strokeOpacity="0.4" />
-                  </svg>
-                </div>
-                <div className="flex items-center justify-between mb-4 relative z-10">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-xl bg-[#F59E0B] flex items-center justify-center text-white shadow-sm shrink-0">
-                      <Clock className="w-5 h-5" />
-                    </div>
-                    <span className="text-sm font-semibold text-black">Acknowledged Reports</span>
-                  </div>
-                  <button className="text-black-icon hover:text-black shrink-0" aria-label="More options">
-                    <MoreVertical className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="flex items-baseline gap-3 mt-auto relative z-10">
-                  <span className="text-[28px] font-bold text-black tracking-tight leading-none">{status === 'loading' ? '...' : acknowledgedReports}</span>
-                  <span className={`inline-flex items-center gap-0.5 text-xs font-bold ${acknowledgedTrend.isPositive ? 'text-primary' : 'text-alert-error'}`}>
-                    {acknowledgedTrend.isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />} {acknowledgedTrend.percentage}%
-                  </span>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* 4. Avg Response Time */}
-          <div className="bg-white border border-white-stroke rounded-2xl p-5 shadow-sm relative overflow-hidden flex flex-col min-h-[140px] w-[85vw] sm:w-[240px] md:w-auto shrink-0 snap-center">
-            {status === 'error' && !isDashboard ? (
-              <div className="w-full h-full flex flex-col justify-between animate-pulse">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-white-stroke"></div>
-                  <div className="w-4 h-4 bg-white-stroke rounded"></div>
-                </div>
-                <div className="w-2/3 h-8 bg-white-stroke rounded mb-2"></div>
-                <div className="w-1/2 h-10 bg-white-stroke rounded"></div>
-              </div>
-            ) : (
-              <>
-                <div className="absolute bottom-0 right-0 w-2/3 h-16 pointer-events-none opacity-60">
-                  <svg viewBox="0 0 120 48" preserveAspectRatio="none" className="w-full h-full">
-                    <path d={responseTimePaths.fillPath} fill="#F3F4F6" />
-                    <path d={responseTimePaths.path} fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeOpacity="0.4" />
-                  </svg>
-                </div>
-                <div className="flex items-center justify-between mb-4 relative z-10">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-xl bg-paragraph flex items-center justify-center text-white shadow-sm shrink-0">
-                      <Timer className="w-5 h-5" />
-                    </div>
-                    <span className="text-sm font-semibold text-black">Avg Response Time</span>
-                  </div>
-                  <button className="text-black-icon hover:text-black shrink-0" aria-label="More options">
-                    <MoreVertical className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="flex items-baseline gap-3 mt-auto relative z-10">
-                  <span className="text-[28px] font-bold text-black tracking-tight leading-none">2.4h</span>
-                  <span className={`inline-flex items-center gap-0.5 text-xs font-bold ${!responseTimeTrend.isPositive ? 'text-primary' : 'text-alert-error'}`}>
-                    {!responseTimeTrend.isPositive ? <ArrowDownRight className="w-3.5 h-3.5" /> : <ArrowUpRight className="w-3.5 h-3.5" />} {responseTimeTrend.percentage}%
-                  </span>
-                </div>
-              </>
-            )}
-          </div>
+             ))
+          ) : (
+             <>
+                <AdminStatCard 
+                   title="Total Reports" 
+                   value={status === 'loading' ? '...' : totalReports} 
+                   trend={totalTrend} 
+                   paths={totalPaths} 
+                   icon={FileText} 
+                   iconColorClass="text-[#127C2F]" 
+                   iconBgClass="bg-[#006FED] text-white" 
+                />
+                <AdminStatCard 
+                   title="Resolved Reports" 
+                   value={status === 'loading' ? '...' : resolvedReports} 
+                   trend={resolvedTrend} 
+                   paths={resolvedPaths} 
+                   icon={CheckCircle2} 
+                   iconColorClass="text-[#DB0404]" 
+                   iconBgClass="bg-primary text-white" 
+                />
+                <AdminStatCard 
+                   title="Acknowledged Reports" 
+                   value={status === 'loading' ? '...' : acknowledgedReports} 
+                   trend={acknowledgedTrend} 
+                   paths={acknowledgedPaths} 
+                   icon={Clock} 
+                   iconColorClass="text-[#F59E0B]" 
+                   iconBgClass="bg-[#F59E0B] text-white" 
+                />
+                <AdminStatCard 
+                   title="Avg Response Time" 
+                   value={stats.averageResponseTimeHours + 'h'} 
+                   trend={responseTimeTrend} 
+                   paths={responseTimePaths} 
+                   icon={Timer} 
+                   iconColorClass="text-[#9CA3AF]" 
+                   iconBgClass="bg-paragraph text-white" 
+                />
+             </>
+          )}
         </div>
         
         {/* System Status Boxes for Error State on Reports Page */}
