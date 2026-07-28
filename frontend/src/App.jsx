@@ -44,8 +44,7 @@ const PageLoader = () => (
 function App() {
   const location = useLocation();
   const isPWA = useIsPWA();
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
-  const shouldShowSplash = isPWA || isMobile;
+  const shouldShowSplash = isPWA;
   const [isSplashComplete, setIsSplashComplete] = useState(!shouldShowSplash);
 
   useEffect(() => {
