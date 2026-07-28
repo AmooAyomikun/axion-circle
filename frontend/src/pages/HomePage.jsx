@@ -281,6 +281,10 @@ export default function HomePage() {
                       Use App on Mobile
                     </button>
                   )}
+                  <div className="text-center mt-2">
+                    <span className="text-sm text-paragraph font-medium">Already have an account? </span>
+                    <Link to="/login" className="text-sm font-bold text-primary hover:underline transition-all">Sign In</Link>
+                  </div>
                 </div>
               </div>
             </>
