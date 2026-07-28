@@ -37,7 +37,7 @@ import fallbackImage from '../assets/fallback-image.svg';
 import { timeAgo } from '../utils/timeAgo';
 import useInstallPrompt from '../hooks/useInstallPrompt';
 import useIsPWA from '../hooks/useIsPWA';
-import { generateTrendData, generateSparklinePath } from '../utils/trendUtils';
+import { generateTrendData, calculateTrendFromReports, generateSparklinePath } from '../utils/trendUtils';
 
 const LazyRender = ({ children, fallback }) => {
   const [isIntersecting, setIntersecting] = useState(false);
@@ -247,9 +247,9 @@ export default function HomePage() {
     }
   };
 
-  const totalReportsTrend = generateTrendData('homeTotal', stats.totalReports);
-  const resolvedReportsTrend = generateTrendData('homeResolved', stats.resolvedReports);
-  const creditsTrend = generateTrendData('homeCredits', stats.totalCreditsEarned);
+  const totalReportsTrend = calculateTrendFromReports(reports, 'homeTotal', stats.totalReports);
+  const resolvedReportsTrend = calculateTrendFromReports(reports, 'homeResolved', stats.resolvedReports);
+  const creditsTrend = calculateTrendFromReports(reports, 'homeCredits', stats.totalCreditsEarned);
   
   const totalReportsPaths = generateSparklinePath(totalReportsTrend.dataPoints);
   const resolvedReportsPaths = generateSparklinePath(resolvedReportsTrend.dataPoints);

@@ -19,7 +19,7 @@ import AdminLayout from '../components/AdminLayout';
 import AdminReportsTable from '../components/AdminReportsTable';
 const RegionalActivityMap = lazy(() => import('../components/RegionalActivityMap'));
 import SEO from '../components/SEO';
-import { generateTrendData, generateSparklinePath } from '../utils/trendUtils';
+import { generateTrendData, calculateTrendFromReports, generateSparklinePath } from '../utils/trendUtils';
 
 export default function AdminReportsPage() {
   const location = useLocation();
@@ -121,13 +121,13 @@ export default function AdminReportsPage() {
   const resolvedReports = stats.resolved;
   const acknowledgedReports = stats.acknowledged;
 
-  // Generate dynamic trends based on the current stats
-  const totalTrend = generateTrendData('total', totalReports);
-  const resolvedTrend = generateTrendData('resolved', resolvedReports);
-  const acknowledgedTrend = generateTrendData('acknowledged', acknowledgedReports);
+  // Generate dynamic trends based on the current stats and available backend report data
+  const totalTrend = calculateTrendFromReports(reports, 'total', totalReports);
+  const resolvedTrend = calculateTrendFromReports(reports, 'resolved', resolvedReports);
+  const acknowledgedTrend = calculateTrendFromReports(reports, 'acknowledged', acknowledgedReports);
   
   // For Avg Response Time, since we don't have real data, base it on 24 (2.4h)
-  const responseTimeTrend = generateTrendData('responseTime', 24); 
+  const responseTimeTrend = calculateTrendFromReports(reports, 'responseTime', 24); 
   
   const totalPaths = generateSparklinePath(totalTrend.dataPoints);
   const resolvedPaths = generateSparklinePath(resolvedTrend.dataPoints);
