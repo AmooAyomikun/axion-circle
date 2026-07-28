@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react';
 import NavbarLogo from './NavbarLogo';
-import useIsPWA from '../hooks/useIsPWA';
 
 export default function SplashScreen({ onComplete }) {
-  const isPWA = useIsPWA();
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
   const [isVisible, setIsVisible] = useState(true);
   const [isFadingOut, setIsFadingOut] = useState(false);
 
   useEffect(() => {
-    // Only show the custom splash screen if running as a PWA
-    if (!isPWA) {
+    // Only show the custom splash screen on mobile devices
+    if (!isMobile) {
       onComplete();
       return;
     }
@@ -27,9 +26,9 @@ export default function SplashScreen({ onComplete }) {
       clearTimeout(timer1);
       clearTimeout(timer2);
     };
-  }, [isPWA, onComplete]);
+  }, [isMobile, onComplete]);
 
-  if (!isPWA || !isVisible) return null;
+  if (!isMobile || !isVisible) return null;
 
   return (
     <div 
