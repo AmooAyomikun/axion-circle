@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 import api from '../services/api';
 import AuthHeroPanel from '../components/AuthHeroPanel';
 import Logo from '../components/Logo';
+import SEO from '../components/SEO';
 
 const SharedLogo = () => (
   <div className="flex flex-col items-center justify-center">
@@ -132,6 +133,7 @@ export default function VerifyEmailPage() {
   if (isSuccess) {
     return (
       <div className="min-h-screen flex lg:flex font-body bg-white-bg">
+        <SEO title="Verify Email" />
         <AuthHeroPanel />
         <div className="w-full lg:w-1/2 min-h-screen flex flex-col items-center justify-center p-6 sm:p-12">
           <div className="w-full max-w-sm px-4 sm:px-8 my-auto flex flex-col items-center text-center animate-in fade-in duration-300">

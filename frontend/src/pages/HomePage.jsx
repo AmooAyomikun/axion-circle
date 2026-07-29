@@ -52,7 +52,7 @@ const LazyRender = ({ children, fallback }) => {
           observer.disconnect();
         }
       },
-      { rootMargin: '200px' }
+      { rootMargin: '0px' }
     );
     if (ref.current) {
       observer.observe(ref.current);
@@ -114,7 +114,7 @@ export default function HomePage() {
           globalResolutionRate = Math.round(((statsData.resolvedReports || 0) / statsData.totalReports) * 100);
         }
       } catch (err) {
-        console.error('Failed to fetch stats:', err);
+        // console.error('Failed to fetch stats:', err);
       }
 
       try {
@@ -134,7 +134,7 @@ export default function HomePage() {
         const content = res.data?.data?.content || res.data?.content || res.data?.data || [];
         apiReports = Array.isArray(content) ? content : [];
       } catch (apiErr) {
-        console.error('Failed to fetch live reports:', apiErr);
+        // console.error('Failed to fetch live reports:', apiErr);
         setMapStatus('error');
         return;
       }

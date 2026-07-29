@@ -76,20 +76,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         // Safe object-based chunk splitting — Rollup resolves load order correctly
-        manualChunks: {
-          // React core — always loaded, must be first
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          // Leaflet/maps — only loaded when map components are shown
-          'map-vendor': ['leaflet', 'react-leaflet', 'leaflet.markercluster', '@changey/react-leaflet-markercluster'],
-          // Google OAuth — only needed on login/register
-          'google-auth': ['@react-oauth/google'],
-          // Icons — shared across pages
-          'icons': ['lucide-react'],
-          // Analytics — deferred loaded after page interaction
-          'analytics': ['react-ga4'],
-          // Toast notifications
-          'toast': ['react-hot-toast'],
-        },
+        // manualChunks removed for optimal Vite auto-splitting
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash][extname]',

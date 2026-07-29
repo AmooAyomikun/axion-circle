@@ -8,6 +8,7 @@ import api from '../services/api';
 import AuthHeroPanel from '../components/AuthHeroPanel';
 import Logo from '../components/Logo';
 import AccountCreatedModal from '../components/AccountCreatedModal';
+import SEO from '../components/SEO';
 
 const SharedLogo = () => (
   <div className="flex flex-col items-center justify-center">
@@ -327,6 +328,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex lg:flex font-body bg-white-bg">
+        <SEO title="Register" />
       {/* Left Column - Shared Auth Hero */}
       <AuthHeroPanel />
 

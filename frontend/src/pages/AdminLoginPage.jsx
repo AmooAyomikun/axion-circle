@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { Eye, EyeOff, MapPin } from 'lucide-react';
 import api from '../services/api';
 import Logo from '../components/Logo';
+import SEO from '../components/SEO';
 
 export default function AdminLoginPage() {
   const navigate = useNavigate();
@@ -76,6 +77,7 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center font-body bg-white-bg relative overflow-hidden p-6">
+        <SEO title="Admin Login" />
       {/* Decorative Background */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none flex items-center justify-center" aria-hidden="true">
         <Logo className="w-[600px] h-[600px] sm:w-[800px] sm:h-[800px] lg:w-[1000px] lg:h-[1000px] object-contain opacity-[0.04] grayscale" />

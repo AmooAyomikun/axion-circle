@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import AppNavbar from '../components/AppNavbar';
 import Footer from '../components/Footer';
 import api from '../services/api';
+import SEO from '../components/SEO';
 
 export default function RewardsPage() {
   const navigate = useNavigate();
@@ -79,6 +80,7 @@ export default function RewardsPage() {
 
   return (
     <div className="min-h-screen bg-white-bg font-body flex flex-col">
+        <SEO title="Rewards" />
       <AppNavbar activeTab="rewards" />
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
@@ -149,7 +151,7 @@ export default function RewardsPage() {
                   <div key={reward.id} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col">
                     <div className="w-full h-48 bg-gray-50 rounded-xl mb-4 overflow-hidden flex items-center justify-center">
                       {reward.imageUrl ? (
-                        <img src={reward.imageUrl} alt={reward.name} className="w-full h-full object-cover" />
+                        <img loading="lazy" src={reward.imageUrl} alt={reward.name} className="w-full h-full object-cover" />
                       ) : (
                         <Gift className="w-16 h-16 text-gray-200" />
                       )}
@@ -201,7 +203,7 @@ export default function RewardsPage() {
                   <div key={claim.id} className="bg-white border border-gray-100 rounded-xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center gap-4">
                     <div className="w-16 h-16 bg-gray-50 rounded-lg overflow-hidden shrink-0 hidden sm:flex items-center justify-center">
                       {claim.reward?.imageUrl ? (
-                        <img src={claim.reward.imageUrl} alt={claim.reward.name} className="w-full h-full object-cover" />
+                        <img loading="lazy" src={claim.reward.imageUrl} alt={claim.reward.name} className="w-full h-full object-cover" />
                       ) : (
                         <Gift className="w-8 h-8 text-gray-300" />
                       )}

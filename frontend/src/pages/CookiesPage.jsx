@@ -1,12 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import AppNavbar from '../components/AppNavbar';
 import Footer from '../components/Footer';
+import SEO from '../components/SEO';
 
 export default function CookiesPage() {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-white-bg font-body flex flex-col justify-between">
+        <SEO title="Cookies" />
       <div>
         <AppNavbar />
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">

@@ -1,9 +1,11 @@
 import { Coins } from 'lucide-react';
 import AppNavbar from '../components/AppNavbar';
+import SEO from '../components/SEO';
 
 export default function CreditsPage() {
   return (
     <div className="min-h-screen bg-white-bg font-body flex flex-col">
+        <SEO title="Credits" />
       <AppNavbar />
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-16 text-center">
