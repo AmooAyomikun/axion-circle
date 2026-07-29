@@ -95,6 +95,13 @@ export default function ReportDetailPage() {
   
   const [newComment, setNewComment] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  
+  // Mention System State
+  const [showMentionDropdown, setShowMentionDropdown] = useState(false);
+  const [mentionSearchTerm, setMentionSearchTerm] = useState('');
+  const [mentionUsers, setMentionUsers] = useState([]);
+  const [mentionLoading, setMentionLoading] = useState(false);
+  const [cursorPosition, setCursorPosition] = useState(0);
 
   // Reverse Geocoded Location
   const [geoAddress, setGeoAddress] = useState(null);
@@ -198,6 +205,96 @@ export default function ReportDetailPage() {
     } finally {
       setIsSubmittingComment(false);
     }
+  };
+
+  const handleCommentChange = async (e) => {
+    const val = e.target.value;
+    setNewComment(val);
+    const cursor = e.target.selectionStart;
+    setCursorPosition(cursor);
+
+    // Look backwards from cursor for an '@'
+    const textBeforeCursor = val.slice(0, cursor);
+    const match = textBeforeCursor.match(/@(\w*)$/);
+    
+    if (match) {
+      const term = match[1];
+      setMentionSearchTerm(term);
+      setShowMentionDropdown(true);
+      
+      // Fetch users
+      setMentionLoading(true);
+      try {
+        const { data } = await api.get(`/users/search?q=${term}`);
+        setMentionUsers(data.data || data || []);
+      } catch (error) {
+        // Fallback mock users so the frontend is testable before backend is ready
+        const allMocks = [
+          { id: 'm1', username: 'city_admin', displayName: 'City Admin', avatarUrl: '' },
+          { id: 'm2', username: 'john_doe', displayName: 'John Doe', avatarUrl: '' },
+          { id: 'm3', username: 'jane_smith', displayName: 'Jane Smith', avatarUrl: '' },
+          { id: 'm4', username: 'environmental_agency', displayName: 'Env Agency', avatarUrl: '' }
+        ];
+        setMentionUsers(allMocks.filter(u => u.username.includes(term.toLowerCase()) || u.displayName.toLowerCase().includes(term.toLowerCase())));
+      } finally {
+        setMentionLoading(false);
+      }
+    } else {
+      setShowMentionDropdown(false);
+    }
+  };
+
+  const handleSelectMention = (user) => {
+    const textBeforeCursor = newComment.slice(0, cursorPosition);
+    const textAfterCursor = newComment.slice(cursorPosition);
+    
+    // Replace the `@term` with `@username `
+    const replacedTextBefore = textBeforeCursor.replace(/@\w*$/, `@${user.username} `);
+    
+    setNewComment(replacedTextBefore + textAfterCursor);
+    setShowMentionDropdown(false);
+  };
+
+  const MentionDropdown = () => {
+    if (!showMentionDropdown) return null;
+    return (
+      <div className="absolute bottom-[calc(100%+8px)] left-0 w-64 bg-white border border-gray-200 rounded-lg shadow-[0_4px_20px_rgb(0,0,0,0.1)] z-[100] max-h-48 overflow-y-auto">
+        {mentionLoading ? (
+          <div className="p-3 text-sm text-gray-500 text-center">Searching...</div>
+        ) : mentionUsers.length === 0 ? (
+          <div className="p-3 text-sm text-gray-500 text-center">No users found</div>
+        ) : (
+          <ul className="py-1">
+            {mentionUsers.map(u => (
+              <li 
+                key={u.id}
+                onClick={() => handleSelectMention(u)}
+                className="px-3 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-2"
+              >
+                <div className="w-7 h-7 rounded-full bg-gray-200 overflow-hidden shrink-0 border border-gray-100">
+                  <img src={u.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.displayName || u.username)}&background=random`} alt="" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-gray-900 leading-tight">{u.displayName}</span>
+                  <span className="text-xs text-gray-500 leading-tight">@{u.username}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  };
+
+  const renderCommentContent = (content) => {
+    if (!content) return null;
+    const parts = content.split(/(@\w+)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('@')) {
+        return <span key={i} className="text-primary font-semibold">{part}</span>;
+      }
+      return part;
+    });
   };
 
   const [commentToDelete, setCommentToDelete] = useState(null);
@@ -521,7 +618,7 @@ export default function ReportDetailPage() {
                             </button>
                           )}
                         </div>
-                        <p className="text-sm text-paragraph leading-relaxed whitespace-pre-wrap break-all overflow-hidden">{comment.content}</p>
+                        <p className="text-sm text-paragraph leading-relaxed whitespace-pre-wrap break-all overflow-hidden">{renderCommentContent(comment.content)}</p>
                       </div>
                     </div>
                   ))
@@ -532,11 +629,12 @@ export default function ReportDetailPage() {
               {isLoggedIn ? (
                 <form onSubmit={handleAddComment} className="flex gap-2 items-start">
                   <div className="relative flex-1">
+                    <MentionDropdown />
                     <input
                       type="text"
                       maxLength={1000}
                       value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
+                      onChange={handleCommentChange}
                       placeholder="Write a comment..."
                       className="w-full px-3 py-2.5 pr-16 border border-white-stroke rounded-lg text-xs focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors bg-white shadow-sm"
                     />
@@ -844,7 +942,7 @@ export default function ReportDetailPage() {
                             )}
                           </div>
                           <p className="text-sm text-paragraph whitespace-pre-wrap break-all overflow-hidden">
-                            {comment.content}
+                            {renderCommentContent(comment.content)}
                           </p>
                         </div>
                       </div>
@@ -857,12 +955,13 @@ export default function ReportDetailPage() {
               {isLoggedIn ? (
                 <form onSubmit={handleAddComment} className="flex gap-3 items-start">
                   <div className="relative flex-1">
+                    <MentionDropdown />
                     <input
                       id="commentInput"
                       type="text"
                       maxLength={1000}
                       value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
+                      onChange={handleCommentChange}
                       placeholder="Write a comment..."
                       className="w-full px-4 py-2.5 pr-16 border border-white-stroke rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors bg-white"
                     />
