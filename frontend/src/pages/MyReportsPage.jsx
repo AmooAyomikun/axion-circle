@@ -122,10 +122,10 @@ export default function MyReportsPage() {
           api.get('/credits/balance').catch(() => ({ data: { data: { creditBalance: 0 } } }))
         ]);
         
-        if (creditsRes?.data?.data?.creditBalance !== undefined) {
-          setCredits(creditsRes.data.data.creditBalance);
-        } else if (creditsRes?.data?.creditBalance !== undefined) {
-          setCredits(creditsRes.data.creditBalance);
+        if (creditsRes?.data?.data?.balance !== undefined || creditsRes?.data?.data?.creditBalance !== undefined) {
+          setCredits(creditsRes.data.data.balance ?? creditsRes.data.data.creditBalance);
+        } else if (creditsRes?.data?.balance !== undefined || creditsRes?.data?.creditBalance !== undefined) {
+          setCredits(creditsRes.data.balance ?? creditsRes.data.creditBalance);
         }
 
         const data = response.data?.data;

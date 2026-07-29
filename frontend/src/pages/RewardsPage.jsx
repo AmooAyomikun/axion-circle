@@ -33,7 +33,7 @@ export default function RewardsPage() {
       setRewards(rewardsRes.data?.data || []);
       
       if (creditsRes) {
-        const bal = creditsRes.data?.data?.creditBalance ?? creditsRes.data?.creditBalance ?? 0;
+        const bal = creditsRes.data?.data?.balance ?? creditsRes.data?.data?.creditBalance ?? creditsRes.data?.balance ?? creditsRes.data?.creditBalance ?? 0;
         setCredits(bal);
       }
       if (claimsRes) {
@@ -59,13 +59,18 @@ export default function RewardsPage() {
       return;
     }
 
-    if (credits < reward.creditsRequired) {
-      toast.error("You don't have enough Eco-Points for this reward.");
-      return;
-    }
-
     try {
       setIsClaiming(true);
+      
+      // Fetch fresh balance before claiming
+      const balanceRes = await api.get('/credits/balance');
+      const freshCredits = balanceRes.data?.data?.balance ?? balanceRes.data?.data?.creditBalance ?? balanceRes.data?.balance ?? balanceRes.data?.creditBalance ?? 0;
+      setCredits(freshCredits);
+
+      if (freshCredits < reward.creditsRequired) {
+        toast.error("You don't have enough Eco-Points for this reward.");
+        return;
+      }
       await api.post(`/rewards/${reward.id}/claim`);
       toast.success(`Successfully claimed ${reward.name}!`);
       // Refresh data

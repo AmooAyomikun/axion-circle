@@ -119,10 +119,10 @@ export default function HomePage() {
 
       try {
         const creditsRes = await api.get('/credits/balance');
-        if (creditsRes?.data?.data?.creditBalance !== undefined) {
-          setCredits(creditsRes.data.data.creditBalance);
-        } else if (creditsRes?.data?.creditBalance !== undefined) {
-          setCredits(creditsRes.data.creditBalance);
+        if (creditsRes?.data?.data?.balance !== undefined || creditsRes?.data?.data?.creditBalance !== undefined) {
+          setCredits(creditsRes.data.data.balance ?? creditsRes.data.data.creditBalance);
+        } else if (creditsRes?.data?.balance !== undefined || creditsRes?.data?.creditBalance !== undefined) {
+          setCredits(creditsRes.data.balance ?? creditsRes.data.creditBalance);
         }
       } catch (err) {
         // user not logged in or endpoint failed
