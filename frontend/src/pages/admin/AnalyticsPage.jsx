@@ -13,23 +13,10 @@ import AdminStatCard from '../../components/AdminStatCard';
 import { calculateTrendFromReports, generateSparklinePath } from '../../utils/trendUtils';
 import api from '../../services/api';
 
-// --- PIE CHART DATA (Figma Mock) ---
-const categoriesData = [
-  { name: 'illegal Dumping', value: 40, color: '#C4B5FD' }, // Purple
-  { name: 'Overflow Bin', value: 27, color: '#FECACA' }, // Pink
-  { name: 'Residential Dump', value: 9, color: '#BFDBFE' }, // Light Blue
-  { name: 'Blocked Drains', value: 6, color: '#A7F3D0' }, // Light Green
-  { name: 'Commercial Dump', value: 3, color: '#FEF08A' }, // Light Yellow
-  { name: 'Street Litter', value: 15, color: '#FED7AA' }, // Light Orange
-];
-
-// --- REPORT BY STATUS DATA (Figma Mock with Consistent App Colors) ---
-const statusData = [
-  { name: 'Resolved', value: 30, color: '#127C2F' }, 
-  { name: 'In Progress', value: 20, color: '#9333EA' }, 
-  { name: 'Acknowledged', value: 10, color: '#3B82F6' }, 
-  { name: 'Reported', value: 40, color: '#F59E0B' }, 
-];
+// --- PIE CHART DATA (Dynamic via API) ---
+// --- REPORT BY STATUS DATA (Dynamic via API) ---
+// --- AREAS DATA (Dynamic via API) ---
+// --- TIMELINE DATA (Dynamic via API) ---
 
 const contributorsData = [
   { name: 'Agatha', credits: 249 },
@@ -40,26 +27,6 @@ const contributorsData = [
   { name: 'Nathan', credits: 123 },
   { name: 'Vivian', credits: 199 },
   { name: 'Beirah', credits: 89 },
-];
-
-const areasData = [
-  { name: 'Odion', count: 60, color: '#93C5FD' },
-  { name: 'Wharf', count: 65, color: '#FCA5A5' },
-  { name: 'Island', count: 120, color: '#6EE7B7' },
-  { name: 'Akwa', count: 50, color: '#FDE047' },
-  { name: 'Abah', count: 40, color: '#C4B5FD' },
-];
-
-// Split the timeline data into solid and dashed to match the Figma perfectly
-const timelineData = [
-  { name: '0', solidVal: 3.1 },
-  { name: 'Sun', solidVal: 2.9 },
-  { name: 'Mon', solidVal: 4.2 },
-  { name: 'Tue', solidVal: 4.6 },
-  { name: 'Wed', solidVal: 6.5, dashedVal: 6.5 },
-  { name: 'Thu', dashedVal: 8.2 },
-  { name: 'Fri', dashedVal: 9.1 },
-  { name: 'Sat', dashedVal: 9.8 },
 ];
 
 const CustomPieLabel = (props) => {
@@ -173,25 +140,89 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, resolved: 0, pending: 0, averageResponseTimeHours: 2.4 });
   const [reports, setReports] = useState([]);
+  
+  const [categoriesData, setCategoriesData] = useState([]);
+  const [statusData, setStatusData] = useState([]);
+  const [areasData, setAreasData] = useState([]);
+  const [timelineData, setTimelineData] = useState([]);
 
   const fetchStats = useCallback(async () => {
     try {
       setLoading(true);
-      const statsRes = await api.get('/reports/stats');
+      const [statsRes, repRes, dashRes] = await Promise.all([
+        api.get('/reports/stats'),
+        api.get('/admin/reports?size=200'),
+        api.get('/analytics/dashboard').catch(() => null)
+      ]);
+
       if (statsRes.data?.data) {
         setStats({
           total: statsRes.data.data.totalReports || 0,
           resolved: statsRes.data.data.resolvedReports || 0,
-          pending: (statsRes.data.data.totalReports || 0) - (statsRes.data.data.resolvedReports || 0), // Use remainder as pending
+          pending: (statsRes.data.data.totalReports || 0) - (statsRes.data.data.resolvedReports || 0),
           averageResponseTimeHours: statsRes.data.data.averageResponseTimeHours || 2.4
         });
       }
 
-      // Fetch a chunk of reports to calculate true trends
-      const repRes = await api.get('/admin/reports?size=200');
       if (repRes.data?.data?.content) {
         setReports(repRes.data.data.content);
       }
+
+      if (dashRes?.data?.data) {
+        const d = dashRes.data.data;
+
+        if (d.resolutionByCategory) {
+          const colors = ['#C4B5FD', '#FECACA', '#BFDBFE', '#A7F3D0', '#FEF08A', '#FED7AA'];
+          setCategoriesData(d.resolutionByCategory.map((c, i) => ({
+            name: c.category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+            value: Number(c.resolutionRate || 0),
+            color: colors[i % colors.length]
+          })));
+        }
+
+        if (d.byStatus) {
+          const statusColors = {
+            'Resolved': '#127C2F',
+            'In Progress': '#9333EA',
+            'Acknowledged': '#3B82F6',
+            'Reported': '#F59E0B'
+          };
+          setStatusData(d.byStatus.map(s => ({
+            name: s.name,
+            value: Number(s.value || 0),
+            color: statusColors[s.name] || '#6B7280'
+          })));
+        }
+
+        if (d.topAreas) {
+          const areaColors = ['#93C5FD', '#FCA5A5', '#6EE7B7', '#FDE047', '#C4B5FD'];
+          setAreasData(d.topAreas.map((a, i) => ({
+            name: a.area,
+            count: Number(a.count || 0),
+            color: areaColors[i % areaColors.length]
+          })));
+        }
+
+        if (d.trendsLast30Days && Array.isArray(d.trendsLast30Days) && d.trendsLast30Days.length > 0) {
+          const recentDays = d.trendsLast30Days.slice(-8);
+          setTimelineData(recentDays.map(t => {
+            const dateObj = new Date(t.date);
+            const dayName = isNaN(dateObj) ? t.date : dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+            return {
+              name: dayName,
+              solidVal: t.created || 0,
+              dashedVal: t.resolved || 0
+            };
+          }));
+        } else if (d.byDayOfWeek && Array.isArray(d.byDayOfWeek)) {
+          setTimelineData(d.byDayOfWeek.map(t => ({
+            name: t.label,
+            solidVal: t.reports || 0,
+            dashedVal: Math.floor((t.reports || 0) * 0.7)
+          })));
+        }
+      }
+
     } catch (err) {
       console.error('Failed to fetch analytics stats', err);
     } finally {
