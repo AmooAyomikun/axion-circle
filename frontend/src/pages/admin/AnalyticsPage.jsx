@@ -182,25 +182,35 @@ export default function AnalyticsPage() {
 
         if (d.resolutionByCategory) {
           const colors = ['#C4B5FD', '#FECACA', '#BFDBFE', '#A7F3D0', '#FEF08A', '#FED7AA'];
-          setCategoriesData(d.resolutionByCategory.map((c, i) => ({
-            name: c.category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-            value: Number(c.resolutionRate || 0),
-            color: colors[i % colors.length]
-          })));
+          setCategoriesData(d.resolutionByCategory
+            .map((c, i) => ({
+              name: c.category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+              value: Number(c.resolutionRate || 0),
+              color: colors[i % colors.length]
+            }))
+            .filter(c => c.value > 0)
+          );
         }
 
         if (d.byStatus) {
           const statusColors = {
-            'Resolved': '#127C2F',
-            'In Progress': '#9333EA',
-            'Acknowledged': '#3B82F6',
-            'Reported': '#F59E0B'
+            'RESOLVED': '#127C2F',
+            'IN_PROGRESS': '#9333EA',
+            'IN PROGRESS': '#9333EA',
+            'ACKNOWLEDGED': '#3B82F6',
+            'REPORTED': '#F59E0B'
           };
-          setStatusData(d.byStatus.map(s => ({
-            name: s.name,
-            value: Number(s.value || 0),
-            color: statusColors[s.name] || '#6B7280'
-          })));
+          const totalStatus = d.byStatus.reduce((acc, curr) => acc + Number(curr.value || 0), 0) || 1;
+          setStatusData(d.byStatus.map(s => {
+            const rawName = s.name.toUpperCase();
+            const displayName = s.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            return {
+              name: displayName,
+              value: Number(s.value || 0),
+              percentage: Math.round((Number(s.value || 0) / totalStatus) * 100),
+              color: statusColors[rawName] || statusColors[displayName.toUpperCase()] || '#6B7280'
+            };
+          }));
         }
 
         if (d.topAreas) {
@@ -394,12 +404,12 @@ export default function AnalyticsPage() {
                       <div key={idx} className="flex flex-col gap-2">
                         <div className="flex justify-between items-center">
                           <span className="text-sm font-bold text-[#1F2937]">{status.name}</span>
-                          <span className="text-sm font-medium text-[#4B5563]">{status.value}%</span>
+                          <span className="text-sm font-medium text-[#4B5563]">{status.percentage}% ({status.value})</span>
                         </div>
                         <div className="w-full bg-[#F3F4F6] rounded-full h-2.5">
                           <div 
                             className="h-2.5 rounded-full"
-                            style={{ width: `${status.value}%`, backgroundColor: status.color }}
+                            style={{ width: `${status.percentage}%`, backgroundColor: status.color }}
                           ></div>
                         </div>
                       </div>
