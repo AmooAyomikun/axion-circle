@@ -10,22 +10,8 @@ export const api = axios.create({
   },
 });
 
-// Request interceptor — attach JWT token and mock for local testing to avoid CORS issues lowering Lighthouse scores
+// Request interceptor — attach JWT token
 api.interceptors.request.use((config) => {
-  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  if (isLocal) {
-    config.adapter = async () => {
-      return {
-        data: { data: [] },
-        status: 200,
-        statusText: 'OK',
-        headers: {},
-        config: config,
-        request: {}
-      };
-    };
-  }
-
   const token = (localStorage.getItem('access_token') || sessionStorage.getItem('access_token'));
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

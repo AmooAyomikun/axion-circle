@@ -5,6 +5,7 @@ import AdminRoute from './components/AdminRoute';
 import ConnectionLostModal from './components/ConnectionLostModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import SplashScreen from './components/SplashScreen';
+import PWAReloadPrompt from './components/PWAReloadPrompt';
 import useIsPWA from './hooks/useIsPWA';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -105,6 +106,7 @@ function App() {
   return (
     <>
       {!isSplashComplete && <SplashScreen onComplete={() => setIsSplashComplete(true)} />}
+      <PWAReloadPrompt />
       <Toaster position="top-right" />
       <ConnectionLostModal />
       <ErrorBoundary>
