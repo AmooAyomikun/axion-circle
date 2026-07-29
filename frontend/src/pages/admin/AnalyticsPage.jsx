@@ -466,10 +466,10 @@ export default function AnalyticsPage() {
                   </div>
                   <div className="mt-4 pt-4 border-t border-white-stroke">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-[#1F2937]">Trend is up by 5.2% this month</span>
+                      <span className="text-sm font-bold text-[#1F2937]">High reporting density areas</span>
                       <TrendingUp className="w-4 h-4 text-[#4B5563]" />
                     </div>
-                    <p className="text-[13px] text-[#6B7280] mt-1">Showing total visitors for the last 6 months</p>
+                    <p className="text-[13px] text-[#6B7280] mt-1">Showing top locations based on total community reports submitted</p>
                   </div>
                 </div>
               </div>
