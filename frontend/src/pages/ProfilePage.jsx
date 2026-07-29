@@ -9,6 +9,7 @@ import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import CustomCountrySelect from '../components/CustomCountrySelect';
 import api from '../services/api';
+import SEO from '../components/SEO';
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -221,6 +222,7 @@ export default function ProfilePage() {
   if (isSuccess) {
     return (
       <div className="min-h-screen bg-white-bg font-body flex flex-col">
+        <SEO title="Profile" />
         <AppNavbar />
         <main className="flex-1 flex flex-col items-center justify-center px-4 py-16 text-center">
           <div className="bg-white p-10 rounded-2xl shadow-sm border border-gray-100 max-w-md w-full flex flex-col items-center">

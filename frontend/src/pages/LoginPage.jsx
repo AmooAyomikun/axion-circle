@@ -6,6 +6,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import api from '../services/api';
 import AuthHeroPanel from '../components/AuthHeroPanel';
 import Logo from '../components/Logo';
+import SEO from '../components/SEO';
 
 const SharedLogo = () => (
   <div className="flex flex-col items-center justify-center">
@@ -249,6 +250,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex lg:flex font-body bg-white-bg">
+        <SEO title="Login" />
       {/* Left Column */}
       <AuthHeroPanel />
 

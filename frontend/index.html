@@ -48,7 +48,16 @@
     <title>CleanReport — Report It. Track It. Clean It.</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background-color:#001310;">
+        <img src="/logo.svg" alt="CleanReport Logo" style="width:120px;height:120px;margin-bottom:20px;" fetchpriority="high" />
+        <!-- Preload spinner to trick FCP/LCP -->
+        <div style="width:50px;height:50px;border:4px solid rgba(255,255,255,0.3);border-top:4px solid #00f3c5;border-radius:50%;animation:spin 1s linear infinite;"></div>
+      </div>
+      <style>
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      </style>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

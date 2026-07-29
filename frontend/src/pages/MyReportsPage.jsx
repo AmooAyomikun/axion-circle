@@ -34,6 +34,7 @@ const getCardPhotoUrl = (report) => {
 const statusTabs = ['All', 'Reported', 'Acknowledged', 'In Progress', 'Resolved'];
 
 import api from '../services/api';
+import SEO from '../components/SEO';
 
 export default function MyReportsPage() {
   const navigate = useNavigate();
@@ -257,6 +258,7 @@ export default function MyReportsPage() {
     if (indicator === 'alert') {
       return (
         <div className="w-7 h-7 rounded-full bg-alert-errorLight text-alert-error flex items-center justify-center border border-alert-error/20 shadow-2xs shrink-0">
+        <SEO title="My Reports" />
           <Bell className="w-3.5 h-3.5 fill-alert-error text-alert-error" />
         </div>
       );

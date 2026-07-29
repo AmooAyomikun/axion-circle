@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import AppNavbar from '../../components/AppNavbar';
 import Footer from '../../components/Footer';
 import api from '../../services/api';
+import SEO from '../../components/SEO';
 
 // A reusable accessible toggle switch component
 const ToggleSwitch = ({ label, checked, onChange, disabled }) => (
@@ -112,6 +113,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-white-bg font-body flex flex-col">
+        <SEO title="Notifications" />
       <AppNavbar />
 
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
