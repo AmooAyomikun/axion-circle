@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  AreaChart, Area, 
+  LineChart, Line, 
   PieChart, Pie, Cell, 
+  BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
 import AdminLayout from '../../components/AdminLayout';
 import SEO from '../../components/SEO';
-import { Download, FileText, CheckCircle2, Clock, BarChart2, TrendingUp } from 'lucide-react';
+import { Download, FileText, CheckCircle2, Clock, BarChart2, TrendingUp, Timer } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AdminStatCard from '../../components/AdminStatCard';
 import { calculateTrendFromReports, generateSparklinePath } from '../../utils/trendUtils';
@@ -14,20 +15,20 @@ import api from '../../services/api';
 
 // --- PIE CHART DATA (Figma Mock) ---
 const categoriesData = [
-  { name: 'illegal Dumping', value: 40, color: '#34D399' },
-  { name: 'Overflow Bin', value: 27, color: '#A7F3D0' },
-  { name: 'Residential Dump', value: 9, color: '#93C5FD' },
-  { name: 'Blocked Drains', value: 6, color: '#FDE047' },
-  { name: 'Commercial Dump', value: 3, color: '#FCA5A5' },
-  { name: 'Street Litter', value: 15, color: '#C4B5FD' },
+  { name: 'illegal Dumping', value: 40, color: '#C4B5FD' }, // Purple
+  { name: 'Overflow Bin', value: 27, color: '#FECACA' }, // Pink
+  { name: 'Residential Dump', value: 9, color: '#BFDBFE' }, // Light Blue
+  { name: 'Blocked Drains', value: 6, color: '#A7F3D0' }, // Light Green
+  { name: 'Commercial Dump', value: 3, color: '#FEF08A' }, // Light Yellow
+  { name: 'Street Litter', value: 15, color: '#FED7AA' }, // Light Orange
 ];
 
 // --- REPORT BY STATUS DATA (Figma Mock with Consistent App Colors) ---
 const statusData = [
-  { name: 'Resolved', value: 30, color: '#127C2F' }, // Green
-  { name: 'In Progress', value: 20, color: '#9333EA' }, // Purple
-  { name: 'Acknowledged', value: 10, color: '#3B82F6' }, // Blue
-  { name: 'Reported', value: 40, color: '#F59E0B' }, // Orange
+  { name: 'Resolved', value: 30, color: '#127C2F' }, 
+  { name: 'In Progress', value: 20, color: '#9333EA' }, 
+  { name: 'Acknowledged', value: 10, color: '#3B82F6' }, 
+  { name: 'Reported', value: 40, color: '#F59E0B' }, 
 ];
 
 const contributorsData = [
@@ -49,61 +50,117 @@ const areasData = [
   { name: 'Abah', count: 40, color: '#C4B5FD' },
 ];
 
+// Split the timeline data into solid and dashed to match the Figma perfectly
 const timelineData = [
-  { name: '0', val: 0.3 },
-  { name: 'Sun', val: 0.28 },
-  { name: 'Mon', val: 0.58 },
-  { name: 'Tue', val: 0.42 },
-  { name: 'Wed', val: 0.45 },
-  { name: 'Thu', val: 0.82 },
-  { name: 'Fri', val: 0.90 },
-  { name: 'Sat', val: 0.98 },
+  { name: '0', solidVal: 3.1 },
+  { name: 'Sun', solidVal: 2.9 },
+  { name: 'Mon', solidVal: 4.2 },
+  { name: 'Tue', solidVal: 4.6 },
+  { name: 'Wed', solidVal: 6.5, dashedVal: 6.5 },
+  { name: 'Thu', dashedVal: 8.2 },
+  { name: 'Fri', dashedVal: 9.1 },
+  { name: 'Sat', dashedVal: 9.8 },
 ];
 
 const CustomPieLabel = (props) => {
   const RADIAN = Math.PI / 180;
-  const { cx, cy, midAngle, innerRadius, outerRadius, percent, name, color } = props;
-  const radius = outerRadius * 1.35;
-  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * RADIAN);
-  const textAnchor = x > cx ? 'start' : 'end';
+  const { cx, cy, midAngle, outerRadius, percent, name } = props;
+  
+  // Calculate points for the custom elbow line
+  const sin = Math.sin(-RADIAN * midAngle);
+  const cos = Math.cos(-RADIAN * midAngle);
+  
+  // Start exactly at the pie slice edge
+  const sx = cx + outerRadius * cos;
+  const sy = cy + outerRadius * sin;
+  
+  let mx = cx + (outerRadius + 10) * cos;
+  let my = cy + (outerRadius + 10) * sin;
+
+  let isRightSide = cos >= 0;
+  // Force Overflow Bin to the right side like Figma
+  if (name === 'Overflow Bin') isRightSide = true;
+
+  // Manual anti-collision routing to perfectly match Figma layout
+  // Now that the pie radius is 55, we have plenty of vertical room to space them out
+  if (name === 'Street Litter') {
+    my -= 15; // Push up to separate from Commercial Dump
+    mx -= 25; // Pull left
+  } else if (name === 'Commercial Dump') {
+    my -= 5;  // Push up slightly
+  } else if (name === 'Blocked Drains') {
+    my += 5;  // Push down slightly
+  } else if (name === 'Residential Dump') {
+    my += 25; // Push down to separate from Blocked Drains
+    mx -= 15;
+  } else if (name === 'Overflow Bin') {
+    my += 10; // Push down slightly
+    mx += 25; 
+  } else if (name === 'illegal Dumping') {
+    my -= 10;
+  }
+
+  let exDir = isRightSide ? 1 : -1;
+  const ex = mx + exDir * 15; // horizontal line length
+  const ey = my;
+
+  const textAnchor = isRightSide ? 'start' : 'end';
+  const textX = ex + exDir * 6; // text padding
 
   return (
     <g>
-      <text x={x} y={y - 8} textAnchor={textAnchor} fill="#111827" fontSize={11} fontWeight={600} dominantBaseline="central">
+      <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke="#D1D5DB" fill="none" strokeWidth={1} />
+      <text x={textX} y={ey - 7} textAnchor={textAnchor} fill="#1F2937" fontSize={11.5} fontWeight={600} dominantBaseline="central">
         {name}
       </text>
-      <text x={x} y={y + 8} textAnchor={textAnchor} fill="#127C2F" fontSize={10} fontWeight={700} dominantBaseline="central">
+      <text x={textX} y={ey + 9} textAnchor={textAnchor} fill="#10B981" fontSize={11.5} fontWeight={500} dominantBaseline="central">
         {(percent * 100).toFixed(0)}%
       </text>
     </g>
   );
 };
 
+const CustomPieTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    const displayName = data.name === 'illegal Dumping' ? 'illegal Dump' : data.name;
+    return (
+      <div className="bg-white rounded-xl shadow-xl p-4 border border-white-stroke w-[220px]">
+        <div className="text-[#1F2937] font-semibold mb-3">Percentage of Reports</div>
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-3.5 h-3.5 rounded-sm" style={{ backgroundColor: data.color }}></div>
+            <span className="text-[#374151]">{displayName}</span>
+          </div>
+          <span className="font-medium text-[#374151]">{data.value}%</span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 const CustomAreaTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
-    // Generate a mock timestamp based on current time
-    const now = new Date();
-    const mockTime = `${now.getDate().toString().padStart(2, '0')}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
     return (
-      <div className="bg-white border border-white-stroke rounded-xl shadow-lg p-3 w-[150px]">
-        <div className="text-[10px] text-paragraph mb-2 font-medium">{mockTime}</div>
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center justify-between text-[11px]">
-            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-[#127C2F]"></div><span className="text-black-icon font-medium">Resolved</span></div>
-            <span className="font-semibold text-black-icon">30%</span>
+      <div className="bg-white border border-white-stroke rounded-xl shadow-xl p-4 w-[170px]">
+        <div className="text-[11px] text-[#6B7280] mb-3 font-medium">30-07-2028 28:20:45</div>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-sm bg-[#127C2F]"></div><span className="text-[#4B5563] font-medium">Resolved</span></div>
+            <span className="font-semibold text-[#4B5563]">30%</span>
           </div>
-          <div className="flex items-center justify-between text-[11px]">
-            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-[#9333EA]"></div><span className="text-black-icon font-medium">In Progress</span></div>
-            <span className="font-semibold text-black-icon">20%</span>
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-sm bg-[#8B5CF6]"></div><span className="text-[#4B5563] font-medium">In Progress</span></div>
+            <span className="font-semibold text-[#4B5563]">20%</span>
           </div>
-          <div className="flex items-center justify-between text-[11px]">
-            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-[#3B82F6]"></div><span className="text-black-icon font-medium">Acknowledged</span></div>
-            <span className="font-semibold text-black-icon">10%</span>
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-sm bg-[#3B82F6]"></div><span className="text-[#4B5563] font-medium">Acknowledged</span></div>
+            <span className="font-semibold text-[#4B5563]">10%</span>
           </div>
-          <div className="flex items-center justify-between text-[11px]">
-            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-[#F59E0B]"></div><span className="text-black-icon font-medium">Pending</span></div>
-            <span className="font-semibold text-black-icon">40%</span>
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-sm bg-[#F59E0B]"></div><span className="text-[#4B5563] font-medium">Pending</span></div>
+            <span className="font-semibold text-[#4B5563]">40%</span>
           </div>
         </div>
       </div>
@@ -114,7 +171,6 @@ const CustomAreaTooltip = ({ active, payload }) => {
 
 export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
-  const [timeFilter, setTimeFilter] = useState('Weekly');
   const [stats, setStats] = useState({ total: 0, resolved: 0, pending: 0, averageResponseTimeHours: 2.4 });
   const [reports, setReports] = useState([]);
 
@@ -175,10 +231,10 @@ export default function AnalyticsPage() {
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="font-heading text-2xl sm:text-[28px] font-bold text-black mb-1">
+            <h1 className="font-heading text-2xl sm:text-[28px] font-bold text-[#1F2937] mb-1">
               Analytics
             </h1>
-            <p className="text-sm text-paragraph font-medium">
+            <p className="text-sm text-[#6B7280] font-medium">
               Live view of community reporting activity across all areas.
             </p>
           </div>
@@ -205,8 +261,7 @@ export default function AnalyticsPage() {
                 trend={totalTrend} 
                 paths={totalPaths} 
                 icon={FileText} 
-                iconColorClass="text-white" 
-                iconBgClass="bg-[#8B5CF6]" 
+                iconBgClass="bg-[#006FED] text-white" 
               />
               <AdminStatCard 
                 title="Resolved Reports" 
@@ -214,28 +269,23 @@ export default function AnalyticsPage() {
                 trend={resolvedTrend} 
                 paths={resolvedPaths} 
                 icon={CheckCircle2} 
-                iconColorClass="text-white" 
-                iconBgClass="bg-[#127C2F]" 
+                iconBgClass="bg-primary text-white" 
               />
               <AdminStatCard 
-                title="Pending Reports" 
-                value={stats.pending} 
-                trend={pendingTrend} 
-                paths={pendingPaths} 
+                title="Acknowledged Reports" 
+                value={stats.acknowledged} 
+                trend={{ percentage: 0, isPositive: true }} 
+                paths={totalPaths} 
                 icon={Clock} 
-                iconColorClass="text-[#F59E0B]" 
-                iconBgClass="bg-[#FFF4E5]" 
-                svgFillColor="#FFE8E8" 
-                svgStrokeColor="#DB0404" 
+                iconBgClass="bg-[#F59E0B] text-white" 
               />
               <AdminStatCard 
                 title="Avg Response Time" 
                 value={`${stats.averageResponseTimeHours}h`} 
                 trend={avgTimeTrend} 
                 paths={avgTimePaths} 
-                icon={BarChart2} 
-                iconColorClass="text-white" 
-                iconBgClass="bg-[#006FED]" 
+                icon={Timer} 
+                iconBgClass="bg-paragraph text-white" 
               />
             </div>
 
@@ -243,19 +293,18 @@ export default function AnalyticsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
               {/* Categories of Reports */}
-              <div className="bg-white border border-white-stroke rounded-[20px] p-6 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col">
+              <div className="bg-white border border-white-stroke rounded-2xl p-6 shadow-sm flex flex-col">
                 <div className="flex items-start justify-between mb-2">
                   <div>
-                    <h2 className="font-heading font-bold text-[17px] text-black">Categories of Reports</h2>
-                    <p className="text-xs text-paragraph mt-1">Monthly staff growth and hiring patterns</p>
+                    <h2 className="font-heading font-bold text-xl text-[#1F2937]">Categories of Reports</h2>
+                    <p className="text-sm text-[#6B7280] mt-1">Breakdown of reports by issue category</p>
                   </div>
-                  <div className="flex bg-[#F3F4F6] p-1 rounded-lg">
-                    {['Weekly', 'Monthly', 'Yearly'].map(filter => (
+                  <div className="flex bg-white border border-[#E5E7EB] rounded-lg p-0.5">
+                    {['Weekly', 'Monthly', 'Yearly'].map((filter, i) => (
                       <button
                         key={filter}
-                        onClick={() => setTimeFilter(filter)}
-                        className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-colors ${
-                          timeFilter === filter ? 'bg-white text-black shadow-sm' : 'text-paragraph hover:text-black'
+                        className={`px-4 py-1.5 text-[13px] rounded-md transition-colors ${
+                          i === 0 ? 'bg-white text-[#127C2F] shadow-sm font-semibold' : 'text-[#4B5563] hover:text-black font-medium'
                         }`}
                       >
                         {filter}
@@ -264,50 +313,51 @@ export default function AnalyticsPage() {
                   </div>
                 </div>
                 
-                <div className="flex-1 min-h-[250px] w-full flex items-center justify-center mt-4">
+                <div className="flex-1 h-[220px] w-full flex items-center justify-center mt-2">
                   <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
+                    <PieChart margin={{ top: 10, right: 40, bottom: 10, left: 40 }}>
                       <Pie
                         data={categoriesData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={60}
-                        outerRadius={85}
-                        paddingAngle={2}
+                        innerRadius={0}
+                        outerRadius={55}
                         dataKey="value"
-                        labelLine={{ stroke: '#D1D5DB', strokeWidth: 1 }}
+                        labelLine={false}
                         label={<CustomPieLabel />}
-                        stroke="none"
+                        stroke="#ffffff"
+                        strokeWidth={2}
+                        startAngle={90}
+                        endAngle={-270}
                       >
                         {categoriesData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      {/* Optional extra standard tooltip just in case */}
-                      <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB', padding: '8px', fontSize: '12px' }} />
+                      <Tooltip content={<CustomPieTooltip />} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
               </div>
 
               {/* Report By Status (Custom Horizontal Bars) */}
-              <div className="bg-white border border-white-stroke rounded-[20px] p-6 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col">
-                <div className="mb-6">
-                   <h2 className="font-heading font-bold text-[17px] text-black">Report By Status</h2>
-                   <p className="text-xs text-paragraph mt-1">Current lifecycle stage</p>
+              <div className="bg-white border border-white-stroke rounded-2xl p-6 shadow-sm flex flex-col">
+                <div className="mb-4">
+                   <h2 className="font-heading font-bold text-xl text-[#1F2937]">Report By Status</h2>
+                   <p className="text-sm text-[#6B7280] mt-1">Current lifecycle stage</p>
                 </div>
                 
-                <div className="flex-1 flex flex-col justify-center gap-7">
+                <div className="flex-1 flex flex-col justify-center gap-5 mt-2">
                   {statusData.map((status, idx) => {
                     return (
                       <div key={idx} className="flex flex-col gap-2">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-semibold text-black">{status.name}</span>
-                          <span className="text-sm text-paragraph">{status.value}%</span>
+                          <span className="text-sm font-bold text-[#1F2937]">{status.name}</span>
+                          <span className="text-sm font-medium text-[#4B5563]">{status.value}%</span>
                         </div>
-                        <div className="w-full bg-[#F3F4F6] rounded-full h-2">
+                        <div className="w-full bg-[#F3F4F6] rounded-full h-2.5">
                           <div 
-                            className="h-2 rounded-full"
+                            className="h-2.5 rounded-full"
                             style={{ width: `${status.value}%`, backgroundColor: status.color }}
                           ></div>
                         </div>
@@ -322,40 +372,40 @@ export default function AnalyticsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
               {/* Top Contributors */}
-              <div className="bg-white border border-white-stroke rounded-[20px] p-6 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col">
+              <div className="bg-white border border-white-stroke rounded-2xl p-6 shadow-sm flex flex-col min-h-[300px]">
                 <div className="mb-6">
-                  <h2 className="font-heading font-bold text-[17px] text-black">Top Contributors by Credit Balance</h2>
-                  <p className="text-xs text-paragraph mt-1">Ranked by CleanCredits balance</p>
+                  <h2 className="font-heading font-bold text-xl text-[#1F2937]">Top Contributors by Credit Balance</h2>
+                  <p className="text-sm text-[#6B7280] mt-1">Ranked by CleanCredits balance</p>
                 </div>
                 <div className="flex-1 flex flex-col gap-4 justify-center py-2">
                   {contributorsData.map((c, i) => (
                     <div key={i} className="flex items-center gap-4">
-                      <span className="w-12 text-xs font-medium text-black-icon text-right">{c.name}</span>
+                      <span className="w-12 text-[13px] font-medium text-[#4B5563] text-right">{c.name}</span>
                       <div className="flex-1">
                         <div 
-                          className="h-3 bg-[#127C2F]" 
+                          className="h-3.5 bg-[#127C2F] rounded-r-sm" 
                           style={{ width: `${(c.credits / Math.max(...contributorsData.map(d=>d.credits))) * 100}%` }}
                         ></div>
                       </div>
-                      <span className="w-8 text-xs text-paragraph">{c.credits}</span>
+                      <span className="w-8 text-[13px] text-[#6B7280]">{c.credits}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Top 5 Reporting Areas */}
-              <div className="bg-white border border-white-stroke rounded-[20px] p-6 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col">
-                <div className="mb-2">
-                  <h2 className="font-heading font-bold text-[17px] text-black">Top 5 Reporting Areas</h2>
-                  <p className="text-xs text-paragraph mt-1">Araes where major reports come from</p>
+              <div className="bg-white border border-white-stroke rounded-2xl p-6 shadow-sm flex flex-col min-h-[300px]">
+                <div className="mb-4">
+                  <h2 className="font-heading font-bold text-xl text-[#1F2937]">Top 5 Reporting Areas</h2>
+                  <p className="text-sm text-[#6B7280] mt-1">Araes where major reports come from</p>
                 </div>
-                <div className="flex-1 min-h-[220px] w-full flex flex-col">
+                <div className="flex-1 min-h-[180px] w-full flex flex-col">
                   <div className="flex-1">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={areasData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }} barSize={36}>
-                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6B7280' }} dy={10} />
-                        <Tooltip cursor={{ fill: '#f3f4f6' }} contentStyle={{ borderRadius: '8px', fontSize: '12px' }} />
-                        <Bar dataKey="count" radius={[6, 6, 6, 6]}>
+                      <BarChart data={areasData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }} barSize={42}>
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} dy={10} />
+                        <Tooltip cursor={{ fill: '#F3F4F6', radius: 8 }} contentStyle={{ borderRadius: '8px', fontSize: '13px' }} />
+                        <Bar dataKey="count" radius={[8, 8, 8, 8]}>
                           {areasData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
@@ -365,28 +415,28 @@ export default function AnalyticsPage() {
                   </div>
                   <div className="mt-4 pt-4 border-t border-white-stroke">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-black">Trend is up by 5.2% this month</span>
-                      <TrendingUp className="w-4 h-4 text-black-icon" />
+                      <span className="text-sm font-bold text-[#1F2937]">Trend is up by 5.2% this month</span>
+                      <TrendingUp className="w-4 h-4 text-[#4B5563]" />
                     </div>
-                    <p className="text-xs text-paragraph mt-1">Showing total visitors for the last 6 months</p>
+                    <p className="text-[13px] text-[#6B7280] mt-1">Showing total visitors for the last 6 months</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* VERY BOTTOM: Reports Submitted Over Time */}
-            <div className="bg-white border border-white-stroke rounded-[20px] p-6 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-              <div className="flex items-start justify-between mb-6">
+            <div className="bg-white border border-white-stroke rounded-2xl p-6 shadow-sm min-h-[400px]">
+              <div className="flex items-start justify-between mb-8">
                 <div>
-                  <h2 className="font-heading font-bold text-[17px] text-black">Reports Submitted Over Time</h2>
-                  <p className="text-xs text-paragraph mt-1">Switch the time grain to explore trends</p>
+                  <h2 className="font-heading font-bold text-xl text-[#1F2937]">Reports Submitted Over Time</h2>
+                  <p className="text-sm text-[#6B7280] mt-1">Switch the time grain to explore trends</p>
                 </div>
-                <div className="flex bg-[#F3F4F6] p-1 rounded-lg">
-                  {['Weekly', 'Monthly', 'Yearly'].map(filter => (
+                <div className="flex bg-white border border-[#E5E7EB] rounded-lg p-0.5">
+                  {['Weekly', 'Monthly', 'Yearly'].map((filter, i) => (
                     <button
                       key={filter}
-                      className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-colors ${
-                        filter === 'Weekly' ? 'bg-white text-black shadow-sm' : 'text-paragraph hover:text-black'
+                      className={`px-4 py-1.5 text-[13px] rounded-md transition-colors ${
+                        i === 0 ? 'bg-white text-[#127C2F] shadow-sm font-semibold' : 'text-[#4B5563] hover:text-black font-medium'
                       }`}
                     >
                       {filter}
@@ -394,34 +444,46 @@ export default function AnalyticsPage() {
                   ))}
                 </div>
               </div>
-              <div className="w-full h-[300px]">
+              <div className="w-full h-[320px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={timelineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                  <LineChart data={timelineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={true} stroke="#F3F4F6" />
                     <XAxis 
                       dataKey="name" 
-                      axisLine={false} 
+                      axisLine={{ stroke: '#E5E7EB' }} 
                       tickLine={false} 
-                      tick={{ fill: '#6B7280', fontSize: 11 }} 
+                      tick={{ fill: '#6B7280', fontSize: 12 }} 
                       dy={10} 
                     />
                     <YAxis 
                       axisLine={false} 
                       tickLine={false} 
-                      tick={{ fill: '#6B7280', fontSize: 11 }} 
-                      tickFormatter={(val) => val === 0 ? '02' : Math.floor(val * 16).toString().padStart(2, '0')}
+                      tick={{ fill: '#6B7280', fontSize: 12 }} 
+                      tickFormatter={(val) => val === 0 ? '02' : Math.floor(val * 1.6).toString().padStart(2, '0')}
+                      domain={[0, 10]}
+                      ticks={[2, 4, 6, 8, 10, 12, 14, 16].map(v => v/1.6)}
                     />
-                    <Tooltip content={<CustomAreaTooltip />} cursor={{ stroke: '#E5E7EB', strokeWidth: 1, strokeDasharray: '3 3' }} />
-                    <Area 
+                    <Tooltip content={<CustomAreaTooltip />} cursor={{ stroke: '#E5E7EB', strokeWidth: 1 }} />
+                    <Line 
                       type="linear" 
-                      dataKey="val" 
-                      stroke="#127C2F" 
-                      strokeWidth={2}
-                      strokeDasharray="6 4"
-                      fill="none" 
-                      activeDot={{ r: 5, fill: '#127C2F', stroke: '#fff', strokeWidth: 2 }} 
+                      dataKey="solidVal" 
+                      stroke="#22C55E" 
+                      strokeWidth={2.5}
+                      dot={false}
+                      activeDot={{ r: 5, fill: '#22C55E', stroke: '#fff', strokeWidth: 2 }} 
+                      isAnimationActive={false}
                     />
-                  </AreaChart>
+                    <Line 
+                      type="linear" 
+                      dataKey="dashedVal" 
+                      stroke="#22C55E" 
+                      strokeWidth={2.5}
+                      strokeDasharray="6 4"
+                      dot={false}
+                      activeDot={{ r: 5, fill: '#22C55E', stroke: '#fff', strokeWidth: 2 }} 
+                      isAnimationActive={false}
+                    />
+                  </LineChart>
                 </ResponsiveContainer>
               </div>
             </div>
