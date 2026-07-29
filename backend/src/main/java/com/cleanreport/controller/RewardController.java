@@ -1,5 +1,6 @@
 package com.cleanreport.controller;
 
+import com.cleanreport.dto.request.RedeemRewardRequest;
 import com.cleanreport.dto.response.ApiResponse;
 import com.cleanreport.model.entity.Reward;
 import com.cleanreport.model.entity.RewardClaim;
@@ -8,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +49,22 @@ public class RewardController {
             @Parameter(description = "Reward UUID to claim") @PathVariable UUID rewardId,
             Authentication authentication) {
         RewardClaim claim = rewardService.claimReward(rewardId, authentication.getName());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.created(claim, "Reward claimed successfully"));
+    }
+
+    @Operation(
+            summary = "Redeem a reward (alias for POST /rewards/{id}/claim)",
+            description = """
+                    Alias endpoint matching frontend convention. Accepts `rewardId` in the request body
+                    instead of the path. Behaves identically to POST /rewards/{id}/claim.
+                    """,
+            security = @SecurityRequirement(name = "Bearer Auth"))
+    @PostMapping("/redeem")
+    public ResponseEntity<ApiResponse<RewardClaim>> redeemReward(
+            @Valid @RequestBody RedeemRewardRequest request,
+            Authentication authentication) {
+        RewardClaim claim = rewardService.claimReward(request.getRewardId(), authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.created(claim, "Reward claimed successfully"));
     }

@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,4 +46,40 @@ public interface ReportRepository extends JpaRepository<Report, UUID>, JpaSpecif
     long countByStatus(ReportStatus status);
 
     long countByCategory(ReportCategory category);
+
+    long countByCategoryAndStatus(ReportCategory category, ReportStatus status);
+
+    // ============================================================
+    // Analytics aggregations (native — Postgres date/interval functions)
+    // Each row: [0] = day as 'yyyy-MM-dd' String, [1] = count as Number
+    // ============================================================
+
+    @Query(value = "SELECT to_char(date_trunc('day', r.created_at), 'YYYY-MM-DD') AS day, COUNT(*) AS cnt " +
+            "FROM reports r WHERE r.created_at >= :since " +
+            "GROUP BY day ORDER BY day",
+            nativeQuery = true)
+    List<Object[]> countCreatedPerDaySince(@Param("since") Instant since);
+
+    @Query(value = "SELECT to_char(date_trunc('day', sh.created_at), 'YYYY-MM-DD') AS day, COUNT(*) AS cnt " +
+            "FROM status_history sh WHERE CAST(sh.new_status AS TEXT) = 'RESOLVED' AND sh.created_at >= :since " +
+            "GROUP BY day ORDER BY day",
+            nativeQuery = true)
+    List<Object[]> countResolvedPerDaySince(@Param("since") Instant since);
+
+    /**
+     * Each row: [0] = Postgres day-of-week (0 = Sunday .. 6 = Saturday), [1] = count.
+     */
+    @Query(value = "SELECT CAST(EXTRACT(DOW FROM r.created_at) AS INTEGER) AS dow, COUNT(*) AS cnt " +
+            "FROM reports r GROUP BY dow ORDER BY dow",
+            nativeQuery = true)
+    List<Object[]> countGroupedByDayOfWeek();
+
+    /**
+     * Each row: [0] = area_name, [1] = count. Ordered by count descending.
+     */
+    @Query(value = "SELECT r.area_name AS area, COUNT(*) AS cnt " +
+            "FROM reports r WHERE r.area_name IS NOT NULL " +
+            "GROUP BY r.area_name ORDER BY cnt DESC LIMIT :limit",
+            nativeQuery = true)
+    List<Object[]> findTopAreasByReportCount(@Param("limit") int limit);
 }

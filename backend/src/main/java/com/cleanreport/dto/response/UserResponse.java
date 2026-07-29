@@ -30,4 +30,12 @@ public class UserResponse {
 
     @Schema(example = "0")
     private Integer creditBalance;
+
+    private String avatarUrl;
+    private String phone;
+    private String firstName;
+    private String middleName;
+    private String lastName;
+    private String gender;
+    private String address;
 }

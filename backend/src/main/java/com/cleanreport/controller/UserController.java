@@ -1,11 +1,14 @@
 package com.cleanreport.controller;
 
+import com.cleanreport.dto.request.ChangePasswordRequest;
+import com.cleanreport.dto.request.UpdateNotificationPreferencesRequest;
 import com.cleanreport.dto.request.UpdateProfileRequest;
 import com.cleanreport.dto.response.ApiResponse;
+import com.cleanreport.dto.response.CreditBalanceResponse;
+import com.cleanreport.dto.response.NotificationPreferencesResponse;
 import com.cleanreport.dto.response.UserResponse;
-import com.cleanreport.exception.ResourceNotFoundException;
-import com.cleanreport.model.entity.User;
-import com.cleanreport.repository.UserRepository;
+import com.cleanreport.service.CreditService;
+import com.cleanreport.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -13,7 +16,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,44 +24,55 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Users", description = "User profile management")
 public class UserController {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
+    private final CreditService creditService;
 
     @Operation(summary = "Get my profile", security = @SecurityRequirement(name = "Bearer Auth"))
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserResponse>> getMyProfile(Authentication authentication) {
-        User user = userRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        return ResponseEntity.ok(ApiResponse.ok(mapToResponse(user)));
+        return ResponseEntity.ok(ApiResponse.ok(userService.getProfile(authentication.getName())));
     }
 
-    @Operation(summary = "Update my profile (display name + avatar)", 
+    @Operation(summary = "Update my profile (display name, avatar, name, phone, gender, address)",
                security = @SecurityRequirement(name = "Bearer Auth"))
-    @Transactional
     @PatchMapping("/me")
     public ResponseEntity<ApiResponse<UserResponse>> updateProfile(
             @Valid @RequestBody UpdateProfileRequest request,
             Authentication authentication) {
-        User user = userRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        if (request.getDisplayName() != null && !request.getDisplayName().isBlank()) {
-            user.setDisplayName(request.getDisplayName().trim());
-        }
-        if (request.getAvatarUrl() != null && !request.getAvatarUrl().isBlank()) {
-            user.setAvatarUrl(request.getAvatarUrl());
-        }
-
-        userRepository.save(user);
-        return ResponseEntity.ok(ApiResponse.ok(mapToResponse(user), "Profile updated successfully"));
+        UserResponse response = userService.updateProfile(request, authentication.getName());
+        return ResponseEntity.ok(ApiResponse.ok(response, "Profile updated successfully"));
     }
 
-    private UserResponse mapToResponse(User user) {
-        return UserResponse.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .displayName(user.getDisplayName())
-                .role(user.getRole())
-                .creditBalance(user.getCreditBalance())
-                .build();
+    @Operation(summary = "Get my notification preferences", security = @SecurityRequirement(name = "Bearer Auth"))
+    @GetMapping("/me/preferences")
+    public ResponseEntity<ApiResponse<NotificationPreferencesResponse>> getPreferences(Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.ok(userService.getPreferences(authentication.getName())));
+    }
+
+    @Operation(summary = "Update my notification preferences", security = @SecurityRequirement(name = "Bearer Auth"))
+    @PatchMapping("/me/preferences")
+    public ResponseEntity<ApiResponse<NotificationPreferencesResponse>> updatePreferences(
+            @Valid @RequestBody UpdateNotificationPreferencesRequest request,
+            Authentication authentication) {
+        NotificationPreferencesResponse response = userService.updatePreferences(request, authentication.getName());
+        return ResponseEntity.ok(ApiResponse.ok(response, "Preferences updated successfully"));
+    }
+
+    @Operation(summary = "Change my password", security = @SecurityRequirement(name = "Bearer Auth"))
+    @PostMapping("/me/password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request,
+            Authentication authentication) {
+        userService.changePassword(request, authentication.getName());
+        return ResponseEntity.ok(ApiResponse.ok(null, "Password changed successfully"));
+    }
+
+    @Operation(
+            summary = "Get my points balance (alias for GET /credits/balance)",
+            description = "Alias endpoint matching frontend convention. Same data as GET /credits/balance.",
+            security = @SecurityRequirement(name = "Bearer Auth"))
+    @GetMapping("/me/points")
+    public ResponseEntity<ApiResponse<CreditBalanceResponse>> getMyPoints(Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.ok(creditService.getBalance(authentication.getName())));
     }
 }

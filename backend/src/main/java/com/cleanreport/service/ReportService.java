@@ -10,7 +10,9 @@ import com.cleanreport.model.enums.ReportCategory;
 import com.cleanreport.model.enums.ReportStatus;
 import com.cleanreport.model.enums.ReportUrgency;
 import com.cleanreport.repository.ReportRepository;
+import com.cleanreport.repository.ReportUpvoteRepository;
 import com.cleanreport.repository.UserRepository;
+import com.cleanreport.model.entity.ReportUpvote;
 import com.cleanreport.util.ReferenceNumberGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +41,7 @@ public class ReportService {
 
     private final ReportRepository reportRepository;
     private final UserRepository userRepository;
+    private final ReportUpvoteRepository reportUpvoteRepository;
     private final GeocodingService geocodingService;
     private final CreditService creditService;
     private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), SRID_WGS84);
@@ -48,6 +51,35 @@ public class ReportService {
         User reporter = userRepository.findByEmail(reporterEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + reporterEmail));
 
+        Report saved = reportRepository.save(buildReport(request, reporter));
+        log.info("Report created: {} by user {}", saved.getReferenceNumber(), reporter.getEmail());
+
+        // Award credits for report submission
+        creditService.awardReportSubmitCredits(reporter, saved);
+
+        return mapToResponse(saved);
+    }
+
+    /**
+     * Create multiple reports in a single transaction (offline sync).
+     * All-or-nothing: if any report fails validation, the whole batch is rolled back.
+     */
+    @Transactional
+    public List<ReportResponse> createReportsBulk(List<CreateReportRequest> requests, String reporterEmail) {
+        User reporter = userRepository.findByEmail(reporterEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + reporterEmail));
+
+        List<Report> saved = requests.stream()
+                .map(request -> reportRepository.save(buildReport(request, reporter)))
+                .toList();
+
+        saved.forEach(report -> creditService.awardReportSubmitCredits(reporter, report));
+        log.info("Bulk created {} reports for user {}", saved.size(), reporter.getEmail());
+
+        return saved.stream().map(this::mapToResponse).toList();
+    }
+
+    private Report buildReport(CreateReportRequest request, User reporter) {
         Point location = geometryFactory.createPoint(new Coordinate(request.getLongitude(), request.getLatitude()));
         location.setSRID(SRID_WGS84);
 
@@ -57,7 +89,7 @@ public class ReportService {
             address = geocodingService.reverseGeocode(request.getLatitude(), request.getLongitude());
         }
 
-        Report report = Report.builder()
+        return Report.builder()
                 .referenceNumber(ReferenceNumberGenerator.generate())
                 .reporter(reporter)
                 .title(request.getTitle())
@@ -71,20 +103,41 @@ public class ReportService {
                 .urgency(request.getUrgency() != null ? request.getUrgency() : ReportUrgency.ROUTINE)
                 .isAnonymous(request.getIsAnonymous() != null ? request.getIsAnonymous() : false)
                 .build();
-
-        Report saved = reportRepository.save(report);
-        log.info("Report created: {} by user {}", saved.getReferenceNumber(), reporter.getEmail());
-
-        // Award credits for report submission
-        creditService.awardReportSubmitCredits(reporter, saved);
-
-        return mapToResponse(saved);
     }
 
     public ReportResponse getReportById(UUID id) {
+        return getReportById(id, null);
+    }
+
+    public ReportResponse getReportById(UUID id, String currentUserEmail) {
         Report report = reportRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Report not found: " + id));
-        return mapToResponse(report);
+        UUID currentUserId = currentUserEmail == null ? null :
+                userRepository.findByEmail(currentUserEmail).map(User::getId).orElse(null);
+        return mapToResponse(report, currentUserId);
+    }
+
+    /**
+     * Toggle upvote on a report: adds an upvote if not present, removes it if already upvoted.
+     * Returns the updated upvote count and the user's new upvote status.
+     */
+    @Transactional
+    public ReportResponse toggleUpvote(UUID reportId, String userEmail) {
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new ResourceNotFoundException("Report not found: " + reportId));
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
+
+        var existing = reportUpvoteRepository.findByReportIdAndUserId(reportId, user.getId());
+        if (existing.isPresent()) {
+            reportUpvoteRepository.delete(existing.get());
+            log.info("Upvote removed from report {} by {}", reportId, userEmail);
+        } else {
+            reportUpvoteRepository.save(ReportUpvote.builder().report(report).user(user).build());
+            log.info("Upvote added to report {} by {}", reportId, userEmail);
+        }
+
+        return mapToResponse(report, user.getId());
     }
 
     public Page<ReportResponse> getReports(ReportStatus status, ReportCategory category, Pageable pageable) {
@@ -196,7 +249,14 @@ public class ReportService {
     }
 
     private ReportResponse mapToResponse(Report report) {
+        return mapToResponse(report, null);
+    }
+
+    private ReportResponse mapToResponse(Report report, UUID currentUserId) {
         String reporterName = report.getIsAnonymous() ? "Anonymous" : report.getReporter().getDisplayName();
+        int upvotesCount = (int) reportUpvoteRepository.countByReportId(report.getId());
+        boolean hasUpvoted = currentUserId != null &&
+                reportUpvoteRepository.existsByReportIdAndUserId(report.getId(), currentUserId);
 
         return ReportResponse.builder()
                 .id(report.getId())
@@ -215,6 +275,8 @@ public class ReportService {
                 .urgency(report.getUrgency())
                 .isAnonymous(report.getIsAnonymous())
                 .areaName(report.getAreaName())
+                .upvotesCount(upvotesCount)
+                .hasUpvoted(hasUpvoted)
                 .createdAt(report.getCreatedAt())
                 .updatedAt(report.getUpdatedAt())
                 .build();

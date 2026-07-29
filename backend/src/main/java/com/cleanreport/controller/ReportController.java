@@ -4,6 +4,7 @@ import com.cleanreport.dto.request.CreateReportRequest;
 import com.cleanreport.dto.response.ApiResponse;
 import com.cleanreport.dto.response.DashboardStatsResponse;
 import com.cleanreport.dto.response.ReportResponse;
+import com.cleanreport.exception.BadRequestException;
 import com.cleanreport.model.enums.ReportCategory;
 import com.cleanreport.model.enums.ReportStatus;
 import com.cleanreport.service.ReportService;
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,6 +37,7 @@ import java.util.UUID;
 public class ReportController {
 
     private final ReportService reportService;
+    private final Validator validator;
 
     @Operation(
             summary = "Submit a new report",
@@ -68,6 +72,70 @@ public class ReportController {
         ReportResponse response = reportService.createReport(request, authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.created(response, "Report submitted successfully"));
+    }
+
+    @Operation(
+            summary = "Bulk submit reports (offline sync)",
+            description = """
+                    Creates several sanitation issue reports in one request. Requires authentication (Bearer token).
+                    
+                    **Use case:** the mobile/PWA client queued reports while offline and flushes them once
+                    connectivity returns.
+                    
+                    **Transactional:** all-or-nothing — if any report fails, the whole batch is rolled back
+                    and no credits are awarded.
+                    
+                    **Credits:** reporter earns +10 credits per report in the batch.
+                    
+                    **Body:** a JSON array of the same payload accepted by `POST /reports`.
+                    
+                    **Validation:** every element is validated individually; the response lists the failing
+                    index and field (e.g. `reports[2].photoUrl: Photo URL is required`).
+                    """,
+            security = @SecurityRequirement(name = "Bearer Auth"))
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Reports created successfully"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Empty array, or an element failed validation"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Not authenticated — include Bearer token in Authorization header")
+    })
+    @PostMapping("/bulk")
+    public ResponseEntity<ApiResponse<List<ReportResponse>>> createReportsBulk(
+            @Valid @RequestBody List<CreateReportRequest> requests,
+            Authentication authentication) {
+        validateBulk(requests);
+        List<ReportResponse> responses = reportService.createReportsBulk(requests, authentication.getName());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.created(responses, "Bulk reports created successfully"));
+    }
+
+    /**
+     * Bean Validation does not cascade into collection elements for {@code @Valid @RequestBody List<T>}:
+     * {@code @Valid} makes Spring validate the {@code List} instance itself, which declares no constraints,
+     * so per-element annotations on {@link CreateReportRequest} would be silently skipped. Validate each
+     * element explicitly so a bad payload returns 400 instead of blowing up inside the service.
+     */
+    private void validateBulk(List<CreateReportRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            throw new BadRequestException("At least one report is required");
+        }
+
+        List<String> errors = new ArrayList<>();
+        for (int i = 0; i < requests.size(); i++) {
+            CreateReportRequest request = requests.get(i);
+            if (request == null) {
+                errors.add("reports[" + i + "]: must not be null");
+                continue;
+            }
+            final int index = i;
+            validator.validate(request).stream()
+                    .map(violation -> "reports[" + index + "]." + violation.getPropertyPath() + ": " + violation.getMessage())
+                    .sorted()
+                    .forEach(errors::add);
+        }
+
+        if (!errors.isEmpty()) {
+            throw new BadRequestException("Validation failed: " + String.join("; ", errors));
+        }
     }
 
     @Operation(
@@ -147,6 +215,9 @@ public class ReportController {
                     Returns full details of a single report including reporter name
                     (or "Anonymous" if submitted anonymously), photo URL, GPS coordinates,
                     title, address, status, and timestamps. **Public endpoint.**
+                    
+                    `upvotesCount` is always returned. `hasUpvoted` reflects the caller's own upvote when a
+                    Bearer token is supplied, and is `false` for anonymous callers.
                     """)
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Report found"),
@@ -158,9 +229,40 @@ public class ReportController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ReportResponse>> getReportById(
             @Parameter(description = "Report UUID", example = "550e8400-e29b-41d4-a716-446655440000")
-            @PathVariable UUID id) {
-        ReportResponse response = reportService.getReportById(id);
+            @PathVariable UUID id,
+            Authentication authentication) {
+        // Public endpoint: authentication is null when no Bearer token is supplied.
+        ReportResponse response = reportService.getReportById(id,
+                authentication != null ? authentication.getName() : null);
         return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @Operation(
+            summary = "Toggle upvote on a report",
+            description = """
+                    Adds the caller's upvote to a report, or removes it if they already upvoted.
+                    Requires authentication (Bearer token). Idempotent per call direction — calling twice
+                    returns the report to its original state.
+                    
+                    **Response:** the updated report, where `upvotesCount` is the new total and
+                    `hasUpvoted` is the caller's new state (`true` = added, `false` = removed).
+                    """,
+            security = @SecurityRequirement(name = "Bearer Auth"))
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Upvote toggled successfully"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Not authenticated — include Bearer token in Authorization header"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Report not found",
+                    content = @Content(examples = @ExampleObject(value = """
+                            {"success":false,"message":"Report not found: 550e8400-e29b-41d4-a716-446655440000","errors":null,"timestamp":"2026-07-13T12:00:00Z"}
+                            """)))
+    })
+    @PostMapping("/{id}/upvote")
+    public ResponseEntity<ApiResponse<ReportResponse>> toggleUpvote(
+            @Parameter(description = "Report UUID", example = "550e8400-e29b-41d4-a716-446655440000")
+            @PathVariable UUID id,
+            Authentication authentication) {
+        ReportResponse response = reportService.toggleUpvote(id, authentication.getName());
+        return ResponseEntity.ok(ApiResponse.ok(response, "Upvote toggled successfully"));
     }
 
     @Operation(

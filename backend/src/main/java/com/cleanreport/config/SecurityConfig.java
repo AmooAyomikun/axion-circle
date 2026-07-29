@@ -40,6 +40,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/reports/*/status").hasRole("ADMIN")
                 // Admin endpoints require ADMIN role
                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                // Analytics exposes aggregate operational data — ADMIN only (defense in depth)
+                .requestMatchers("/analytics/**").hasRole("ADMIN")
                 // Everything else requires authentication
                 .anyRequest().authenticated()
             )

@@ -5,12 +5,14 @@ import com.cleanreport.dto.response.DashboardStatsResponse;
 import com.cleanreport.dto.response.ReportResponse;
 import com.cleanreport.exception.ResourceNotFoundException;
 import com.cleanreport.model.entity.Report;
+import com.cleanreport.model.entity.ReportUpvote;
 import com.cleanreport.model.entity.User;
 import com.cleanreport.model.enums.ReportCategory;
 import com.cleanreport.model.enums.ReportStatus;
 import com.cleanreport.model.enums.ReportUrgency;
 import com.cleanreport.model.enums.UserRole;
 import com.cleanreport.repository.ReportRepository;
+import com.cleanreport.repository.ReportUpvoteRepository;
 import com.cleanreport.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -52,6 +55,8 @@ class ReportServiceTest {
     private ReportRepository reportRepository;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private ReportUpvoteRepository reportUpvoteRepository;
     @Mock
     private GeocodingService geocodingService;
     @Mock
@@ -93,6 +98,10 @@ class ReportServiceTest {
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
+
+        // mapToResponse() counts upvotes on every response it builds — lenient because
+        // several tests never reach response mapping (not-found / stats paths).
+        lenient().when(reportUpvoteRepository.countByReportId(any(UUID.class))).thenReturn(0L);
     }
 
     @Test
@@ -289,5 +298,157 @@ class ReportServiceTest {
         assertThat(stats.getByStatus()).containsEntry("REPORTED", 30L);
         assertThat(stats.getByStatus()).containsEntry("RESOLVED", 40L);
         assertThat(stats.getByCategory()).hasSize(6);
+    }
+
+    @Test
+    @DisplayName("getReportById - authenticated caller - resolves hasUpvoted for that user")
+    void getReportById_authenticatedCaller_resolvesHasUpvoted() {
+        when(reportRepository.findById(TEST_REPORT_ID)).thenReturn(Optional.of(testReport));
+        when(userRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(testUser));
+        when(reportUpvoteRepository.countByReportId(TEST_REPORT_ID)).thenReturn(7L);
+        when(reportUpvoteRepository.existsByReportIdAndUserId(TEST_REPORT_ID, TEST_USER_ID)).thenReturn(true);
+
+        ReportResponse response = reportService.getReportById(TEST_REPORT_ID, TEST_EMAIL);
+
+        assertThat(response.getUpvotesCount()).isEqualTo(7);
+        assertThat(response.getHasUpvoted()).isTrue();
+    }
+
+    @Test
+    @DisplayName("getReportById - anonymous caller - hasUpvoted is false and user is not looked up")
+    void getReportById_anonymousCaller_hasUpvotedFalse() {
+        when(reportRepository.findById(TEST_REPORT_ID)).thenReturn(Optional.of(testReport));
+        when(reportUpvoteRepository.countByReportId(TEST_REPORT_ID)).thenReturn(3L);
+
+        ReportResponse response = reportService.getReportById(TEST_REPORT_ID, null);
+
+        assertThat(response.getUpvotesCount()).isEqualTo(3);
+        assertThat(response.getHasUpvoted()).isFalse();
+        verify(userRepository, never()).findByEmail(anyString());
+        verify(reportUpvoteRepository, never()).existsByReportIdAndUserId(any(UUID.class), any(UUID.class));
+    }
+
+    @Test
+    @DisplayName("toggleUpvote - no existing upvote - saves upvote and returns hasUpvoted=true")
+    void toggleUpvote_absent_addsUpvote() {
+        when(reportRepository.findById(TEST_REPORT_ID)).thenReturn(Optional.of(testReport));
+        when(userRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(testUser));
+        when(reportUpvoteRepository.findByReportIdAndUserId(TEST_REPORT_ID, TEST_USER_ID)).thenReturn(Optional.empty());
+        when(reportUpvoteRepository.countByReportId(TEST_REPORT_ID)).thenReturn(1L);
+        when(reportUpvoteRepository.existsByReportIdAndUserId(TEST_REPORT_ID, TEST_USER_ID)).thenReturn(true);
+
+        ReportResponse response = reportService.toggleUpvote(TEST_REPORT_ID, TEST_EMAIL);
+
+        assertThat(response.getId()).isEqualTo(TEST_REPORT_ID);
+        assertThat(response.getUpvotesCount()).isEqualTo(1);
+        assertThat(response.getHasUpvoted()).isTrue();
+
+        ArgumentCaptor<ReportUpvote> captor = ArgumentCaptor.forClass(ReportUpvote.class);
+        verify(reportUpvoteRepository).save(captor.capture());
+        assertThat(captor.getValue().getReport().getId()).isEqualTo(TEST_REPORT_ID);
+        assertThat(captor.getValue().getUser().getId()).isEqualTo(TEST_USER_ID);
+        verify(reportUpvoteRepository, never()).delete(any(ReportUpvote.class));
+    }
+
+    @Test
+    @DisplayName("toggleUpvote - existing upvote - deletes it and returns hasUpvoted=false")
+    void toggleUpvote_present_removesUpvote() {
+        ReportUpvote existing = ReportUpvote.builder()
+                .id(UUID.randomUUID())
+                .report(testReport)
+                .user(testUser)
+                .createdAt(Instant.now())
+                .build();
+
+        when(reportRepository.findById(TEST_REPORT_ID)).thenReturn(Optional.of(testReport));
+        when(userRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(testUser));
+        when(reportUpvoteRepository.findByReportIdAndUserId(TEST_REPORT_ID, TEST_USER_ID)).thenReturn(Optional.of(existing));
+        when(reportUpvoteRepository.countByReportId(TEST_REPORT_ID)).thenReturn(0L);
+        when(reportUpvoteRepository.existsByReportIdAndUserId(TEST_REPORT_ID, TEST_USER_ID)).thenReturn(false);
+
+        ReportResponse response = reportService.toggleUpvote(TEST_REPORT_ID, TEST_EMAIL);
+
+        assertThat(response.getUpvotesCount()).isZero();
+        assertThat(response.getHasUpvoted()).isFalse();
+
+        verify(reportUpvoteRepository).delete(existing);
+        verify(reportUpvoteRepository, never()).save(any(ReportUpvote.class));
+    }
+
+    @Test
+    @DisplayName("toggleUpvote - unknown report - throws ResourceNotFoundException")
+    void toggleUpvote_unknownReport_throwsNotFound() {
+        UUID unknownId = UUID.randomUUID();
+        when(reportRepository.findById(unknownId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> reportService.toggleUpvote(unknownId, TEST_EMAIL))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Report not found");
+
+        verify(reportUpvoteRepository, never()).save(any(ReportUpvote.class));
+        verify(reportUpvoteRepository, never()).delete(any(ReportUpvote.class));
+    }
+
+    @Test
+    @DisplayName("createReportsBulk - creates N reports and awards credits N times")
+    void createReportsBulk_createsAllAndAwardsCredits() {
+        List<CreateReportRequest> requests = List.of(
+                bulkRequest("Bin overflowing", ReportCategory.OVERFLOW),
+                bulkRequest("Dumped rubble", ReportCategory.ILLEGAL_DUMPING),
+                bulkRequest("Blocked gutter", ReportCategory.BLOCKED_DRAIN));
+
+        when(userRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(testUser));
+        when(reportRepository.save(any(Report.class))).thenAnswer(invocation -> {
+            Report report = invocation.getArgument(0);
+            return report.toBuilder()
+                    .id(UUID.randomUUID())
+                    .createdAt(Instant.now())
+                    .updatedAt(Instant.now())
+                    .build();
+        });
+
+        List<ReportResponse> responses = reportService.createReportsBulk(requests, TEST_EMAIL);
+
+        assertThat(responses).hasSize(3);
+        assertThat(responses).extracting(ReportResponse::getCategory)
+                .containsExactly(ReportCategory.OVERFLOW, ReportCategory.ILLEGAL_DUMPING, ReportCategory.BLOCKED_DRAIN);
+        assertThat(responses).allSatisfy(response -> {
+            assertThat(response.getId()).isNotNull();
+            assertThat(response.getReferenceNumber()).startsWith("CR-");
+            assertThat(response.getReporterName()).isEqualTo(TEST_DISPLAY_NAME);
+            assertThat(response.getStatus()).isEqualTo(ReportStatus.REPORTED);
+            assertThat(response.getUpvotesCount()).isZero();
+            assertThat(response.getHasUpvoted()).isFalse();
+        });
+
+        verify(reportRepository, times(3)).save(any(Report.class));
+        verify(creditService, times(3)).awardReportSubmitCredits(eq(testUser), any(Report.class));
+        verify(geocodingService, never()).reverseGeocode(anyDouble(), anyDouble());
+    }
+
+    @Test
+    @DisplayName("createReportsBulk - unknown user - throws and saves nothing")
+    void createReportsBulk_unknownUser_throwsNotFound() {
+        List<CreateReportRequest> requests = List.of(bulkRequest("Bin overflowing", ReportCategory.OVERFLOW));
+        when(userRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> reportService.createReportsBulk(requests, "unknown@example.com"))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("User not found");
+
+        verify(reportRepository, never()).save(any(Report.class));
+        verify(creditService, never()).awardReportSubmitCredits(any(User.class), any(Report.class));
+    }
+
+    /** Address is pre-filled so bulk sync never hits the geocoding service. */
+    private CreateReportRequest bulkRequest(String title, ReportCategory category) {
+        CreateReportRequest request = new CreateReportRequest();
+        request.setTitle(title);
+        request.setPhotoUrl(TEST_PHOTO_URL);
+        request.setLatitude(TEST_LATITUDE);
+        request.setLongitude(TEST_LONGITUDE);
+        request.setCategory(category);
+        request.setAddress("15 Broad Street, Lagos Island");
+        return request;
     }
 }

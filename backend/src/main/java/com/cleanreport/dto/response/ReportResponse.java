@@ -35,6 +35,8 @@ public class ReportResponse {
     private ReportUrgency urgency;
     private Boolean isAnonymous;
     private String areaName;
+    private Integer upvotesCount;
+    private Boolean hasUpvoted;
     private Instant createdAt;
     private Instant updatedAt;
 }

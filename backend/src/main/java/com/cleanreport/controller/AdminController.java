@@ -1,24 +1,31 @@
 package com.cleanreport.controller;
 
+import com.cleanreport.dto.request.UpdateStatusRequest;
 import com.cleanreport.dto.response.ApiResponse;
 import com.cleanreport.dto.response.ReportResponse;
+import com.cleanreport.dto.response.StatusHistoryResponse;
 import com.cleanreport.model.enums.ReportCategory;
 import com.cleanreport.model.enums.ReportStatus;
 import com.cleanreport.service.ReportService;
+import com.cleanreport.service.StatusService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/admin/reports")
@@ -27,6 +34,7 @@ import java.time.ZoneOffset;
 public class AdminController {
 
     private final ReportService reportService;
+    private final StatusService statusService;
 
     @Operation(
             summary = "List all reports with advanced filters (Admin only)",
@@ -68,6 +76,37 @@ public class AdminController {
                 PageRequest.of(page, Math.min(size, 100), Sort.by(sortDirection, sortField)));
 
         return ResponseEntity.ok(ApiResponse.ok(reports));
+    }
+
+    @Operation(
+            summary = "Update report status (Admin only)",
+            description = """
+                    Alias of `PUT /reports/{id}/status` exposed under the admin namespace so that
+                    admin dashboards can keep every management call under `/admin/**`.
+                    Behaviour is identical — same validation, same status history record,
+                    same credit awards.
+
+                    Only forward transitions are allowed:
+                    REPORTED → ACKNOWLEDGED → IN_PROGRESS → RESOLVED.
+                    Attempting to go backward returns 400.
+
+                    **Requires ADMIN role.**
+                    """,
+            security = @SecurityRequirement(name = "Bearer Auth"))
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Status updated successfully"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid transition (backward) or validation error"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Not authenticated"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Not an admin"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Report not found")
+    })
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<ApiResponse<StatusHistoryResponse>> updateReportStatus(
+            @Parameter(description = "Report UUID") @PathVariable UUID id,
+            @Valid @RequestBody UpdateStatusRequest request,
+            Authentication authentication) {
+        StatusHistoryResponse response = statusService.updateStatus(id, request, authentication.getName());
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
     private String validateSortField(String sortBy) {

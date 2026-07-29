@@ -78,6 +78,31 @@ public class User {
     @Column(name = "verification_code_expires")
     private Instant verificationCodeExpires;
 
+    @Column(name = "email_notifications", nullable = false)
+    @Builder.Default
+    private Boolean emailNotifications = true;
+
+    @Column(name = "push_notifications", nullable = false)
+    @Builder.Default
+    private Boolean pushNotifications = true;
+
+    @Column(name = "sms_notifications", nullable = false)
+    @Builder.Default
+    private Boolean smsNotifications = true;
+
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "middle_name")
+    private String middleName;
+
+    @Column(name = "last_name")
+    private String lastName;
+
+    private String gender;
+
+    private String address;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
