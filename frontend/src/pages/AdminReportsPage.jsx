@@ -46,12 +46,22 @@ export default function AdminReportsPage() {
       setStatus('loading');
       
       // Fetch stats for the top cards
-      const statsRes = await api.get('/reports/stats');
+      const [statsRes, dashRes] = await Promise.all([
+        api.get('/reports/stats'),
+        api.get('/analytics/dashboard').catch(() => null)
+      ]);
+      
+      let ackCount = 0;
+      if (dashRes?.data?.data?.byStatus) {
+        const ackObj = dashRes.data.data.byStatus.find(s => s.name === 'Acknowledged' || s.name === 'ACKNOWLEDGED');
+        if (ackObj) ackCount = Number(ackObj.value || 0);
+      }
+
       if (statsRes.data?.data) {
         setStats({
           total: statsRes.data.data.totalReports || 0,
           resolved: statsRes.data.data.resolvedReports || 0,
-          acknowledged: statsRes.data.data.acknowledgedReports || 0,
+          acknowledged: ackCount,
           averageResponseTimeHours: statsRes.data.data.averageResponseTimeHours || 2.4
         });
       }

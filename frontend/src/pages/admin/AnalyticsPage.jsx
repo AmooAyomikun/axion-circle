@@ -155,11 +155,20 @@ export default function AnalyticsPage() {
         api.get('/analytics/dashboard').catch(() => null)
       ]);
 
+      let ackCount = 0;
+      if (dashRes?.data?.data) {
+        const d = dashRes.data.data;
+        if (d.byStatus) {
+          const ackObj = d.byStatus.find(s => s.name === 'Acknowledged' || s.name === 'ACKNOWLEDGED');
+          if (ackObj) ackCount = Number(ackObj.value || 0);
+        }
+      }
+
       if (statsRes.data?.data) {
         setStats({
           total: statsRes.data.data.totalReports || 0,
           resolved: statsRes.data.data.resolvedReports || 0,
-          pending: (statsRes.data.data.totalReports || 0) - (statsRes.data.data.resolvedReports || 0),
+          acknowledged: ackCount,
           averageResponseTimeHours: statsRes.data.data.averageResponseTimeHours || 2.4
         });
       }
@@ -358,6 +367,7 @@ export default function AnalyticsPage() {
                         label={<CustomPieLabel />}
                         stroke="#ffffff"
                         strokeWidth={2}
+                        paddingAngle={3}
                         startAngle={90}
                         endAngle={-270}
                       >
