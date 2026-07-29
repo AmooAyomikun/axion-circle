@@ -81,6 +81,7 @@ public class StatusService {
     /**
      * Get full status history for a report, newest first.
      */
+    @Transactional(readOnly = true)
     public List<StatusHistoryResponse> getHistory(UUID reportId) {
         if (!reportRepository.existsById(reportId)) {
             throw new ResourceNotFoundException("Report not found: " + reportId);
