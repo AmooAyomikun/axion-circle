@@ -13,6 +13,7 @@ import com.cleanreport.model.enums.ReportUrgency;
 import com.cleanreport.model.enums.UserRole;
 import com.cleanreport.repository.ReportRepository;
 import com.cleanreport.repository.ReportUpvoteRepository;
+import com.cleanreport.repository.StatusHistoryRepository;
 import com.cleanreport.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -57,6 +58,8 @@ class ReportServiceTest {
     private UserRepository userRepository;
     @Mock
     private ReportUpvoteRepository reportUpvoteRepository;
+    @Mock
+    private StatusHistoryRepository statusHistoryRepository;
     @Mock
     private GeocodingService geocodingService;
     @Mock
@@ -287,6 +290,7 @@ class ReportServiceTest {
         when(reportRepository.countByStatus(ReportStatus.RESOLVED)).thenReturn(40L);
         when(reportRepository.countByCategory(any(ReportCategory.class))).thenReturn(15L);
         when(userRepository.count()).thenReturn(25L);
+        when(statusHistoryRepository.findAverageResponseTimeHours()).thenReturn(4.5);
 
         DashboardStatsResponse stats = reportService.getDashboardStats();
 
