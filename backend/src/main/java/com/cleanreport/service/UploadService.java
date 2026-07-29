@@ -35,19 +35,24 @@ public class UploadService {
     public UploadSignatureResponse generateUploadSignature() {
         long timestamp = System.currentTimeMillis() / MILLIS_PER_SECOND;
 
+        // Read directly from env at runtime (avoids lazy-init @Value injection issue)
+        String apiKey = System.getenv("CLOUDINARY_API_KEY") != null ? System.getenv("CLOUDINARY_API_KEY") : cloudinary.config.apiKey;
+        String cloudName = System.getenv("CLOUDINARY_CLOUD_NAME") != null ? System.getenv("CLOUDINARY_CLOUD_NAME") : cloudinary.config.cloudName;
+        String apiSecret = System.getenv("CLOUDINARY_API_SECRET") != null ? System.getenv("CLOUDINARY_API_SECRET") : cloudinary.config.apiSecret;
+
         Map<String, Object> paramsToSign = new LinkedHashMap<>();
         paramsToSign.put(PARAM_TIMESTAMP, timestamp);
         paramsToSign.put(PARAM_UPLOAD_PRESET, uploadPreset);
 
-        String signature = cloudinary.apiSignRequest(paramsToSign, cloudinary.config.apiSecret);
+        String signature = cloudinary.apiSignRequest(paramsToSign, apiSecret);
 
         log.debug("Generated Cloudinary upload signature for preset={} at timestamp={}", uploadPreset, timestamp);
 
         return UploadSignatureResponse.builder()
                 .signature(signature)
                 .timestamp(timestamp)
-                .apiKey(cloudinary.config.apiKey)
-                .cloudName(cloudinary.config.cloudName)
+                .apiKey(apiKey)
+                .cloudName(cloudName)
                 .uploadPreset(uploadPreset)
                 .build();
     }
