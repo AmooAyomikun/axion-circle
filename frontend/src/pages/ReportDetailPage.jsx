@@ -236,7 +236,17 @@ export default function ReportDetailPage() {
     }));
     
     try {
-      await api.post(`/reports/${id}/upvote`);
+      const res = await api.post(`/reports/${id}/upvote`);
+      const data = res.data?.data || res.data;
+      
+      // Sync with the actual server response if available
+      if (data && typeof data.upvotesCount === 'number') {
+        setReport(prev => ({
+          ...prev,
+          hasUpvoted: data.upvoted !== undefined ? data.upvoted : prev.hasUpvoted,
+          upvotesCount: data.upvotesCount
+        }));
+      }
     } catch (error) {
       // Revert on error
       setReport(prev => ({
