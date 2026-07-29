@@ -219,6 +219,37 @@ export default function ReportDetailPage() {
     }
   };
 
+  const handleUpvote = async () => {
+    if (!isLoggedIn) {
+      toast.error('Please log in to upvote reports.');
+      navigate('/login');
+      return;
+    }
+    
+    // Optimistic update
+    setReport(prev => ({
+      ...prev,
+      hasUpvoted: !prev.hasUpvoted,
+      upvotesCount: prev.hasUpvoted 
+        ? Math.max(0, (prev.upvotesCount || 1) - 1) 
+        : (prev.upvotesCount || 0) + 1
+    }));
+    
+    try {
+      await api.post(`/reports/${id}/upvote`);
+    } catch (error) {
+      // Revert on error
+      setReport(prev => ({
+        ...prev,
+        hasUpvoted: !prev.hasUpvoted,
+        upvotesCount: prev.hasUpvoted 
+          ? Math.max(0, (prev.upvotesCount || 1) - 1) 
+          : (prev.upvotesCount || 0) + 1
+      }));
+      toast.error('Failed to upvote report.');
+    }
+  };
+
   const handleShare = () => {
     const text = encodeURIComponent("Check out this sanitation report on CleanReport: " + window.location.href);
     const shareUrl = `https://wa.me/?text=${text}`;
@@ -391,8 +422,9 @@ export default function ReportDetailPage() {
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <button className="text-black-icon hover:text-primary transition-colors p-1.5" aria-label="Upvote">
-                  <Star className="w-4 h-4" />
+                <button onClick={handleUpvote} className={`flex items-center gap-1 transition-colors p-1.5 rounded-lg ${report.hasUpvoted ? 'text-primary bg-primary/10' : 'text-black-icon hover:bg-white-stroke'}`} aria-label="Upvote">
+                  <Star className="w-4 h-4" fill={report.hasUpvoted ? 'currentColor' : 'none'} />
+                  {report.upvotesCount > 0 && <span className="text-[11px] font-bold">{report.upvotesCount}</span>}
                 </button>
                 <button className="text-black-icon hover:text-primary transition-colors p-1.5" aria-label="Flag Report">
                   <Flag className="w-4 h-4" />
@@ -682,8 +714,9 @@ export default function ReportDetailPage() {
               
               <div className="flex flex-wrap justify-center sm:justify-start items-center gap-3 mt-4 sm:mt-3">
                 <div className="flex items-center gap-2">
-                  <button className="text-black-icon hover:text-primary transition-colors p-1" title="Save Report" aria-label="Upvote">
-                    <Star className="w-[20px] h-[20px]" strokeWidth={1.5} />
+                  <button onClick={handleUpvote} className={`flex items-center gap-1.5 transition-colors px-2 py-1 rounded-lg ${report.hasUpvoted ? 'text-primary bg-primary/10' : 'text-black-icon hover:bg-white-stroke'}`} title="Upvote Report" aria-label="Upvote">
+                    <Star className="w-[20px] h-[20px]" strokeWidth={1.5} fill={report.hasUpvoted ? 'currentColor' : 'none'} />
+                    {report.upvotesCount > 0 && <span className="text-[13px] font-bold">{report.upvotesCount}</span>}
                   </button>
                   <button className="text-black-icon hover:text-alert-error transition-colors p-1" title="Flag Report" aria-label="Flag Report">
                     <Flag className="w-[20px] h-[20px]" strokeWidth={1.5} />

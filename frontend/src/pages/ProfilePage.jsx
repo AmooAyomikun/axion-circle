@@ -173,7 +173,13 @@ export default function ProfilePage() {
       
       // Call the backend endpoint
       await api.patch('/users/me', {
-        displayName: updatedDisplayName
+        displayName: updatedDisplayName,
+        firstName: formData.firstName,
+        middleName: formData.middleName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+        gender: formData.gender,
+        address: formData.address
       });
 
       // Save to local storage to keep it in sync
