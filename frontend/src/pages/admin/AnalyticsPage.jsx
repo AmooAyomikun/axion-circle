@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 import AdminLayout from '../../components/AdminLayout';
 import SEO from '../../components/SEO';
-import { Download, FileText, CheckCircle2, Clock, BarChart2, TrendingUp, Timer } from 'lucide-react';
+import { Download, FileText, CheckCircle2, Clock, Timer } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AdminStatCard from '../../components/AdminStatCard';
 import { calculateTrendFromReports, generateSparklinePath } from '../../utils/trendUtils';
