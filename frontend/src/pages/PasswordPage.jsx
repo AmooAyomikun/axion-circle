@@ -73,15 +73,15 @@ export default function PasswordPage() {
     try {
       setIsSaving(true);
       
-      // MOCK API CALL DELAY
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // TODO: Replace with real API call when backend endpoint is available
-      // Example: await api.post('/users/me/password', { currentPassword, newPassword });
+      await api.post('/users/me/password', { 
+        currentPassword: formData.currentPassword, 
+        newPassword: formData.newPassword 
+      });
 
       setIsSuccess(true);
     } catch (error) {
-      toast.error("Failed to update password. Please try again.");
+      const serverMsg = error.response?.data?.message || error.response?.data?.error || "Failed to update password. Please try again.";
+      toast.error(serverMsg);
     } finally {
       setIsSaving(false);
     }
