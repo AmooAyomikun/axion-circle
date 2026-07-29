@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { uploadToCloudinary } from '../services/cloudinary';
+import { addPendingReport } from '../services/offlineQueue';
 import AppNavbar from '../components/AppNavbar';
 import ReactGA from 'react-ga4';
 import Footer from '../components/Footer';

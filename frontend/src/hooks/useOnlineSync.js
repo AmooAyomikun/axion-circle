@@ -29,35 +29,80 @@ export const useOnlineSync = () => {
       const reports = await getPendingReports();
       let successCount = 0;
 
-      for (const report of reports) {
-        try {
-          // Upload photo if it's a File/Blob, otherwise use existing photoUrl
-          let photoUrl = report.photoUrl;
-          if (report.photo instanceof Blob || report.photo instanceof File) {
-            photoUrl = await uploadToCloudinary(report.photo);
-          } else if (report.photo && typeof report.photo === 'string') {
-            photoUrl = report.photo;
+      if (reports.length >= 5) {
+        // --- BULK SYNC LOGIC ---
+        const payloads = [];
+        const successfulIds = [];
+
+        for (const report of reports) {
+          try {
+            let photoUrl = report.photoUrl;
+            if (report.photo instanceof Blob || report.photo instanceof File) {
+              photoUrl = await uploadToCloudinary(report.photo);
+            } else if (report.photo && typeof report.photo === 'string') {
+              photoUrl = report.photo;
+            }
+
+            payloads.push({
+              title: report.title,
+              photoUrl: photoUrl,
+              latitude: report.latitude,
+              longitude: report.longitude,
+              category: report.category,
+              description: report.description,
+              address: report.address,
+              urgency: report.urgency,
+              isAnonymous: report.isAnonymous,
+            });
+            successfulIds.push(report.id);
+          } catch (uploadError) {
+            console.error(`Failed to upload photo for report ${report.id}:`, uploadError);
           }
+        }
 
-          const payload = {
-            title: report.title,
-            photoUrl: photoUrl,
-            latitude: report.latitude,
-            longitude: report.longitude,
-            category: report.category,
-            description: report.description,
-            address: report.address,
-            urgency: report.urgency,
-            isAnonymous: report.isAnonymous,
-          };
+        if (payloads.length > 0) {
+          try {
+            await api.post('/reports/bulk', payloads);
+            for (const id of successfulIds) {
+              await removePendingReport(id);
+            }
+            successCount = payloads.length;
+          } catch (error) {
+            console.error('Failed to bulk sync reports:', error);
+          }
+        }
+      } else {
+        // --- INDIVIDUAL SYNC LOGIC ---
+        for (const report of reports) {
+          try {
+            // Upload photo if it's a File/Blob, otherwise use existing photoUrl
+            let photoUrl = report.photoUrl;
+            if (report.photo instanceof Blob || report.photo instanceof File) {
+              photoUrl = await uploadToCloudinary(report.photo);
+            } else if (report.photo && typeof report.photo === 'string') {
+              photoUrl = report.photo;
+            }
 
-          await api.post('/reports', payload);
-          // If successful, remove from queue
-          await removePendingReport(report.id);
-          successCount++;
-        } catch (error) {
-          console.error(`Failed to sync report ${report.id}:`, error);
-          // Leave it in the queue to retry later
+            const payload = {
+              title: report.title,
+              photoUrl: photoUrl,
+              latitude: report.latitude,
+              longitude: report.longitude,
+              category: report.category,
+              description: report.description,
+              address: report.address,
+              urgency: report.urgency,
+              isAnonymous: report.isAnonymous,
+            };
+
+            await api.post('/reports', payload);
+            // If successful, remove from queue
+            await removePendingReport(report.id);
+            successCount++;
+          } catch (error) {
+            console.error(`Failed to sync report ${report.id}:`, error);
+            // Leave it in the queue to retry later
+          }
         }
       }
       
