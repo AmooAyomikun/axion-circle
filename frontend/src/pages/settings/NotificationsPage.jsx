@@ -29,13 +29,12 @@ export default function NotificationsPage() {
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [email, setEmail] = useState('');
 
-  // Default state for all preferences
   const [preferences, setPreferences] = useState({
-    comments: { push: true, email: true, sms: false },
-    tags: { push: true, email: false, sms: false },
-    reminders: { push: false, email: false, sms: false },
-    moreActivity: { push: false, email: false, sms: false }
+    emailEnabled: true,
+    pushEnabled: true,
+    smsEnabled: false
   });
+  const [isSaving, setIsSaving] = useState(false);
 
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -52,15 +51,19 @@ export default function NotificationsPage() {
     };
     fetchUnreadCount();
 
-    // Simulate fetching user preferences from an API
+    // Fetch user preferences from the actual API
     const fetchPreferences = async () => {
       try {
         setIsLoading(true);
-        // MOCK DELAY
-        await new Promise(resolve => setTimeout(resolve, 800));
-        // Once backend endpoint is ready, replace this with actual API fetch
-        // const res = await api.get('/settings/notifications');
-        // setPreferences(res.data);
+        const { data } = await api.get('/users/me/preferences');
+        const prefs = data.data || data;
+        if (prefs) {
+          setPreferences({
+            emailEnabled: Boolean(prefs.emailEnabled),
+            pushEnabled: Boolean(prefs.pushEnabled),
+            smsEnabled: Boolean(prefs.smsEnabled)
+          });
+        }
       } catch (error) {
         toast.error("Failed to load notification settings.");
       } finally {
@@ -71,19 +74,23 @@ export default function NotificationsPage() {
     fetchPreferences();
   }, []);
 
-  const handleToggle = (category, channel) => {
-    // Optimistically update the UI
-    const newPreferences = {
-      ...preferences,
-      [category]: {
-        ...preferences[category],
-        [channel]: !preferences[category][channel]
-      }
-    };
-    setPreferences(newPreferences);
+  const handleToggle = (key) => {
+    setPreferences(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
 
-    // Mock API call to save toggle state (Auto-save)
-    // api.patch('/settings/notifications', { category, channel, value: newPreferences[category][channel] }).catch(...)
+  const handleSavePreferences = async () => {
+    try {
+      setIsSaving(true);
+      await api.patch('/users/me/preferences', preferences);
+      toast.success("Preferences saved successfully!");
+    } catch (error) {
+      toast.error("Failed to save preferences.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSubscribe = async (e) => {
@@ -214,62 +221,27 @@ export default function NotificationsPage() {
               ) : (
                 /* Settings Categories */
                 <div className="space-y-8">
-                  {/* Comments */}
+                  {/* Global Notifications */}
                   <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
                     <div className="sm:w-2/3 md:pr-8">
-                      <h3 className="text-sm font-semibold text-gray-900 mb-1">Comments</h3>
-                      <p className="text-sm text-gray-500">These are notifications for comments on your posts and replies to your comments.</p>
+                      <h3 className="text-sm font-semibold text-gray-900 mb-1">Global Notifications</h3>
+                      <p className="text-sm text-gray-500">Manage how you receive alerts, updates, and messages from CleanReport.</p>
                     </div>
                     <div className="flex flex-col space-y-4 sm:w-1/3 sm:items-start">
-                      <ToggleSwitch label="Push" checked={preferences.comments.push} onChange={() => handleToggle('comments', 'push')} />
-                      <ToggleSwitch label="Email" checked={preferences.comments.email} onChange={() => handleToggle('comments', 'email')} />
-                      <ToggleSwitch label="SMS" checked={preferences.comments.sms} onChange={() => handleToggle('comments', 'sms')} />
+                      <ToggleSwitch label="Push" checked={preferences.pushEnabled} onChange={() => handleToggle('pushEnabled')} disabled={isSaving} />
+                      <ToggleSwitch label="Email" checked={preferences.emailEnabled} onChange={() => handleToggle('emailEnabled')} disabled={isSaving} />
+                      <ToggleSwitch label="SMS" checked={preferences.smsEnabled} onChange={() => handleToggle('smsEnabled')} disabled={isSaving} />
                     </div>
                   </div>
-
-                  <hr className="border-gray-100" />
-
-                  {/* Tags */}
-                  <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
-                    <div className="sm:w-2/3 md:pr-8">
-                      <h3 className="text-sm font-semibold text-gray-900 mb-1">Tags</h3>
-                      <p className="text-sm text-gray-500">These are notifications for when someone tags you in a comment, post or story.</p>
-                    </div>
-                    <div className="flex flex-col space-y-4 sm:w-1/3 sm:items-start">
-                      <ToggleSwitch label="Push" checked={preferences.tags.push} onChange={() => handleToggle('tags', 'push')} />
-                      <ToggleSwitch label="Email" checked={preferences.tags.email} onChange={() => handleToggle('tags', 'email')} />
-                      <ToggleSwitch label="SMS" checked={preferences.tags.sms} onChange={() => handleToggle('tags', 'sms')} />
-                    </div>
-                  </div>
-
-                  <hr className="border-gray-100" />
-
-                  {/* Reminders */}
-                  <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
-                    <div className="sm:w-2/3 md:pr-8">
-                      <h3 className="text-sm font-semibold text-gray-900 mb-1">Reminders</h3>
-                      <p className="text-sm text-gray-500">These are notifications to remind you of updates you might have missed.</p>
-                    </div>
-                    <div className="flex flex-col space-y-4 sm:w-1/3 sm:items-start">
-                      <ToggleSwitch label="Push" checked={preferences.reminders.push} onChange={() => handleToggle('reminders', 'push')} />
-                      <ToggleSwitch label="Email" checked={preferences.reminders.email} onChange={() => handleToggle('reminders', 'email')} />
-                      <ToggleSwitch label="SMS" checked={preferences.reminders.sms} onChange={() => handleToggle('reminders', 'sms')} />
-                    </div>
-                  </div>
-
-                  <hr className="border-gray-100" />
-
-                  {/* More activity about you */}
-                  <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
-                    <div className="sm:w-2/3 md:pr-8">
-                      <h3 className="text-sm font-semibold text-gray-900 mb-1">More activity about you</h3>
-                      <p className="text-sm text-gray-500">These are notifications for posts on your profile, likes and other reactions to your posts, and more.</p>
-                    </div>
-                    <div className="flex flex-col space-y-4 sm:w-1/3 sm:items-start">
-                      <ToggleSwitch label="Push" checked={preferences.moreActivity.push} onChange={() => handleToggle('moreActivity', 'push')} />
-                      <ToggleSwitch label="Email" checked={preferences.moreActivity.email} onChange={() => handleToggle('moreActivity', 'email')} />
-                      <ToggleSwitch label="SMS" checked={preferences.moreActivity.sms} onChange={() => handleToggle('moreActivity', 'sms')} />
-                    </div>
+                  
+                  <div className="flex justify-end pt-6 border-t border-gray-100">
+                    <button 
+                      onClick={handleSavePreferences}
+                      disabled={isSaving}
+                      className="bg-primary hover:bg-primary/90 text-white px-8 py-2.5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-70 flex items-center justify-center shadow-sm"
+                    >
+                      {isSaving ? 'Saving...' : 'Save Preferences'}
+                    </button>
                   </div>
                 </div>
               )}
