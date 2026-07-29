@@ -254,6 +254,7 @@ public class ReportService {
 
     private ReportResponse mapToResponse(Report report, UUID currentUserId) {
         String reporterName = report.getIsAnonymous() ? "Anonymous" : report.getReporter().getDisplayName();
+        String reporterAvatarUrl = report.getIsAnonymous() ? null : report.getReporter().getAvatarUrl();
         int upvotesCount = (int) reportUpvoteRepository.countByReportId(report.getId());
         boolean hasUpvoted = currentUserId != null &&
                 reportUpvoteRepository.existsByReportIdAndUserId(report.getId(), currentUserId);
@@ -263,6 +264,7 @@ public class ReportService {
                 .referenceNumber(report.getReferenceNumber())
                 .reporterId(report.getReporter().getId())
                 .reporterName(reporterName)
+                .reporterAvatarUrl(reporterAvatarUrl)
                 .title(report.getTitle())
                 .photoUrl(report.getPhotoUrl())
                 .photoAfterUrl(report.getPhotoAfterUrl())

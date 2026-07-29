@@ -23,6 +23,7 @@ public class ReportResponse {
     private String referenceNumber;
     private UUID reporterId;
     private String reporterName;
+    private String reporterAvatarUrl;
     private String title;
     private String photoUrl;
     private String photoAfterUrl;
