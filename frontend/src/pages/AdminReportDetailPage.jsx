@@ -62,6 +62,25 @@ export default function AdminReportDetailPage() {
   const [newStatus, setNewStatus] = useState('In Progress');
   const [internalNote, setInternalNote] = useState('');
 
+  useEffect(() => {
+    switch(newStatus) {
+      case 'Acknowledged':
+        setInternalNote('Your report has been acknowledged and is currently under review by our team.');
+        break;
+      case 'In Progress':
+        setInternalNote('We have assigned personnel and started working on resolving the reported issue.');
+        break;
+      case 'Resolved':
+        setInternalNote('The issue you reported has been successfully resolved. Thank you for keeping our community clean!');
+        break;
+      case 'Reported':
+        setInternalNote('Your report has been received and logged.');
+        break;
+      default:
+        setInternalNote('');
+    }
+  }, [newStatus]);
+
   const fetchReportData = React.useCallback(async () => {
     setIsLoading(true);
     setNotFound(false);
