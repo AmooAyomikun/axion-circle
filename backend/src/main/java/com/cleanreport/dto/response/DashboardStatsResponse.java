@@ -31,6 +31,9 @@ public class DashboardStatsResponse {
     @Schema(description = "Reports count grouped by category", example = "{\"OVERFLOW\": 30, \"ILLEGAL_DUMPING\": 45}")
     private Map<String, Long> byCategory;
 
+    @Schema(description = "Average time in hours between report creation and first admin action (acknowledged/in_progress/resolved)", example = "4.5")
+    private Double averageResponseTimeHours;
+
     @Schema(description = "Total community credits earned", example = "1420")
     private long totalCreditsEarned;
 

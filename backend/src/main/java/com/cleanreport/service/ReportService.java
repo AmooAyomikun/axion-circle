@@ -11,6 +11,7 @@ import com.cleanreport.model.enums.ReportStatus;
 import com.cleanreport.model.enums.ReportUrgency;
 import com.cleanreport.repository.ReportRepository;
 import com.cleanreport.repository.ReportUpvoteRepository;
+import com.cleanreport.repository.StatusHistoryRepository;
 import com.cleanreport.repository.UserRepository;
 import com.cleanreport.model.entity.ReportUpvote;
 import com.cleanreport.util.ReferenceNumberGenerator;
@@ -42,6 +43,7 @@ public class ReportService {
     private final ReportRepository reportRepository;
     private final UserRepository userRepository;
     private final ReportUpvoteRepository reportUpvoteRepository;
+    private final StatusHistoryRepository statusHistoryRepository;
     private final GeocodingService geocodingService;
     private final CreditService creditService;
     private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), SRID_WGS84);
@@ -202,6 +204,8 @@ public class ReportService {
 
         long totalUsers = userRepository.count();
 
+        Double avgResponseTimeHours = statusHistoryRepository.findAverageResponseTimeHours();
+
         return DashboardStatsResponse.builder()
                 .totalReports(total)
                 .resolvedReports(resolved)
@@ -210,6 +214,7 @@ public class ReportService {
                 .byCategory(byCategory)
                 .totalCreditsEarned(total * 10) // Each report = 10 credits
                 .totalUsers(totalUsers)
+                .averageResponseTimeHours(avgResponseTimeHours != null ? Math.round(avgResponseTimeHours * 10.0) / 10.0 : null)
                 .build();
     }
 
