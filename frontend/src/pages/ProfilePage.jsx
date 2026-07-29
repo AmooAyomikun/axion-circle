@@ -198,7 +198,8 @@ export default function ProfilePage() {
       setIsEditing(false);
     } catch (error) {
       console.error('Profile update error:', error);
-      toast.error("Failed to update profile. Please try again.");
+      const serverMsg = error.response?.data?.message || error.response?.data?.error || "Failed to update profile. Please try again.";
+      toast.error(serverMsg);
     } finally {
       setIsSaving(false);
     }
