@@ -4,10 +4,12 @@ import { uploadToCloudinary } from '../services/cloudinary';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 
+let globalIsSyncing = false;
+
 export const useOnlineSync = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [pendingCount, setPendingCount] = useState(0);
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(globalIsSyncing);
 
   const updateCount = async () => {
     try {
@@ -19,12 +21,13 @@ export const useOnlineSync = () => {
   };
 
   const syncPendingReports = async () => {
-    if (isSyncing || !navigator.onLine) return;
+    if (globalIsSyncing || !navigator.onLine) return;
     
     try {
       const count = await getPendingCount();
       if (count === 0) return;
       
+      globalIsSyncing = true;
       setIsSyncing(true);
       const reports = await getPendingReports();
       let successCount = 0;
@@ -111,6 +114,7 @@ export const useOnlineSync = () => {
       }
     } finally {
       await updateCount();
+      globalIsSyncing = false;
       setIsSyncing(false);
     }
   };
