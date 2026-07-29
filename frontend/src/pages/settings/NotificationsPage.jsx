@@ -30,9 +30,10 @@ export default function NotificationsPage() {
   const [email, setEmail] = useState('');
 
   const [preferences, setPreferences] = useState({
-    emailEnabled: true,
-    pushEnabled: true,
-    smsEnabled: false
+    comments: { push: true, email: true, sms: false },
+    tags: { push: true, email: false, sms: false },
+    reminders: { push: false, email: false, sms: false },
+    moreActivity: { push: false, email: false, sms: false }
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -51,18 +52,15 @@ export default function NotificationsPage() {
     };
     fetchUnreadCount();
 
-    // Fetch user preferences from the actual API
     const fetchPreferences = async () => {
       try {
         setIsLoading(true);
         const { data } = await api.get('/users/me/preferences');
         const prefs = data.data || data;
-        if (prefs) {
-          setPreferences({
-            emailEnabled: Boolean(prefs.emailEnabled),
-            pushEnabled: Boolean(prefs.pushEnabled),
-            smsEnabled: Boolean(prefs.smsEnabled)
-          });
+        
+        // Only update if the backend actually returns the detailed structure
+        if (prefs && prefs.comments && prefs.tags) {
+          setPreferences(prefs);
         }
       } catch (error) {
         toast.error("Failed to load notification settings.");
@@ -74,10 +72,13 @@ export default function NotificationsPage() {
     fetchPreferences();
   }, []);
 
-  const handleToggle = (key) => {
+  const handleToggle = (category, channel) => {
     setPreferences(prev => ({
       ...prev,
-      [key]: !prev[key]
+      [category]: {
+        ...prev[category],
+        [channel]: !prev[category][channel]
+      }
     }));
   };
 
@@ -221,19 +222,64 @@ export default function NotificationsPage() {
               ) : (
                 /* Settings Categories */
                 <div className="space-y-8">
-                  {/* Global Notifications */}
+                  {/* Comments */}
                   <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
                     <div className="sm:w-2/3 md:pr-8">
-                      <h3 className="text-sm font-semibold text-gray-900 mb-1">Global Notifications</h3>
-                      <p className="text-sm text-gray-500">Manage how you receive alerts, updates, and messages from CleanReport.</p>
+                      <h3 className="text-sm font-semibold text-gray-900 mb-1">Comments</h3>
+                      <p className="text-sm text-gray-500">These are notifications for comments on your posts and replies to your comments.</p>
                     </div>
                     <div className="flex flex-col space-y-4 sm:w-1/3 sm:items-start">
-                      <ToggleSwitch label="Push" checked={preferences.pushEnabled} onChange={() => handleToggle('pushEnabled')} disabled={isSaving} />
-                      <ToggleSwitch label="Email" checked={preferences.emailEnabled} onChange={() => handleToggle('emailEnabled')} disabled={isSaving} />
-                      <ToggleSwitch label="SMS" checked={preferences.smsEnabled} onChange={() => handleToggle('smsEnabled')} disabled={isSaving} />
+                      <ToggleSwitch label="Push" checked={preferences.comments.push} onChange={() => handleToggle('comments', 'push')} />
+                      <ToggleSwitch label="Email" checked={preferences.comments.email} onChange={() => handleToggle('comments', 'email')} />
+                      <ToggleSwitch label="SMS" checked={preferences.comments.sms} onChange={() => handleToggle('comments', 'sms')} />
                     </div>
                   </div>
-                  
+
+                  <hr className="border-gray-100" />
+
+                  {/* Tags */}
+                  <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
+                    <div className="sm:w-2/3 md:pr-8">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-1">Tags</h3>
+                      <p className="text-sm text-gray-500">These are notifications for when someone tags you in a comment, post or story.</p>
+                    </div>
+                    <div className="flex flex-col space-y-4 sm:w-1/3 sm:items-start">
+                      <ToggleSwitch label="Push" checked={preferences.tags.push} onChange={() => handleToggle('tags', 'push')} />
+                      <ToggleSwitch label="Email" checked={preferences.tags.email} onChange={() => handleToggle('tags', 'email')} />
+                      <ToggleSwitch label="SMS" checked={preferences.tags.sms} onChange={() => handleToggle('tags', 'sms')} />
+                    </div>
+                  </div>
+
+                  <hr className="border-gray-100" />
+
+                  {/* Reminders */}
+                  <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
+                    <div className="sm:w-2/3 md:pr-8">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-1">Reminders</h3>
+                      <p className="text-sm text-gray-500">These are notifications to remind you of updates you might have missed.</p>
+                    </div>
+                    <div className="flex flex-col space-y-4 sm:w-1/3 sm:items-start">
+                      <ToggleSwitch label="Push" checked={preferences.reminders.push} onChange={() => handleToggle('reminders', 'push')} />
+                      <ToggleSwitch label="Email" checked={preferences.reminders.email} onChange={() => handleToggle('reminders', 'email')} />
+                      <ToggleSwitch label="SMS" checked={preferences.reminders.sms} onChange={() => handleToggle('reminders', 'sms')} />
+                    </div>
+                  </div>
+
+                  <hr className="border-gray-100" />
+
+                  {/* More activity about you */}
+                  <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
+                    <div className="sm:w-2/3 md:pr-8">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-1">More activity about you</h3>
+                      <p className="text-sm text-gray-500">These are notifications for posts on your profile, likes and other reactions to your posts, and more.</p>
+                    </div>
+                    <div className="flex flex-col space-y-4 sm:w-1/3 sm:items-start">
+                      <ToggleSwitch label="Push" checked={preferences.moreActivity.push} onChange={() => handleToggle('moreActivity', 'push')} disabled={isSaving} />
+                      <ToggleSwitch label="Email" checked={preferences.moreActivity.email} onChange={() => handleToggle('moreActivity', 'email')} disabled={isSaving} />
+                      <ToggleSwitch label="SMS" checked={preferences.moreActivity.sms} onChange={() => handleToggle('moreActivity', 'sms')} disabled={isSaving} />
+                    </div>
+                  </div>
+
                   <div className="flex justify-end pt-6 border-t border-gray-100">
                     <button 
                       onClick={handleSavePreferences}
