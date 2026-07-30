@@ -14,7 +14,7 @@ export default function NotificationBell() {
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchUnreadCount = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
     if (!token) return;
     
     try {
@@ -27,13 +27,16 @@ export default function NotificationBell() {
   };
 
   useEffect(() => {
-    // Delay first fetch so it doesn't compete with page render resources
+    let intervalId;
     const initialDelay = setTimeout(() => {
       fetchUnreadCount();
-      const intervalId = setInterval(fetchUnreadCount, 30000); // Poll every 30s (was 15s)
-      return () => clearInterval(intervalId);
-    }, 5000); // 5 second delay before first poll
-    return () => clearTimeout(initialDelay);
+      intervalId = setInterval(fetchUnreadCount, 10000); // Poll every 10s for real-time feel
+    }, 2000); 
+
+    return () => {
+      clearTimeout(initialDelay);
+      if (intervalId) clearInterval(intervalId);
+    };
   }, []);
 
   useEffect(() => {
