@@ -319,6 +319,8 @@ export default function AdminReportDetailPage() {
                   <img loading="lazy" 
                     src={imageUrl} 
                     alt={categoryName} 
+                    width="600"
+                    height="400"
                     className="w-full h-[300px] sm:h-[400px] object-cover rounded-xl"
                   />
                 </div>

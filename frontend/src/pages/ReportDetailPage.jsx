@@ -272,7 +272,7 @@ export default function ReportDetailPage() {
                 className="px-3 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-2"
               >
                 <div className="w-7 h-7 rounded-full bg-gray-200 overflow-hidden shrink-0 border border-gray-100">
-                  <img src={u.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.displayName || u.username)}&background=random`} alt="" className="w-full h-full object-cover" />
+                  <img src={u.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.displayName || u.username)}&background=random`} alt="" loading="lazy" width="28" height="28" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-sm font-semibold text-gray-900 leading-tight">{u.displayName}</span>

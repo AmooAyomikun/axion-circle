@@ -156,7 +156,7 @@ export default function RewardsPage() {
                   <div key={reward.id} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col">
                     <div className="w-full h-48 bg-gray-50 rounded-xl mb-4 overflow-hidden flex items-center justify-center">
                       {reward.imageUrl ? (
-                        <img loading="lazy" src={reward.imageUrl} alt={reward.name} className="w-full h-full object-cover" />
+                        <img loading="lazy" src={reward.imageUrl} alt={reward.name} width="400" height="192" className="w-full h-full object-cover" />
                       ) : (
                         <Gift className="w-16 h-16 text-gray-200" />
                       )}
@@ -208,7 +208,7 @@ export default function RewardsPage() {
                   <div key={claim.id} className="bg-white border border-gray-100 rounded-xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center gap-4">
                     <div className="w-16 h-16 bg-gray-50 rounded-lg overflow-hidden shrink-0 hidden sm:flex items-center justify-center">
                       {claim.reward?.imageUrl ? (
-                        <img loading="lazy" src={claim.reward.imageUrl} alt={claim.reward.name} className="w-full h-full object-cover" />
+                        <img loading="lazy" src={claim.reward.imageUrl} alt={claim.reward.name} width="64" height="64" className="w-full h-full object-cover" />
                       ) : (
                         <Gift className="w-8 h-8 text-gray-300" />
                       )}

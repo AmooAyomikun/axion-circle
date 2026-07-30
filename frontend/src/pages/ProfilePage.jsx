@@ -5,10 +5,12 @@ import toast from 'react-hot-toast';
 import AppNavbar from '../components/AppNavbar';
 import Footer from '../components/Footer';
 import { uploadToCloudinary } from '../services/cloudinary';
-import PhoneInput from 'react-phone-number-input';
+import ReactGA from 'react-ga4';
 import 'react-phone-number-input/style.css';
-import CustomCountrySelect from '../components/CustomCountrySelect';
 import api from '../services/api';
+
+const PhoneInput = React.lazy(() => import('react-phone-number-input'));
+const CustomCountrySelect = React.lazy(() => import('../components/CustomCountrySelect'));
 import SEO from '../components/SEO';
 
 export default function ProfilePage() {
@@ -374,6 +376,8 @@ export default function ProfilePage() {
                       src={formData.avatarUrl}
                       alt="Profile"
                       loading="lazy"
+                      width="128"
+                      height="128"
                       className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border border-gray-200 object-cover shadow-sm"
                       onError={(e) => { e.target.onerror = null; e.target.src = avatarFallbackUrl; }}
                     />
@@ -416,6 +420,8 @@ export default function ProfilePage() {
                         src={formData.avatarUrl}
                         alt="Profile"
                         loading="lazy"
+                        width="64"
+                        height="64"
                         className="w-16 h-16 rounded-full border border-gray-200 object-cover"
                         onError={(e) => { e.target.onerror = null; e.target.src = avatarFallbackUrl; }}
                       />
@@ -505,18 +511,20 @@ export default function ProfilePage() {
                 <label htmlFor="phone" className="md:w-1/3 text-sm font-semibold text-gray-700 mb-1.5 md:mb-0">Phone Number</label>
                 <div className="md:w-2/3">
                   <div className={`w-full border border-gray-300 rounded-lg py-2.5 px-3 focus-within:ring-2 focus-within:ring-primary/50 focus-within:border-primary transition-colors ${!isEditing ? 'bg-white text-gray-800' : 'bg-white text-gray-900'}`}>
-                    <PhoneInput
-                      international
-                      defaultCountry="US"
-                      id="phone"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={(value) => setFormData(prev => ({ ...prev, phone: value || '' }))}
-                      disabled={!isEditing}
-                      placeholder="+1 908 765 4321"
-                      className="w-full h-full custom-phone-input"
-                      countrySelectComponent={CustomCountrySelect}
-                    />
+                    <React.Suspense fallback={<div className="w-full h-full text-gray-500 flex items-center text-sm pl-2">Loading...</div>}>
+                      <PhoneInput
+                        international
+                        defaultCountry="US"
+                        id="phone"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={(value) => setFormData(prev => ({ ...prev, phone: value || '' }))}
+                        disabled={!isEditing}
+                        placeholder="+1 908 765 4321"
+                        className="w-full h-full custom-phone-input"
+                        countrySelectComponent={CustomCountrySelect}
+                      />
+                    </React.Suspense>
                   </div>
                 </div>
               </div>
