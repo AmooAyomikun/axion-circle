@@ -14,7 +14,7 @@ const ReportListView = React.memo(function ReportListView({ reports }) {
   return (
     <div className="w-full h-full bg-white overflow-y-auto z-0">
       {reports.map((report, idx) => {
-        const status = (report.status || 'reported').toLowerCase().replace(' ', '');
+        const status = (report.status || 'reported').toLowerCase().replace(/[_ ]/g, '');
         const isResolved = status === 'resolved';
         const isInProgress = status === 'inprogress';
         const isAcknowledged = status === 'acknowledged';

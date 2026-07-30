@@ -264,7 +264,7 @@ export default function RegionalActivityMap({ reports, mapStatus, onRetry }) {
                           <div className="flex items-center justify-between mb-1.5">
                             <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-sm ${
                               (report.status || '').toLowerCase() === 'resolved' ? 'bg-alert-successLight text-primary' :
-                              (report.status || '').toLowerCase() === 'inprogress' || (report.status || '').toLowerCase() === 'in progress' ? 'bg-alert-inprogressLight text-alert-inprogress' :
+                              (report.status || '').toLowerCase().replace(/[_ ]/g, '') === 'inprogress' ? 'bg-alert-inprogressLight text-alert-inprogress' :
                               (report.status || '').toLowerCase() === 'acknowledged' ? 'bg-alert-infoLight text-alert-info' :
                               'bg-alert-warningLight text-accent'
                             }`}>

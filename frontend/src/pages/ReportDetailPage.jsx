@@ -397,7 +397,7 @@ export default function ReportDetailPage() {
   }
 
   // Determine current active stage index from status history or report status
-  const currentStatusStr = (report.status || 'Reported').toLowerCase().replace(' ', '');
+  const currentStatusStr = (report.status || 'Reported').toLowerCase().replace(/[_ ]/g, '');
   let activeStageIndex = 0;
   if (currentStatusStr === 'acknowledged') activeStageIndex = 1;
   else if (currentStatusStr === 'inprogress') activeStageIndex = 2;
@@ -407,8 +407,8 @@ export default function ReportDetailPage() {
   const mappedStages = STAGES.map((stageName, index) => {
     // Attempt to find a matching history record
     const historyRecord = statusHistory.find(h => {
-      const s = (h.status || '').toLowerCase().replace(' ', '');
-      const sn = stageName.toLowerCase().replace(' ', '');
+      const s = (h.status || '').toLowerCase().replace(/[_ ]/g, '');
+      const sn = stageName.toLowerCase().replace(/[_ ]/g, '');
       return s === sn;
     });
 
@@ -734,9 +734,9 @@ export default function ReportDetailPage() {
               <div className="flex items-center gap-2 mt-2">
                 {/* Status Badge */}
                 <span className={`text-[11px] font-bold uppercase px-2.5 py-0.5 rounded-sm border ${
-                  (report.status || '').toLowerCase().replace(' ', '') === 'resolved' ? 'bg-alert-successLight text-primary border-alert-successStroke' :
-                  (report.status || '').toLowerCase().replace(' ', '') === 'inprogress' ? 'bg-alert-inprogressLight text-alert-inprogress border-alert-inprogressStroke' :
-                  (report.status || '').toLowerCase().replace(' ', '') === 'acknowledged' ? 'bg-alert-infoLight text-alert-info border-alert-infoStroke' :
+                  (report.status || '').toLowerCase().replace(/[_ ]/g, '') === 'resolved' ? 'bg-alert-successLight text-primary border-alert-successStroke' :
+                  (report.status || '').toLowerCase().replace(/[_ ]/g, '') === 'inprogress' ? 'bg-alert-inprogressLight text-alert-inprogress border-alert-inprogressStroke' :
+                  (report.status || '').toLowerCase().replace(/[_ ]/g, '') === 'acknowledged' ? 'bg-alert-infoLight text-alert-info border-alert-infoStroke' :
                   'bg-alert-warningLight text-[#8B4500] border-alert-warningStroke'
                 }`}>
                   {report.status || 'Reported'}
