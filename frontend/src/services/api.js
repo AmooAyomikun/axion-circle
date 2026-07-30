@@ -69,7 +69,7 @@ api.interceptors.response.use(
         localStorage.removeItem('access_token'); sessionStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token'); sessionStorage.removeItem('refresh_token');
         localStorage.removeItem('user'); sessionStorage.removeItem('user');
-        window.location.href = "/login";
+        window.dispatchEvent(new CustomEvent('auth-unauthorized'));
         return Promise.reject(error);
       }
 
@@ -97,7 +97,7 @@ api.interceptors.response.use(
         localStorage.removeItem('access_token'); sessionStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token'); sessionStorage.removeItem('refresh_token');
         localStorage.removeItem('user'); sessionStorage.removeItem('user');
-        window.location.href = "/login";
+        window.dispatchEvent(new CustomEvent('auth-unauthorized'));
         return Promise.reject(err);
       }
     }
