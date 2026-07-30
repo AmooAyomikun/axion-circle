@@ -295,6 +295,8 @@ export default function AdminReportsTable({ reports, pageData, filters, onFilter
                         <img loading="lazy" 
                           src={(report.photoUrl || report.imageUrl || (report.images && report.images[0])) ? (report.photoUrl || report.imageUrl || report.images[0]) : fallbackImage} 
                           alt={catName}
+                          width="40"
+                          height="40"
                           className="w-10 h-10 rounded-lg object-cover bg-white-bg2 shrink-0 border border-white-stroke"
                         />
                         <span className="font-bold text-black capitalize">{catName.toLowerCase()}</span>

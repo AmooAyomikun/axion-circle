@@ -29,63 +29,7 @@ const contributorsData = [
   { name: 'Beirah', credits: 89 },
 ];
 
-const CustomPieLabel = (props) => {
-  const RADIAN = Math.PI / 180;
-  const { cx, cy, midAngle, outerRadius, percent, name } = props;
-  
-  // Calculate points for the custom elbow line
-  const sin = Math.sin(-RADIAN * midAngle);
-  const cos = Math.cos(-RADIAN * midAngle);
-  
-  // Start exactly at the pie slice edge
-  const sx = cx + outerRadius * cos;
-  const sy = cy + outerRadius * sin;
-  
-  let mx = cx + (outerRadius + 10) * cos;
-  let my = cy + (outerRadius + 10) * sin;
-
-  let isRightSide = cos >= 0;
-  // Force Overflow Bin to the right side like Figma
-  if (name === 'Overflow Bin') isRightSide = true;
-
-  // Manual anti-collision routing to perfectly match Figma layout
-  // Now that the pie radius is 55, we have plenty of vertical room to space them out
-  if (name === 'Street Litter') {
-    my -= 15; // Push up to separate from Commercial Dump
-    mx -= 25; // Pull left
-  } else if (name === 'Commercial Dump') {
-    my -= 5;  // Push up slightly
-  } else if (name === 'Blocked Drains') {
-    my += 5;  // Push down slightly
-  } else if (name === 'Residential Dump') {
-    my += 25; // Push down to separate from Blocked Drains
-    mx -= 15;
-  } else if (name === 'Overflow Bin') {
-    my += 10; // Push down slightly
-    mx += 25; 
-  } else if (name === 'illegal Dumping') {
-    my -= 10;
-  }
-
-  let exDir = isRightSide ? 1 : -1;
-  const ex = mx + exDir * 15; // horizontal line length
-  const ey = my;
-
-  const textAnchor = isRightSide ? 'start' : 'end';
-  const textX = ex + exDir * 6; // text padding
-
-  return (
-    <g>
-      <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke="#D1D5DB" fill="none" strokeWidth={1} />
-      <text x={textX} y={ey - 7} textAnchor={textAnchor} fill="#1F2937" fontSize={11.5} fontWeight={600} dominantBaseline="central">
-        {name}
-      </text>
-      <text x={textX} y={ey + 9} textAnchor={textAnchor} fill="#10B981" fontSize={11.5} fontWeight={500} dominantBaseline="central">
-        {(percent * 100).toFixed(0)}%
-      </text>
-    </g>
-  );
-};
+// CustomPieLabel removed to use Legend instead to avoid overlapping text
 
 const CustomPieTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
@@ -159,7 +103,7 @@ export default function AnalyticsPage() {
       if (dashRes?.data?.data) {
         const d = dashRes.data.data;
         if (d.byStatus) {
-          const ackObj = d.byStatus.find(s => s.name === 'Acknowledged' || s.name === 'ACKNOWLEDGED');
+          const ackObj = d.byStatus.find(s => s.name && s.name.toUpperCase().includes('ACKNOWLEDGE'));
           if (ackObj) ackCount = Number(ackObj.value || 0);
         }
       }
@@ -193,22 +137,22 @@ export default function AnalyticsPage() {
         }
 
         if (d.byStatus) {
-          const statusColors = {
-            'RESOLVED': '#127C2F',
-            'IN_PROGRESS': '#9333EA',
-            'IN PROGRESS': '#9333EA',
-            'ACKNOWLEDGED': '#3B82F6',
-            'REPORTED': '#F59E0B'
-          };
           const totalStatus = d.byStatus.reduce((acc, curr) => acc + Number(curr.value || 0), 0) || 1;
           setStatusData(d.byStatus.map(s => {
-            const rawName = s.name.toUpperCase();
-            const displayName = s.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            const rawName = (s.name || '').toUpperCase();
+            const displayName = (s.name || '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            
+            let color = '#6B7280';
+            if (rawName.includes('RESOLV')) color = '#127C2F';
+            else if (rawName.includes('PROGRESS')) color = '#9333EA';
+            else if (rawName.includes('ACKNOWLEDGE')) color = '#3B82F6';
+            else if (rawName.includes('REPORT')) color = '#F59E0B';
+
             return {
               name: displayName,
               value: Number(s.value || 0),
               percentage: Math.round((Number(s.value || 0) / totalStatus) * 100),
-              color: statusColors[rawName] || statusColors[displayName.toUpperCase()] || '#6B7280'
+              color
             };
           }));
         }
@@ -365,16 +309,15 @@ export default function AnalyticsPage() {
                 
                 <div className="flex-1 h-[220px] w-full flex items-center justify-center mt-2">
                   <ResponsiveContainer width="100%" height="100%">
-                    <PieChart margin={{ top: 10, right: 40, bottom: 10, left: 40 }}>
+                    <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
                       <Pie
                         data={categoriesData}
-                        cx="50%"
+                        cx="40%"
                         cy="50%"
-                        innerRadius={0}
-                        outerRadius={55}
+                        innerRadius={45}
+                        outerRadius={75}
                         dataKey="value"
                         labelLine={false}
-                        label={<CustomPieLabel />}
                         stroke="#ffffff"
                         strokeWidth={2}
                         paddingAngle={3}
@@ -386,6 +329,13 @@ export default function AnalyticsPage() {
                         ))}
                       </Pie>
                       <Tooltip content={<CustomPieTooltip />} />
+                      <Legend 
+                        layout="vertical" 
+                        verticalAlign="middle" 
+                        align="right"
+                        iconType="circle"
+                        wrapperStyle={{ fontSize: '11px', color: '#4B5563', right: '0px' }}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>

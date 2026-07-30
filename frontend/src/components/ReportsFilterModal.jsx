@@ -49,6 +49,7 @@ export default function ReportsFilterModal({ isOpen, onClose, onApply }) {
               type="button"
               onClick={onClose}
               className="text-black-icon hover:text-black transition-colors"
+              aria-label="Close filters"
             >
               <X className="w-5 h-5" />
             </button>

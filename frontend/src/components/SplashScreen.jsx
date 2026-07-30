@@ -31,7 +31,7 @@ export default function SplashScreen({ onComplete }) {
     >
       {/* Background Image (contains logo) */}
       <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center">
-        <img loading="lazy" src={splashBg} alt="" className="w-full h-full object-cover md:object-contain md:max-w-md mx-auto" />
+        <img fetchpriority="high" src={splashBg} alt="" width="400" height="800" className="w-full h-full object-cover md:object-contain md:max-w-md mx-auto" />
       </div>
     </div>
   );
