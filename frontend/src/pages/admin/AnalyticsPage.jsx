@@ -288,7 +288,7 @@ export default function AnalyticsPage() {
               
               {/* Categories of Reports */}
               <div className="bg-white border border-white-stroke rounded-2xl p-6 shadow-sm flex flex-col">
-                <div className="flex items-start justify-between mb-2">
+                <div className="flex flex-col xl:flex-row xl:items-start justify-between mb-4 gap-3">
                   <div>
                     <h2 className="font-heading font-bold text-xl text-[#1F2937]">Categories of Reports</h2>
                     <p className="text-sm text-[#6B7280] mt-1">Breakdown of reports by issue category</p>
@@ -426,8 +426,8 @@ export default function AnalyticsPage() {
             </div>
 
             {/* VERY BOTTOM: Reports Submitted Over Time */}
-            <div className="bg-white border border-white-stroke rounded-2xl p-6 shadow-sm min-h-[400px]">
-              <div className="flex items-start justify-between mb-8">
+            <div className="bg-white border border-white-stroke rounded-2xl p-4 sm:p-6 shadow-sm min-h-[400px]">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-6 sm:mb-8 gap-4">
                 <div>
                   <h2 className="font-heading font-bold text-xl text-[#1F2937]">Reports Submitted Over Time</h2>
                   <p className="text-sm text-[#6B7280] mt-1">Switch the time grain to explore trends</p>
