@@ -13,8 +13,8 @@ export default function InstallPWAModal({ isOpen, onClose }) {
       />
       
       {/* Modal content */}
-      <div className="relative bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div className="p-6">
+      <div className="relative bg-white rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        <div className="p-6 overflow-y-auto">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-heading font-bold text-[#001310] flex items-center gap-2">
               <Smartphone className="w-5 h-5 text-primary" />
