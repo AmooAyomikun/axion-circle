@@ -255,6 +255,8 @@ export default function ReportDetailPage() {
       <div className="absolute bottom-[calc(100%+8px)] left-0 w-64 bg-white border border-gray-200 rounded-lg shadow-[0_4px_20px_rgb(0,0,0,0.1)] z-[100] max-h-48 overflow-y-auto">
         {mentionLoading ? (
           <div className="p-3 text-sm text-gray-500 text-center">Searching...</div>
+        ) : mentionSearchTerm === '' ? (
+          <div className="p-3 text-sm text-gray-500 text-center">Type a name to search users...</div>
         ) : mentionUsers.length === 0 ? (
           <div className="p-3 text-sm text-gray-500 text-center">No users found</div>
         ) : (
