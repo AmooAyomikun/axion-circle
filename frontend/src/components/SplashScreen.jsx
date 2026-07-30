@@ -6,14 +6,23 @@ export default function SplashScreen({ onComplete }) {
   const [isFadingOut, setIsFadingOut] = useState(false);
 
   useEffect(() => {
+    // Read from sessionStorage to completely skip if already seen this session
+    const hasSeenSplash = sessionStorage.getItem('splash_seen');
+    if (hasSeenSplash) {
+      setIsVisible(false);
+      onComplete();
+      return;
+    }
+
     const timer1 = setTimeout(() => {
       setIsFadingOut(true);
-    }, 2500); // Wait 2.5 seconds before fading out
+      sessionStorage.setItem('splash_seen', 'true');
+    }, 400); // Wait 400ms before fading out
 
     const timer2 = setTimeout(() => {
       setIsVisible(false);
       onComplete();
-    }, 3000); // 500ms fade transition
+    }, 700); // 300ms fade transition
 
     return () => {
       clearTimeout(timer1);

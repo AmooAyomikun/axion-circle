@@ -14,6 +14,9 @@ export default function NotificationBell() {
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchUnreadCount = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
     try {
       const { data } = await api.get('/notifications/unread-count');
       const unreadResponse = data.data || data;
