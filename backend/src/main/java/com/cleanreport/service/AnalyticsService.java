@@ -6,9 +6,11 @@ import com.cleanreport.dto.response.CategoryResolutionRate;
 import com.cleanreport.dto.response.DailyTrendPoint;
 import com.cleanreport.dto.response.DayOfWeekCount;
 import com.cleanreport.dto.response.StatusCount;
+import com.cleanreport.dto.response.TopContributorResponse;
 import com.cleanreport.model.enums.ReportCategory;
 import com.cleanreport.model.enums.ReportStatus;
 import com.cleanreport.repository.ReportRepository;
+import com.cleanreport.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -56,6 +58,7 @@ public class AnalyticsService {
     private static final int COLUMN_COUNT = 1;
 
     private final ReportRepository reportRepository;
+    private final UserRepository userRepository;
 
     /**
      * Assembles every section of the analytics dashboard in a single call.
@@ -167,6 +170,21 @@ public class AnalyticsService {
         }
         double rate = resolved * PERCENT_SCALE / total;
         return Math.round(rate * ONE_DECIMAL_FACTOR) / ONE_DECIMAL_FACTOR;
+    }
+
+    public List<TopContributorResponse> getTopContributors(int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 50));
+        return userRepository.findTopByCredits(
+                org.springframework.data.domain.PageRequest.of(0, safeLimit))
+                .stream()
+                .map(u -> TopContributorResponse.builder()
+                        .id(u.getId())
+                        .name(u.getDisplayName())
+                        .avatarUrl(u.getAvatarUrl())
+                        .credits(u.getCreditBalance())
+                        .level(u.getLevel() != null ? u.getLevel().name() : "OBSERVER")
+                        .build())
+                .toList();
     }
 
     private Map<String, Long> toCountsByKey(List<Object[]> rows) {

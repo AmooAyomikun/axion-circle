@@ -11,12 +11,23 @@ import lombok.NoArgsConstructor;
 @Schema(description = "Update notification preferences")
 public class UpdateNotificationPreferencesRequest {
 
-    @Schema(description = "Enable/disable email notifications")
+    // Global flags (legacy — still supported)
     private Boolean emailEnabled;
-
-    @Schema(description = "Enable/disable push notifications")
     private Boolean pushEnabled;
-
-    @Schema(description = "Enable/disable SMS notifications")
     private Boolean smsEnabled;
+
+    // Per-category settings
+    private CategoryPrefs comments;
+    private CategoryPrefs tags;
+    private CategoryPrefs reminders;
+    private CategoryPrefs moreActivity;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CategoryPrefs {
+        private Boolean push;
+        private Boolean email;
+        private Boolean sms;
+    }
 }

@@ -13,12 +13,30 @@ import lombok.NoArgsConstructor;
 @Schema(description = "User notification preferences")
 public class NotificationPreferencesResponse {
 
-    @Schema(example = "true")
+    @Schema(description = "Global flags (legacy)")
     private Boolean emailEnabled;
-
-    @Schema(example = "true")
     private Boolean pushEnabled;
-
-    @Schema(example = "true")
     private Boolean smsEnabled;
+
+    @Schema(description = "Comment notification settings")
+    private CategoryPrefs comments;
+
+    @Schema(description = "Tag/@mention notification settings")
+    private CategoryPrefs tags;
+
+    @Schema(description = "Reminder notification settings")
+    private CategoryPrefs reminders;
+
+    @Schema(description = "More activity notification settings")
+    private CategoryPrefs moreActivity;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CategoryPrefs {
+        private Boolean push;
+        private Boolean email;
+        private Boolean sms;
+    }
 }

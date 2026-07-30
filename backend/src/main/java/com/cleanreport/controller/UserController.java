@@ -7,6 +7,7 @@ import com.cleanreport.dto.response.ApiResponse;
 import com.cleanreport.dto.response.CreditBalanceResponse;
 import com.cleanreport.dto.response.NotificationPreferencesResponse;
 import com.cleanreport.dto.response.UserResponse;
+import com.cleanreport.dto.response.UserSearchResponse;
 import com.cleanreport.service.CreditService;
 import com.cleanreport.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -74,5 +75,28 @@ public class UserController {
     @GetMapping("/me/points")
     public ResponseEntity<ApiResponse<CreditBalanceResponse>> getMyPoints(Authentication authentication) {
         return ResponseEntity.ok(ApiResponse.ok(creditService.getBalance(authentication.getName())));
+    }
+
+    @Operation(
+            summary = "Get my credits transaction history (alias for GET /credits/history)",
+            description = "Alias endpoint. Same data as GET /credits/history.",
+            security = @SecurityRequirement(name = "Bearer Auth"))
+    @GetMapping("/me/credits/history")
+    public ResponseEntity<ApiResponse<org.springframework.data.domain.Page<com.cleanreport.dto.response.CreditTransactionResponse>>> getMyCreditsHistory(
+            @org.springframework.data.web.PageableDefault(size = 20) org.springframework.data.domain.Pageable pageable,
+            Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.ok(creditService.getHistory(authentication.getName(), pageable)));
+    }
+
+    @Operation(
+            summary = "Search users by display name",
+            description = "Returns matching users for @mention tagging in comments. Requires auth.",
+            security = @SecurityRequirement(name = "Bearer Auth"))
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<java.util.List<UserSearchResponse>>> searchUsers(
+            @RequestParam String q,
+            Authentication authentication) {
+        java.util.List<UserSearchResponse> results = userService.searchUsers(q);
+        return ResponseEntity.ok(ApiResponse.ok(results));
     }
 }

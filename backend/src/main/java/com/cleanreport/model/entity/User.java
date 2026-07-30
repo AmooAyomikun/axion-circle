@@ -90,6 +90,55 @@ public class User {
     @Builder.Default
     private Boolean smsNotifications = true;
 
+    // Expanded notification preferences (per category)
+    @Column(name = "notif_comments_push", nullable = false)
+    @Builder.Default
+    private Boolean notifCommentsPush = true;
+
+    @Column(name = "notif_comments_email", nullable = false)
+    @Builder.Default
+    private Boolean notifCommentsEmail = true;
+
+    @Column(name = "notif_comments_sms", nullable = false)
+    @Builder.Default
+    private Boolean notifCommentsSms = false;
+
+    @Column(name = "notif_tags_push", nullable = false)
+    @Builder.Default
+    private Boolean notifTagsPush = true;
+
+    @Column(name = "notif_tags_email", nullable = false)
+    @Builder.Default
+    private Boolean notifTagsEmail = false;
+
+    @Column(name = "notif_tags_sms", nullable = false)
+    @Builder.Default
+    private Boolean notifTagsSms = false;
+
+    @Column(name = "notif_reminders_push", nullable = false)
+    @Builder.Default
+    private Boolean notifRemindersPush = false;
+
+    @Column(name = "notif_reminders_email", nullable = false)
+    @Builder.Default
+    private Boolean notifRemindersEmail = false;
+
+    @Column(name = "notif_reminders_sms", nullable = false)
+    @Builder.Default
+    private Boolean notifRemindersSms = false;
+
+    @Column(name = "notif_more_activity_push", nullable = false)
+    @Builder.Default
+    private Boolean notifMoreActivityPush = false;
+
+    @Column(name = "notif_more_activity_email", nullable = false)
+    @Builder.Default
+    private Boolean notifMoreActivityEmail = false;
+
+    @Column(name = "notif_more_activity_sms", nullable = false)
+    @Builder.Default
+    private Boolean notifMoreActivitySms = false;
+
     @Column(name = "first_name")
     private String firstName;
 

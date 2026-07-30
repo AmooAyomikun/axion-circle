@@ -63,32 +63,72 @@ public class UserService {
 
     public NotificationPreferencesResponse getPreferences(String email) {
         User user = findUser(email);
-        return NotificationPreferencesResponse.builder()
-                .emailEnabled(user.getEmailNotifications())
-                .pushEnabled(user.getPushNotifications())
-                .smsEnabled(user.getSmsNotifications())
-                .build();
+        return buildPreferencesResponse(user);
     }
 
     @Transactional
     public NotificationPreferencesResponse updatePreferences(UpdateNotificationPreferencesRequest request, String email) {
         User user = findUser(email);
 
-        if (request.getEmailEnabled() != null) {
-            user.setEmailNotifications(request.getEmailEnabled());
+        // Global flags (legacy)
+        if (request.getEmailEnabled() != null) user.setEmailNotifications(request.getEmailEnabled());
+        if (request.getPushEnabled() != null) user.setPushNotifications(request.getPushEnabled());
+        if (request.getSmsEnabled() != null) user.setSmsNotifications(request.getSmsEnabled());
+
+        // Per-category: comments
+        if (request.getComments() != null) {
+            if (request.getComments().getPush() != null) user.setNotifCommentsPush(request.getComments().getPush());
+            if (request.getComments().getEmail() != null) user.setNotifCommentsEmail(request.getComments().getEmail());
+            if (request.getComments().getSms() != null) user.setNotifCommentsSms(request.getComments().getSms());
         }
-        if (request.getPushEnabled() != null) {
-            user.setPushNotifications(request.getPushEnabled());
+        // Per-category: tags
+        if (request.getTags() != null) {
+            if (request.getTags().getPush() != null) user.setNotifTagsPush(request.getTags().getPush());
+            if (request.getTags().getEmail() != null) user.setNotifTagsEmail(request.getTags().getEmail());
+            if (request.getTags().getSms() != null) user.setNotifTagsSms(request.getTags().getSms());
         }
-        if (request.getSmsEnabled() != null) {
-            user.setSmsNotifications(request.getSmsEnabled());
+        // Per-category: reminders
+        if (request.getReminders() != null) {
+            if (request.getReminders().getPush() != null) user.setNotifRemindersPush(request.getReminders().getPush());
+            if (request.getReminders().getEmail() != null) user.setNotifRemindersEmail(request.getReminders().getEmail());
+            if (request.getReminders().getSms() != null) user.setNotifRemindersSms(request.getReminders().getSms());
+        }
+        // Per-category: moreActivity
+        if (request.getMoreActivity() != null) {
+            if (request.getMoreActivity().getPush() != null) user.setNotifMoreActivityPush(request.getMoreActivity().getPush());
+            if (request.getMoreActivity().getEmail() != null) user.setNotifMoreActivityEmail(request.getMoreActivity().getEmail());
+            if (request.getMoreActivity().getSms() != null) user.setNotifMoreActivitySms(request.getMoreActivity().getSms());
         }
 
         userRepository.save(user);
+        return buildPreferencesResponse(user);
+    }
+
+    private NotificationPreferencesResponse buildPreferencesResponse(User user) {
         return NotificationPreferencesResponse.builder()
                 .emailEnabled(user.getEmailNotifications())
                 .pushEnabled(user.getPushNotifications())
                 .smsEnabled(user.getSmsNotifications())
+                .comments(NotificationPreferencesResponse.CategoryPrefs.builder()
+                        .push(user.getNotifCommentsPush())
+                        .email(user.getNotifCommentsEmail())
+                        .sms(user.getNotifCommentsSms())
+                        .build())
+                .tags(NotificationPreferencesResponse.CategoryPrefs.builder()
+                        .push(user.getNotifTagsPush())
+                        .email(user.getNotifTagsEmail())
+                        .sms(user.getNotifTagsSms())
+                        .build())
+                .reminders(NotificationPreferencesResponse.CategoryPrefs.builder()
+                        .push(user.getNotifRemindersPush())
+                        .email(user.getNotifRemindersEmail())
+                        .sms(user.getNotifRemindersSms())
+                        .build())
+                .moreActivity(NotificationPreferencesResponse.CategoryPrefs.builder()
+                        .push(user.getNotifMoreActivityPush())
+                        .email(user.getNotifMoreActivityEmail())
+                        .sms(user.getNotifMoreActivitySms())
+                        .build())
                 .build();
     }
 
@@ -103,6 +143,22 @@ public class UserService {
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
         log.info("Password changed for user: {}", email);
+    }
+
+    public java.util.List<com.cleanreport.dto.response.UserSearchResponse> searchUsers(String q) {
+        if (q == null || q.trim().length() < 1) {
+            return java.util.List.of();
+        }
+        return userRepository.searchByDisplayName(q.trim(),
+                org.springframework.data.domain.PageRequest.of(0, 10))
+                .stream()
+                .map(u -> com.cleanreport.dto.response.UserSearchResponse.builder()
+                        .id(u.getId())
+                        .username(u.getDisplayName() != null ? u.getDisplayName().toLowerCase().replace(" ", "_") : null)
+                        .displayName(u.getDisplayName())
+                        .avatarUrl(u.getAvatarUrl())
+                        .build())
+                .toList();
     }
 
     private User findUser(String email) {
