@@ -21,16 +21,15 @@ const statusConfig = {
   acknowledged: { bg: 'bg-[#EFF6FF]', text: 'text-[#3B82F6]', border: 'border-[#3B82F6]/20', dot: 'bg-[#3B82F6]', label: 'Acknowledged' }
 };
 
-const getTimelineIcon = (status, isPast) => {
-  const s = (status || '').toLowerCase();
-  if (s === 'reported' && isPast) {
+const getTimelineIcon = (isCompleted, isActive) => {
+  if (isCompleted && !isActive) {
     return (
       <div className="w-6 h-6 rounded-full bg-[#127C2F] flex items-center justify-center shrink-0 z-10">
         <Check className="w-3.5 h-3.5 text-white" />
       </div>
     );
   }
-  if (s === 'acknowledged' && isPast) {
+  if (isActive) {
     return (
       <div className="w-6 h-6 rounded-full bg-[#006FED] flex items-center justify-center shrink-0 z-10 border-4 border-blue-100">
         <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -213,15 +212,17 @@ export default function AdminReportDetailPage() {
     let date = historyRecord?.createdAt || historyRecord?.date || null;
     if (index === 0 && !date) date = report.createdAt || report.date;
 
-    // A step is active if we are past it, or if it's the current active stage.
-    const isActive = index <= activeStageIndex;
+    // A step is completed if we are past it, or if it is the current stage and the status is 'resolved'.
+    const isCompleted = index < activeStageIndex || (index === activeStageIndex && currentStatusStr === 'resolved');
+    const isCurrentActive = index === activeStageIndex && currentStatusStr !== 'resolved';
 
     return {
       status: stageName,
       label: stageName,
       desc: historyRecord?.note || historyRecord?.remarks || defaultDesc,
       date: date,
-      active: isActive
+      isCompleted: isCompleted,
+      isActive: isCurrentActive
     };
   });
 
@@ -405,9 +406,9 @@ export default function AdminReportDetailPage() {
                   <div className="flex flex-col gap-6">
                     {timeline.map((step, idx) => (
                       <div key={idx} className="flex gap-4 relative z-10">
-                        {getTimelineIcon(step.status, step.active)}
+                        {getTimelineIcon(step.isCompleted, step.isActive)}
                         <div className="-mt-0.5">
-                          <h4 className={`font-bold text-sm mb-0.5 ${step.active ? 'text-[#127C2F]' : 'text-paragraph'}`}>
+                          <h4 className={`font-bold text-sm mb-0.5 ${step.isCompleted && !step.isActive ? 'text-[#127C2F]' : step.isActive ? 'text-[#006FED]' : 'text-paragraph'}`}>
                             {step.label}
                           </h4>
                           {step.desc && (
