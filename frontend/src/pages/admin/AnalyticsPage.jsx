@@ -20,17 +20,16 @@ import api from '../../services/api';
 
 // contributorsData moved to state
 
-const CustomPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value, name, color }) => {
-  const RADIAN = Math.PI / 180;
-  const radius = innerRadius + (outerRadius - innerRadius) + 40;
-  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+const CustomPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value, name, x, y }) => {
   const textAnchor = x > cx ? 'start' : 'end';
-  const displayName = name === 'illegal Dumping' ? 'illegal Dump' : name;
+  
+  const formattedName = name ? name.toLowerCase().replace(/\b\w/g, l => l.toUpperCase()) : '';
+  const displayName = formattedName === 'Illegal Dumping' ? 'Illegal Dump' : formattedName;
+  
   return (
-    <text x={x} y={y} fill="#1F2937" textAnchor={textAnchor} dominantBaseline="central" className="text-xs font-bold font-heading">
-      <tspan x={x} dy="-0.5em">{displayName}</tspan>
-      <tspan x={x} dy="1.4em" fill="#127C2F" className="font-medium">{value}%</tspan>
+    <text x={x} y={y} fill="#1F2937" textAnchor={textAnchor} dominantBaseline="central" className="text-[13px] font-bold font-heading">
+      <tspan x={x + (x > cx ? 5 : -5)} dy="-0.5em">{displayName}</tspan>
+      <tspan x={x + (x > cx ? 5 : -5)} dy="1.4em" fill="#127C2F" className="text-[13px] font-medium">{value}%</tspan>
     </text>
   );
 };
@@ -331,7 +330,7 @@ export default function AnalyticsPage() {
                         innerRadius={45}
                         outerRadius={75}
                         dataKey="value"
-                        labelLine={{ stroke: '#D1D5DB', strokeWidth: 1 }}
+                        labelLine={{ stroke: '#D1D5DB', strokeWidth: 1.5, length1: 15, length2: 15 }}
                         label={<CustomPieLabel />}
                         stroke="#ffffff"
                         strokeWidth={2}
