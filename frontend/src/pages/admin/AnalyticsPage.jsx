@@ -23,13 +23,15 @@ import api from '../../services/api';
 const CustomPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value, name, x, y }) => {
   const textAnchor = x > cx ? 'start' : 'end';
   
-  const formattedName = name ? name.toLowerCase().replace(/\b\w/g, l => l.toUpperCase()) : '';
-  const displayName = formattedName === 'Illegal Dumping' ? 'Illegal Dump' : formattedName;
+  let displayName = name ? name.toLowerCase().replace(/\b\w/g, l => l.toUpperCase()) : '';
+  if (displayName.toLowerCase() === 'illegal dumping') {
+    displayName = 'illegal Dumping';
+  }
   
   return (
-    <text x={x} y={y} fill="#1F2937" textAnchor={textAnchor} dominantBaseline="central" className="text-[13px] font-bold font-heading">
-      <tspan x={x + (x > cx ? 5 : -5)} dy="-0.5em">{displayName}</tspan>
-      <tspan x={x + (x > cx ? 5 : -5)} dy="1.4em" fill="#127C2F" className="text-[13px] font-medium">{value}%</tspan>
+    <text x={x} y={y} fill="#374151" textAnchor={textAnchor} dominantBaseline="central" className="text-[14px] font-semibold font-heading">
+      <tspan x={x + (x > cx ? 6 : -6)} dy="-0.4em">{displayName}</tspan>
+      <tspan x={x + (x > cx ? 6 : -6)} dy="1.4em" fill="#127C2F" className="text-[14px] font-normal">{value}%</tspan>
     </text>
   );
 };
@@ -320,17 +322,17 @@ export default function AnalyticsPage() {
                   </div>
                 </div>
                 
-                <div className="flex-1 h-[220px] w-full flex items-center justify-center mt-2">
+                <div className="flex-1 min-h-[250px] w-full flex items-center justify-center mt-4">
                   <ResponsiveContainer width="100%" height="100%">
-                    <PieChart margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
+                    <PieChart margin={{ top: 20, right: 40, bottom: 20, left: 40 }}>
                       <Pie
                         data={categoriesData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={45}
-                        outerRadius={75}
+                        innerRadius={50}
+                        outerRadius={85}
                         dataKey="value"
-                        labelLine={{ stroke: '#D1D5DB', strokeWidth: 1.5, length1: 15, length2: 15 }}
+                        labelLine={{ stroke: '#D1D5DB', strokeWidth: 1.5, length1: 15, length2: 30 }}
                         label={<CustomPieLabel />}
                         stroke="#ffffff"
                         strokeWidth={2}
