@@ -15,6 +15,8 @@ export default function PasswordPage() {
 
   React.useEffect(() => {
     const fetchUnreadCount = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
       try {
         const { data } = await api.get('/notifications/unread-count');
         const unreadResponse = data.data || data;

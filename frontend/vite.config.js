@@ -76,11 +76,15 @@ export default defineConfig({
     chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
-        // Safe object-based chunk splitting — Rollup resolves load order correctly
-        // manualChunks removed for optimal Vite auto-splitting
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash][extname]',
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom', 'zustand'],
+          charts: ['recharts'],
+          maps: ['leaflet', 'react-leaflet', 'leaflet.markercluster', '@changey/react-leaflet-markercluster'],
+          ui: ['lucide-react', 'react-hot-toast']
+        },
       },
     },
   },
