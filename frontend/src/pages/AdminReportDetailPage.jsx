@@ -190,39 +190,40 @@ export default function AdminReportDetailPage() {
   const currentStatusStr = (report?.status || 'REPORTED').toLowerCase();
   const currentStatusConfig = statusConfig[currentStatusStr] || statusConfig['reported'];
 
-  // Build the timeline. We'll ensure there are 4 steps as in the design to match it exactly, or map actual history.
-  // The design showed: Reported, Acknowledged, Resolved, Resolved. 
-  // Let's create a dynamic list based on history, and pad it to match the general feel.
-  let timeline = [
-    { status: 'Reported', label: 'Reported', desc: 'Report has been delivered to the district', date: report.createdAt || report.date, active: true },
-    { status: 'Acknowledged', label: 'Acknowledged', desc: 'A few details about your company', date: null, active: false },
-    { status: 'Resolved', label: 'Resolved', desc: '', date: null, active: false },
-    { status: 'Resolved', label: 'Resolved', desc: '', date: null, active: false },
-  ];
+  const STAGES = ['Reported', 'Acknowledged', 'In Progress', 'Resolved'];
+  let activeStageIndex = 0;
+  if (currentStatusStr === 'acknowledged') activeStageIndex = 1;
+  else if (currentStatusStr === 'in_progress' || currentStatusStr === 'inprogress') activeStageIndex = 2;
+  else if (currentStatusStr === 'resolved') activeStageIndex = 3;
 
-  if (statusHistory && statusHistory.length > 0) {
-    // We try to map the actual history into our visual timeline.
-    timeline = statusHistory.map((sh, idx) => ({
-      status: sh.status,
-      label: (sh.status || 'Unknown').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-      desc: sh.remarks || (idx === 0 ? 'Report has been delivered to the district' : 'A few details about your company'),
-      date: sh.createdAt,
-      active: true
-    }));
-    
-    // Add placeholders if it's less than 4 to match design aesthetic loosely
-    while (timeline.length < 4) {
-      timeline.push({ status: 'Resolved', label: 'Resolved', desc: '', date: null, active: false });
-    }
-  } else if (report.status) {
-      // Just set current status active
-      const currentIdx = timeline.findIndex(t => t.status.toLowerCase() === report.status.toLowerCase());
-      if (currentIdx >= 0) {
-          for(let i=0; i<=currentIdx; i++) {
-              timeline[i].active = true;
-          }
-      }
-  }
+  const timeline = STAGES.map((stageName, index) => {
+    // Attempt to find a matching history record
+    const historyRecord = (statusHistory || []).find(h => {
+      const s = (h.newStatus || h.status || '').toLowerCase().replace(/_/g, '').replace(' ', '');
+      const sn = stageName.toLowerCase().replace(' ', '');
+      return s === sn;
+    });
+
+    let defaultDesc = '';
+    if (index === 0) defaultDesc = 'Report has been delivered to the district';
+    else if (index === 1) defaultDesc = 'Report has been acknowledged by admin';
+    else if (index === 2) defaultDesc = 'Personnel have been dispatched';
+    else if (index === 3) defaultDesc = 'Issue has been successfully resolved';
+
+    let date = historyRecord?.createdAt || historyRecord?.date || null;
+    if (index === 0 && !date) date = report.createdAt || report.date;
+
+    // A step is active if we are past it, or if it's the current active stage.
+    const isActive = index <= activeStageIndex;
+
+    return {
+      status: stageName,
+      label: stageName,
+      desc: historyRecord?.note || historyRecord?.remarks || defaultDesc,
+      date: date,
+      active: isActive
+    };
+  });
 
   const formatDateTime = (dateString) => {
     if (!dateString) return '';
