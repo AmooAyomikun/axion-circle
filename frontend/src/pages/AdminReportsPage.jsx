@@ -307,11 +307,11 @@ export default function AdminReportsPage() {
                   <div className="flex-1 overflow-auto pr-2 custom-scrollbar">
                     <div className="flex flex-col">
                       {reports.slice(0, 5).map((report, idx) => {
-                        const statusLower = (report.status || '').toLowerCase();
+                        const statusLower = (report.status || '').toLowerCase().replace(/[_ ]/g, '');
                         let bg, text, label;
                         if (statusLower === 'resolved') {
                            bg = 'bg-[#ECFDF3]'; text = 'text-[#10B981]'; label = 'Resolved';
-                        } else if (statusLower === 'in progress' || statusLower === 'inprogress') {
+                        } else if (statusLower === 'inprogress') {
                            bg = 'bg-[#F3E8FF]'; text = 'text-[#9333EA]'; label = 'In Progress';
                         } else {
                            bg = 'bg-[#FFF4E5]'; text = 'text-[#F59E0B]'; label = 'Reported';
