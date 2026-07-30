@@ -38,6 +38,7 @@ import { timeAgo } from '../utils/timeAgo';
 import AdminStatCard from '../components/AdminStatCard';
 import useInstallPrompt from '../hooks/useInstallPrompt';
 import useIsPWA from '../hooks/useIsPWA';
+import InstallPWAModal from '../components/InstallPWAModal';
 import { generateTrendData, calculateTrendFromReports, generateSparklinePath } from '../utils/trendUtils';
 
 const LazyRender = ({ children, fallback }) => {
@@ -81,6 +82,7 @@ export default function HomePage() {
     setIsLoggedIn(Boolean(token && token !== 'undefined' && token !== 'null'));
   }, [location.pathname]);
   const [isBannerDismissed, setIsBannerDismissed] = useState(false);
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
   const { canInstall, promptInstall } = useInstallPrompt();
   const isPWA = useIsPWA();
   const [reports, setReports] = useState([]);
@@ -409,7 +411,7 @@ export default function HomePage() {
                 {/* Learn More — dark filled bg, white text — exact Figma */}
                 <button
                   type="button"
-                  onClick={() => toast.success('Learn more modal coming soon!')}
+                  onClick={() => setIsInstallModalOpen(true)}
                   className="inline-flex items-center gap-1.5 bg-[#0a1f1c] border border-white/10 text-white font-semibold px-4 py-2.5 rounded-xl text-sm hover:bg-white/10 transition-colors"
                 >
                   Learn More
@@ -627,6 +629,10 @@ export default function HomePage() {
         </Link>
       </div>
 
+      <InstallPWAModal 
+        isOpen={isInstallModalOpen} 
+        onClose={() => setIsInstallModalOpen(false)} 
+      />
     </div>
   );
 }
