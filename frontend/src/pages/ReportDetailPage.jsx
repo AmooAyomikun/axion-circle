@@ -228,14 +228,8 @@ export default function ReportDetailPage() {
         const { data } = await api.get(`/users/search?q=${term}`);
         setMentionUsers(data.data || data || []);
       } catch (error) {
-        // Fallback mock users so the frontend is testable before backend is ready
-        const allMocks = [
-          { id: 'm1', username: 'city_admin', displayName: 'City Admin', avatarUrl: '' },
-          { id: 'm2', username: 'john_doe', displayName: 'John Doe', avatarUrl: '' },
-          { id: 'm3', username: 'jane_smith', displayName: 'Jane Smith', avatarUrl: '' },
-          { id: 'm4', username: 'environmental_agency', displayName: 'Env Agency', avatarUrl: '' }
-        ];
-        setMentionUsers(allMocks.filter(u => u.username.includes(term.toLowerCase()) || u.displayName.toLowerCase().includes(term.toLowerCase())));
+        console.error('Failed to fetch users for mention:', error);
+        setMentionUsers([]);
       } finally {
         setMentionLoading(false);
       }
