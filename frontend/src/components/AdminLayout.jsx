@@ -18,11 +18,13 @@ import {
 import NavbarLogo from './NavbarLogo';
 import NotificationBell from './NotificationBell';
 import Footer from './Footer';
+import api from '../services/api';
 
 export default function AdminLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [currentDate, setCurrentDate] = useState('');
 
   useEffect(() => {
@@ -65,6 +67,55 @@ export default function AdminLayout({ children }) {
     };
   };
 
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      toast.loading('Preparing CSV export...', { id: 'export-toast' });
+      
+      const response = await api.get('/reports?page=0&size=1000');
+      const reports = response.data?.data?.content || response.data?.content || response.data?.data || [];
+      
+      if (!reports.length) {
+        toast.error('No data available to export', { id: 'export-toast' });
+        return;
+      }
+
+      const headers = ['ID', 'Title', 'Status', 'Category', 'Address', 'Latitude', 'Longitude', 'Created At'];
+      const csvRows = [headers.join(',')];
+      
+      reports.forEach(report => {
+        const row = [
+          report.id || report._id || '',
+          `"${(report.title || '').replace(/"/g, '""')}"`,
+          report.status || '',
+          report.category || '',
+          `"${(report.address || '').replace(/"/g, '""')}"`,
+          report.latitude || '',
+          report.longitude || '',
+          report.createdAt || report.createdDate || ''
+        ];
+        csvRows.push(row.join(','));
+      });
+      
+      const csvContent = csvRows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `cleanreport_data_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success('Export downloaded successfully!', { id: 'export-toast' });
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast.error('Failed to export data', { id: 'export-toast' });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const userInfo = getUserInfo() || {};
   const displayName = String(userInfo.displayName || 'Admin');
   const avatarUrl = userInfo.avatarUrl || null;
@@ -97,10 +148,11 @@ export default function AdminLayout({ children }) {
         
         <div className="px-6 mb-6">
           <button 
-            onClick={() => toast.success('Exporting data...')}
-            className="w-full flex items-center justify-center gap-2 bg-primary text-white py-2.5 rounded-xl font-bold shadow-sm hover:bg-primary/90 transition-all text-sm"
+            onClick={handleExport}
+            disabled={isExporting}
+            className="w-full flex items-center justify-center gap-2 bg-primary text-white py-2.5 rounded-xl font-bold shadow-sm hover:bg-primary/90 transition-all text-sm disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            Export Data
+            {isExporting ? 'Exporting...' : 'Export Data'}
             <Download className="w-4 h-4" />
           </button>
         </div>
@@ -186,10 +238,15 @@ export default function AdminLayout({ children }) {
             
             <div className="p-4">
               <button 
-                onClick={() => toast.success('Exporting data...')}
-                className="w-full flex items-center justify-center gap-2 bg-primary text-white py-2.5 rounded-xl font-bold shadow-sm"
+                onClick={() => {
+                  handleExport();
+                  setIsMobileMenuOpen(false);
+                }}
+                disabled={isExporting}
+                className="w-full flex items-center justify-center gap-2 bg-primary text-white py-2.5 rounded-xl font-bold shadow-sm hover:bg-primary/90 transition-all text-sm mb-6 disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                Export Data <Download className="w-4 h-4" />
+                {isExporting ? 'Exporting...' : 'Export Data'}
+                <Download className="w-4 h-4" />
               </button>
             </div>
 
