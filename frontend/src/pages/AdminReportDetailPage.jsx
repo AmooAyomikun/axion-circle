@@ -291,18 +291,23 @@ export default function AdminReportDetailPage() {
           </div>
 
           {/* Buttons Row / Stack */}
-          <div className="flex flex-col lg:flex-row items-center gap-3 w-full lg:w-auto">
-            <button 
-              onClick={() => setIsChangeStatusModalOpen(true)}
-              className="order-2 lg:order-1 w-full lg:w-auto px-8 py-2.5 bg-white border border-[#D1D5DB] text-black font-bold text-sm rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap">
-              Change Status
-            </button>
-            <button 
-              onClick={handleApproveAction}
-              className="order-1 lg:order-2 w-full lg:w-auto px-8 py-2.5 bg-[#127C2F] text-white font-bold text-sm rounded-lg hover:bg-[#127C2F]/90 transition-colors shadow-sm whitespace-nowrap">
-              Approve Action
-            </button>
-          </div>
+          {activeStageIndex < 3 && (
+            <div className="flex flex-col lg:flex-row items-center gap-3 w-full lg:w-auto">
+              <button 
+                onClick={() => {
+                  setNewStatus(STAGES[activeStageIndex + 1]);
+                  setIsChangeStatusModalOpen(true);
+                }}
+                className="order-2 lg:order-1 w-full lg:w-auto px-8 py-2.5 bg-white border border-[#D1D5DB] text-black font-bold text-sm rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap">
+                Change Status
+              </button>
+              <button 
+                onClick={handleApproveAction}
+                className="order-1 lg:order-2 w-full lg:w-auto px-8 py-2.5 bg-[#127C2F] text-white font-bold text-sm rounded-lg hover:bg-[#127C2F]/90 transition-colors shadow-sm whitespace-nowrap">
+                Approve Action
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-6 sm:gap-8 items-start mb-10">
@@ -455,10 +460,15 @@ export default function AdminReportDetailPage() {
                     onChange={(e) => setNewStatus(e.target.value)}
                     className="w-full px-3 py-2.5 bg-white border border-[#D1D5DB] rounded-lg text-sm text-black focus:outline-none focus:border-primary appearance-none cursor-pointer"
                   >
-                    <option value="Reported">Reported</option>
-                    <option value="Acknowledged">Acknowledged</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Resolved">Resolved</option>
+                    {STAGES.map((stage, idx) => (
+                      <option 
+                        key={stage} 
+                        value={stage}
+                        disabled={idx <= activeStageIndex}
+                      >
+                        {stage}
+                      </option>
+                    ))}
                   </select>
                   <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
                     <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
