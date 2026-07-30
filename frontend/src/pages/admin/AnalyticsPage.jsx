@@ -18,16 +18,7 @@ import api from '../../services/api';
 // --- AREAS DATA (Dynamic via API) ---
 // --- TIMELINE DATA (Dynamic via API) ---
 
-const contributorsData = [
-  { name: 'Agatha', credits: 249 },
-  { name: 'Mary', credits: 169 },
-  { name: 'Ayo', credits: 324 },
-  { name: 'Mercy', credits: 417 },
-  { name: 'Amera', credits: 297 },
-  { name: 'Nathan', credits: 123 },
-  { name: 'Vivian', credits: 199 },
-  { name: 'Beirah', credits: 89 },
-];
+// contributorsData moved to state
 
 // CustomPieLabel removed to use Legend instead to avoid overlapping text
 
@@ -89,14 +80,16 @@ export default function AnalyticsPage() {
   const [statusData, setStatusData] = useState([]);
   const [areasData, setAreasData] = useState([]);
   const [timelineData, setTimelineData] = useState([]);
+  const [contributorsData, setContributorsData] = useState([]);
 
   const fetchStats = useCallback(async () => {
     try {
       setLoading(true);
-      const [statsRes, repRes, dashRes] = await Promise.all([
+      const [statsRes, repRes, dashRes, topContributorsRes] = await Promise.all([
         api.get('/reports/stats'),
         api.get('/admin/reports?size=200'),
-        api.get('/analytics/dashboard').catch(() => null)
+        api.get('/analytics/dashboard').catch(() => null),
+        api.get('/analytics/top-contributors?limit=10').catch(() => null)
       ]);
 
       let ackCount = 0;
@@ -119,6 +112,13 @@ export default function AnalyticsPage() {
 
       if (repRes.data?.data?.content) {
         setReports(repRes.data.data.content);
+      }
+
+      if (topContributorsRes?.data?.data || topContributorsRes?.data) {
+        const top = topContributorsRes.data.data || topContributorsRes.data;
+        if (Array.isArray(top)) {
+          setContributorsData(top);
+        }
       }
 
       if (dashRes?.data?.data) {
