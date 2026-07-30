@@ -3,7 +3,7 @@ import {
   LineChart, Line, 
   PieChart, Pie, Cell, 
   BarChart, Bar,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import AdminLayout from '../../components/AdminLayout';
 import SEO from '../../components/SEO';
