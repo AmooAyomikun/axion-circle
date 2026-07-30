@@ -102,6 +102,36 @@ api.interceptors.response.use(
       }
     }
 
+    // Sanitize raw backend exceptions from leaking into the UI
+    if (error.response?.data) {
+      const sanitizeMsg = (msg) => {
+        if (!msg || typeof msg !== 'string') return msg;
+        const lower = msg.toLowerCase();
+        if (
+          lower.includes('exception') ||
+          lower.includes('sql') ||
+          lower.includes('could not execute statement') ||
+          lower.includes('java.') ||
+          lower.includes('org.hibernate') ||
+          lower.includes('error: value too long')
+        ) {
+          return 'An unexpected server error occurred. Please try again later.';
+        }
+        return msg;
+      };
+
+      if (typeof error.response.data === 'string') {
+        error.response.data = sanitizeMsg(error.response.data);
+      } else {
+        if (error.response.data.message) {
+          error.response.data.message = sanitizeMsg(error.response.data.message);
+        }
+        if (error.response.data.error) {
+          error.response.data.error = sanitizeMsg(error.response.data.error);
+        }
+      }
+    }
+
     return Promise.reject(error);
   }
 );
