@@ -329,7 +329,7 @@ export default function AnalyticsPage() {
                         data={categoriesData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={50}
+                        innerRadius={0}
                         outerRadius={85}
                         dataKey="value"
                         labelLine={{ stroke: '#D1D5DB', strokeWidth: 1.5, length1: 15, length2: 30 }}
