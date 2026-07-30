@@ -8,7 +8,8 @@ import SplashScreen from './components/SplashScreen';
 import PWAReloadPrompt from './components/PWAReloadPrompt';
 import useIsPWA from './hooks/useIsPWA';
 
-const HomePage = lazy(() => import('./pages/HomePage'));
+import HomePage from './pages/HomePage';
+
 const ReportPage = lazy(() => import('./pages/ReportPage'));
 const ReportsPage = lazy(() => import('./pages/ReportsPage'));
 const ReportDetailPage = lazy(() => import('./pages/ReportDetailPage'));

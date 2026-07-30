@@ -76,6 +76,12 @@ export default defineConfig({
     chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom', 'zustand'],
+          map: ['leaflet', 'react-leaflet', 'leaflet.markercluster', '@changey/react-leaflet-markercluster'],
+          charts: ['recharts'],
+          icons: ['lucide-react']
+        },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash][extname]',
