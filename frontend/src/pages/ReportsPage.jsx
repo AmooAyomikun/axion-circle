@@ -20,7 +20,11 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import AppNavbar from '../components/AppNavbar';
+import Footer from '../components/Footer';
 import ReportsFilterModal from '../components/ReportsFilterModal';
+import fallbackImage from '../assets/fallback-image.svg';
+import { optimizeCloudinaryUrl } from '../utils/cloudinary';
+import SEO from '../components/SEO';
 
 export const getCardPhotoUrl = (report) => {
   if (
@@ -30,9 +34,9 @@ export const getCardPhotoUrl = (report) => {
     report.photoUrl !== 'undefined' &&
     report.photoUrl.trim() !== ''
   ) {
-    return report.photoUrl;
+    return optimizeCloudinaryUrl(report.photoUrl, 400);
   }
-  return 'https://placehold.co/600x400/eeeeee/999999?text=No+Image';
+  return fallbackImage;
 };
 
 
@@ -46,8 +50,6 @@ export default function ReportsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategoryFilters, setActiveCategoryFilters] = useState([]);
   const [activeUrgencyFilters, setActiveUrgencyFilters] = useState([]);
-  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
-  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [reportsList, setReportsList] = useState([]);
@@ -101,31 +103,7 @@ export default function ReportsPage() {
         const data = response.data?.data;
         let backendReports = Array.isArray(data) ? data : (data?.content || []);
         
-        try {
-          const overrides = JSON.parse(localStorage.getItem('report_overrides') || '{}');
-          let pending = JSON.parse(localStorage.getItem('pending_overrides') || '[]');
-          
-          backendReports = backendReports.map(report => {
-            let modified = { ...report };
-            if (overrides[report.id]) {
-              modified = { ...modified, ...overrides[report.id] };
-            } else if (pending.length > 0) {
-              const reportTime = new Date(report.createdAt).getTime();
-              const matchedIdx = pending.findIndex(p => Math.abs(p.timestamp - reportTime) < 120000);
-              if (matchedIdx !== -1) {
-                const matchedOverride = pending[matchedIdx];
-                modified = { ...modified, ...matchedOverride };
-                overrides[report.id] = matchedOverride;
-                pending.splice(matchedIdx, 1);
-                localStorage.setItem('report_overrides', JSON.stringify(overrides));
-                localStorage.setItem('pending_overrides', JSON.stringify(pending));
-              }
-            }
-            return modified;
-          });
-        } catch (e) {
-          console.error('Failed to apply overrides', e);
-        }
+        // Override logic removed to ensure strictly matching backend data
 
         const mappedReports = backendReports.map(mapBackendReportToFrontend);
         
@@ -135,7 +113,7 @@ export default function ReportsPage() {
         console.error('Failed to fetch reports from backend:', error);
         // Fallback to local storage and default data if API fails
         try {
-          const stored = localStorage.getItem('user_my_reports');
+          const stored = (localStorage.getItem('saved_reports') || sessionStorage.getItem('saved_reports'));
           if (stored) {
             const parsed = JSON.parse(stored);
             if (Array.isArray(parsed) && parsed.length > 0) {
@@ -155,12 +133,7 @@ export default function ReportsPage() {
     fetchReports();
   }, []);
 
-  const statusTabs = ['All', 'Reported', 'Resolved', 'In Progress', 'Pending'];
-
-  const handleRetrieveReward = () => {
-    toast.success('Rewards system check: Please check your active points balance in Rewards!');
-    navigate('/rewards');
-  };
+  const statusTabs = ['All', 'Reported', 'Acknowledged', 'In Progress', 'Resolved'];
 
   // Filter cards based on activeTab, searchQuery, category, and urgency
   const filteredReports = reportsList.filter((report) => {
@@ -199,7 +172,7 @@ export default function ReportsPage() {
     const s = status.toLowerCase();
     if (s === 'reported') {
       return {
-        pillClass: 'bg-status-reported/15 text-status-reported border border-status-reported/30',
+        pillClass: 'bg-status-reported/15 text-[#8B4500] border border-status-reported/30',
         text: 'Reported',
       };
     }
@@ -252,6 +225,7 @@ export default function ReportsPage() {
 
   return (
     <div className="min-h-screen bg-white-bg sm:bg-white font-body flex flex-col justify-between relative">
+      <SEO title="Community Reports" description="Browse and track community sanitation issues across the city." />
       <div>
         <AppNavbar activeTab="reports" />
 
@@ -269,16 +243,9 @@ export default function ReportsPage() {
             </div>
 
             <div className="flex items-center gap-3 shrink-0">
-              <button
-                type="button"
-                onClick={handleRetrieveReward}
-                className="px-4 py-2.5 rounded-xl border border-white-stroke bg-white text-black font-semibold text-xs sm:text-sm shadow-2xs hover:bg-white-bg transition-all flex items-center gap-2 active:scale-95"
-              >
-                <Gift className="w-4 h-4 text-black-icon" /> Retrieve Reward
-              </button>
               <Link
                 to="/report"
-                className="px-4 py-2.5 rounded-xl bg-primary text-white font-semibold text-xs sm:text-sm shadow-sm hover:bg-primary/90 transition-all flex items-center gap-1.5 active:scale-95"
+                className="px-4 py-2.5 rounded-xl bg-primary text-white font-semibold text-xs sm:text-sm shadow-sm hover:bg-primary/90 transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
               >
                 <Plus className="w-4 h-4" /> Add New Report
               </Link>
@@ -317,6 +284,7 @@ export default function ReportsPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="search for a report"
+                  aria-label="Search reports"
                   className="w-full pl-9 pr-3.5 py-2 border border-white-stroke rounded-xl text-xs sm:text-sm bg-white-bg focus:bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all text-black font-medium placeholder:text-black-placeholder"
                 />
               </div>
@@ -351,93 +319,98 @@ export default function ReportsPage() {
                   </button>
                 )}
               </div>
+
+              {/* My Reports Toggle Desktop */}
+              <div className="flex items-center gap-2 pl-2 sm:pl-3 border-l border-white-stroke">
+                <span className="text-xs sm:text-sm font-medium text-paragraph">My Reports</span>
+                <button
+                  type="button"
+                  onClick={() => navigate('/my-reports')}
+                  className="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none bg-white-stroke hover:bg-[#d1d5db]"
+                  aria-label="Toggle My Reports"
+                >
+                  <span className="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0" />
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Filter Bar — Mobile / Tablet View */}
-          <div className="lg:hidden mb-6">
-            <div className="flex items-center justify-between gap-2.5">
-              {/* Status Dropdown */}
-              <div className="relative flex-1 max-w-[200px]">
-                <button
-                  type="button"
-                  onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-                  className="w-full px-3.5 py-2.5 border border-white-stroke rounded-xl text-xs font-semibold bg-white text-black flex items-center justify-between shadow-2xs"
-                >
-                  <span>{activeTab === 'All' ? 'All Status' : activeTab}</span>
-                  <ChevronDown className={`w-4 h-4 text-black-icon transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-
-                {isStatusDropdownOpen && (
-                  <div className="absolute left-0 top-full mt-1.5 w-full bg-white border border-white-stroke rounded-xl shadow-xl py-1.5 z-40 animate-in fade-in zoom-in-95 duration-100">
-                    {statusTabs.map((tab) => (
-                      <button
-                        key={tab}
-                        type="button"
-                        onClick={() => {
-                          setActiveTab(tab);
-                          setIsStatusDropdownOpen(false);
-                        }}
-                        className={`w-full px-3.5 py-2 text-left text-xs font-medium flex items-center justify-between ${
-                          activeTab === tab ? 'bg-alert-success text-primary font-bold' : 'text-paragraph hover:bg-white-bg'
-                        }`}
-                      >
-                        {tab === 'All' ? 'All Status' : tab}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Right Icons: Search + Filter */}
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
-                  className={`p-2.5 border border-white-stroke rounded-xl bg-white text-black-icon shadow-2xs active:bg-white-bg transition-colors ${
-                    isMobileSearchOpen ? 'border-primary text-primary bg-alert-success' : ''
-                  }`}
-                  aria-label="Search"
-                >
-                  <Search className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsFilterModalOpen(true)}
-                  className="p-2.5 border border-white-stroke rounded-xl bg-white text-black-icon shadow-2xs active:bg-white-bg transition-colors"
-                  aria-label="Filter"
-                >
-                  <Filter className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Expandable Mobile Search Box */}
-            {isMobileSearchOpen && (
-              <div className="mt-3 relative animate-in slide-in-from-top duration-150">
+          <div className="lg:hidden mb-6 flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
                 <Search className="w-4 h-4 text-black-icon absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="search for a report..."
-                  className="w-full pl-9 pr-4 py-2.5 border border-primary/40 rounded-xl text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-black font-medium placeholder:text-black-placeholder shadow-xs"
-                  autoFocus
+                  aria-label="Search reports"
+                  className="w-full pl-9 pr-4 py-2.5 border border-white-stroke rounded-xl text-xs sm:text-sm bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-black font-medium placeholder:text-black-placeholder shadow-xs"
                 />
               </div>
-            )}
+              <button
+                type="button"
+                onClick={() => setIsFilterModalOpen(true)}
+                className={`relative p-2.5 border border-white-stroke rounded-xl bg-white text-black-icon shadow-2xs active:bg-white-bg transition-colors shrink-0 flex items-center justify-center ${
+                  activeCategoryFilters.length + activeUrgencyFilters.length > 0 ? 'border-primary text-primary bg-alert-successLight' : ''
+                }`}
+                aria-label="Filter"
+              >
+                <Filter className="w-4 h-4 text-black-icon" />
+                {activeCategoryFilters.length + activeUrgencyFilters.length > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center border border-white">
+                    {activeCategoryFilters.length + activeUrgencyFilters.length}
+                  </span>
+                )}
+              </button>
+            </div>
+            
+            {/* My Reports Toggle Mobile */}
+            <div className="flex items-center justify-between px-1">
+              <span className="text-sm font-medium text-paragraph">Show only my reports</span>
+              <button
+                type="button"
+                onClick={() => navigate('/my-reports')}
+                className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none bg-white-stroke"
+                aria-label="Toggle My Reports"
+              >
+                <span className="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0" />
+              </button>
+            </div>
+
+            {/* Scrollable Status Pills */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+              {statusTabs.map((tab) => {
+                const isActive = activeTab === tab;
+                return (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-4 py-2 rounded-xl text-xs transition-all whitespace-nowrap shrink-0 border ${
+                      isActive
+                        ? 'bg-alert-success border-transparent text-white font-bold'
+                        : 'bg-white border-white-stroke text-paragraph font-medium hover:bg-white-bg'
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Report Cards Grid */}
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-20">
+            <div className="flex flex-col items-center justify-center py-20 min-h-[500px]">
               <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
               <p className="text-sm font-medium text-paragraph">Loading community reports...</p>
             </div>
           ) : filteredReports.length === 0 ? (
             <div className="bg-white border border-white-stroke rounded-2xl p-12 text-center my-8 shadow-2xs">
               <Sprout className="w-12 h-12 text-white-stroke mx-auto mb-3 animate-pulse" />
-              <h3 className="text-base sm:text-lg font-bold text-black mb-1">No community reports found</h3>
+              <h2 className="text-base sm:text-lg font-bold text-black mb-1">No community reports found</h2>
               <p className="text-xs sm:text-sm text-paragraph mb-6">
                 No reports match your current category, status, or keyword filters.
               </p>
@@ -446,7 +419,8 @@ export default function ReportsPage() {
                 onClick={() => {
                   setActiveTab('All');
                   setSearchQuery('');
-                  setSelectedCategory('All Categories');
+                  setActiveCategoryFilters([]);
+                  setActiveUrgencyFilters([]);
                 }}
                 className="px-4 py-2 bg-alert-success text-primary font-semibold text-xs sm:text-sm rounded-xl hover:bg-alert-success/80 transition-colors"
               >
@@ -476,15 +450,22 @@ export default function ReportsPage() {
                         <img
                           src={getCardPhotoUrl(report)}
                           alt={report.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          width="400"
+                          height="176"
+                          loading="lazy"
+                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = fallbackImage;
+                          }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       </div>
 
                       {/* Title */}
-                      <h3 className="font-heading font-bold text-base sm:text-lg text-black mb-2 group-hover:text-primary transition-colors">
+                      <h2 className="font-heading font-bold text-base sm:text-lg text-black mb-2 group-hover:text-primary transition-colors">
                         {report.title}
-                      </h3>
+                      </h2>
 
                       {/* Description Text */}
                       <p className="text-xs sm:text-sm text-paragraph line-clamp-3 mb-4 leading-relaxed">
@@ -516,6 +497,7 @@ export default function ReportsPage() {
                         <Link
                           to={`/reports/${report.id}`}
                           className="text-xs sm:text-sm font-bold text-primary hover:text-primary/80 flex items-center gap-1 group/link"
+                          aria-label={`Show details for ${report.title || 'report'} - Ref ${report.referenceId || report.id}`}
                         >
                           Show Details
                           <ChevronRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
@@ -631,20 +613,7 @@ export default function ReportsPage() {
       </div>
 
       {/* Desktop & Mobile Footer */}
-      <footer className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 border-t border-white-stroke text-xs text-black-placeholder mt-16 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div>Copyright © CleanReport</div>
-        <div className="flex items-center gap-4">
-          <Link to="#" className="hover:underline">
-            Privacy
-          </Link>
-          <Link to="#" className="hover:underline">
-            Terms
-          </Link>
-          <Link to="#" className="hover:underline">
-            Cookies
-          </Link>
-        </div>
-      </footer>
+      <Footer />
       <ReportsFilterModal
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}

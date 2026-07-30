@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
@@ -23,57 +23,49 @@ import {
   AlertCircle,
   MapPinned,
   List,
-  RefreshCw
+  RefreshCw,
+  FileEdit
 } from 'lucide-react';
 import AppNavbar from '../components/AppNavbar';
-import mapBg from '../assets/map-bg.jpg';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import MarkerClusterGroup from '@changey/react-leaflet-markercluster';
-import 'leaflet.markercluster/dist/MarkerCluster.css';
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
+import Footer from '../components/Footer';
+import SEO from '../components/SEO';
+
 import api from '../services/api';
 import ReportListView from '../components/ReportListView';
-import MapErrorBoundary from '../components/MapErrorBoundary';
+const RegionalActivityMap = lazy(() => import('../components/RegionalActivityMap'));
+import fallbackImage from '../assets/fallback-image.svg';
+import { timeAgo } from '../utils/timeAgo';
+import AdminStatCard from '../components/AdminStatCard';
+import useInstallPrompt from '../hooks/useInstallPrompt';
+import useIsPWA from '../hooks/useIsPWA';
+import InstallPWAModal from '../components/InstallPWAModal';
+import { generateTrendData, calculateTrendFromReports, generateSparklinePath } from '../utils/trendUtils';
 
-const timeAgo = (dateStr) => {
-  if (!dateStr) return 'Just now';
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return 'Just now';
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-};
+const LazyRender = ({ children, fallback }) => {
+  const [isIntersecting, setIntersecting] = useState(false);
+  const ref = useRef(null);
 
-const getMarkerIcon = (status) => {
-  let color = '#3b82f6'; // default blue
-  const s = (status || '').toLowerCase();
-  if (s === 'reported') color = '#f59e0b'; // amber
-  else if (s === 'acknowledged') color = '#3b82f6'; // blue
-  else if (s === 'inprogress' || s === 'in progress') color = '#a855f7'; // purple
-  else if (s === 'resolved') color = '#22c55e'; // green
-
-  return L.divIcon({
-    className: 'custom-leaflet-pin',
-    html: `<div style="background-color: ${color}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
-  });
-};
-
-const MapBoundsFit = ({ reports }) => {
-  const map = useMap();
   useEffect(() => {
-    if (reports && reports.length > 0) {
-      const bounds = L.latLngBounds(reports.map(r => [r.latitude, r.longitude]));
-      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIntersecting(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '0px' }
+    );
+    if (ref.current) {
+      observer.observe(ref.current);
     }
-  }, [reports, map]);
-  return null;
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className="w-full">
+      {isIntersecting ? children : fallback}
+    </div>
+  );
 };
 
 export default function HomePage() {
@@ -81,46 +73,123 @@ export default function HomePage() {
 
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    const token = localStorage.getItem('access_token');
+    const token = (localStorage.getItem('access_token') || sessionStorage.getItem('access_token'));
     return Boolean(token && token !== 'undefined' && token !== 'null');
   });
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
+    const token = (localStorage.getItem('access_token') || sessionStorage.getItem('access_token'));
     setIsLoggedIn(Boolean(token && token !== 'undefined' && token !== 'null'));
   }, [location.pathname]);
   const [isBannerDismissed, setIsBannerDismissed] = useState(false);
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
+  const { canInstall, promptInstall } = useInstallPrompt();
+  const isPWA = useIsPWA();
   const [reports, setReports] = useState([]);
   const [mapStatus, setMapStatus] = useState('loading'); // 'loading' | 'success' | 'error'
-  const [activeFilter, setActiveFilter] = useState('All');
-  const [viewMode, setViewMode] = useState('map'); // 'map' | 'list'
+  const [stats, setStats] = useState({
+    totalReports: 0,
+    resolvedReports: 0,
+    totalCreditsEarned: 0
+  });
+  const [credits, setCredits] = useState(0);
+  const [areaStats, setAreaStats] = useState({
+    topActiveArea: 'Loading...',
+    resolutionRate: 0
+  });
 
   const fetchReports = async () => {
     try {
       setMapStatus('loading');
 
+      // Fetch stats
+      let globalResolutionRate = 0;
+      try {
+        const statsRes = await api.get('/reports/stats');
+        const statsData = statsRes.data?.data || statsRes.data || {};
+        setStats({
+          totalReports: statsData.totalReports || 0,
+          resolvedReports: statsData.resolvedReports || 0,
+          totalCreditsEarned: statsData.totalCreditsEarned || 0,
+        });
+        if (statsData.totalReports > 0) {
+          globalResolutionRate = Math.round(((statsData.resolvedReports || 0) / statsData.totalReports) * 100);
+        }
+      } catch (err) {
+        // console.error('Failed to fetch stats:', err);
+      }
+
+      try {
+        const creditsRes = await api.get('/credits/balance');
+        if (creditsRes?.data?.data?.balance !== undefined || creditsRes?.data?.data?.creditBalance !== undefined) {
+          setCredits(creditsRes.data.data.balance ?? creditsRes.data.data.creditBalance);
+        } else if (creditsRes?.data?.balance !== undefined || creditsRes?.data?.creditBalance !== undefined) {
+          setCredits(creditsRes.data.balance ?? creditsRes.data.creditBalance);
+        }
+      } catch (err) {
+        // user not logged in or endpoint failed
+      }
+
       let apiReports = [];
       try {
-        const res = await api.get('/reports');
-        const content = res.data?.data?.content || [];
+        const res = await api.get('/reports?page=0&size=50');
+        const content = res.data?.data?.content || res.data?.content || res.data?.data || [];
         apiReports = Array.isArray(content) ? content : [];
       } catch (apiErr) {
-        console.error('Failed to fetch live reports:', apiErr);
+        // console.error('Failed to fetch live reports:', apiErr);
         setMapStatus('error');
         return;
       }
+      
+      // Calculate Area Stats dynamically as fallback/primary
+      let topArea = 'Unavailable';
+      if (apiReports.length > 0) {
+        const areaCounts = {};
+        apiReports.forEach(r => {
+          const area = r.areaName || r.address || 'Unknown';
+          const cleanArea = area.split(',')[0].trim(); // Get primary area from address
+          areaCounts[cleanArea] = (areaCounts[cleanArea] || 0) + 1;
+        });
+        
+        let maxCount = 0;
+        for (const [area, count] of Object.entries(areaCounts)) {
+          if (count > maxCount && !area.toLowerCase().includes('location') && area !== 'Unknown') {
+            maxCount = count;
+            topArea = area;
+          }
+        }
+      }
+      
+      setAreaStats({
+        topActiveArea: topArea !== 'Unavailable' ? topArea : 'N/A',
+        resolutionRate: globalResolutionRate
+      });
+
+
 
       const lagosLat = 6.5244;
       const lagosLng = 3.3792;
+      const coordMap = new Map();
       const allReports = [...apiReports].map((r, idx) => {
-        // Add a micro-jitter (approx 10-20 meters) so exact duplicate coordinates don't hide each other
-        const jitterLat = Math.sin(idx * 1234) * 0.0003;
-        const jitterLng = Math.cos(idx * 1234) * 0.0003;
+        let lat = r.latitude ? parseFloat(r.latitude) : lagosLat;
+        let lng = r.longitude ? parseFloat(r.longitude) : lagosLng;
+        
+        const key = `${lat},${lng}`;
+        const count = coordMap.get(key) || 0;
+        coordMap.set(key, count + 1);
+
+        // Only apply jitter if there's a collision (count > 0)
+        let jitterLat = 0;
+        let jitterLng = 0;
+        if (count > 0) {
+          jitterLat = Math.sin(count * 1234) * 0.0003;
+          jitterLng = Math.cos(count * 1234) * 0.0003;
+        }
         
         return {
           ...r,
-          latitude: r.latitude ? (parseFloat(r.latitude) + jitterLat) : (lagosLat + jitterLat),
-          longitude: r.longitude ? (parseFloat(r.longitude) + jitterLng) : (lagosLng + jitterLng),
+          latitude: lat + jitterLat,
+          longitude: lng + jitterLng,
           rawDate: r.createdAt ? new Date(r.createdAt).getTime() : (r.date ? 0 : Date.now())
         };
       });
@@ -138,7 +207,7 @@ export default function HomePage() {
   }, []);
 
   const handleViewAll = () => {
-    if (localStorage.getItem('access_token')) {
+    if ((localStorage.getItem('access_token') || sessionStorage.getItem('access_token'))) {
       navigate('/reports');
     } else {
       navigate('/login');
@@ -147,23 +216,23 @@ export default function HomePage() {
 
   const getUserFirstName = () => {
     try {
-      const storedUser = localStorage.getItem('user');
+      const storedUser = (localStorage.getItem('user') || sessionStorage.getItem('user'));
       if (storedUser && storedUser !== 'undefined' && storedUser !== 'null') {
         const parsed = JSON.parse(storedUser);
-        const name = String(parsed?.displayName || parsed?.name || parsed?.fullName || parsed?.username || localStorage.getItem('user_name') || '');
+        const name = String(parsed?.authorName || parsed?.displayName || parsed?.name || parsed?.fullName || parsed?.username || (localStorage.getItem('user_name') || sessionStorage.getItem('user_name')) || '');
         if (name && name.trim() !== '') {
           return name.split(' ')[0];
         }
         
         // Fallback to email
-        const emailStr = String(parsed?.email || localStorage.getItem('user_email') || '');
+        const emailStr = String(parsed?.email || (localStorage.getItem('user_email') || sessionStorage.getItem('user_email')) || '');
         if (emailStr && typeof emailStr === 'string' && emailStr.includes('@')) {
            return emailStr.split('@')[0].replace(/[._0-9]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()).trim().split(' ')[0];
         }
       }
     } catch (e) {}
     
-    const emailStr = localStorage.getItem('user_email');
+    const emailStr = (localStorage.getItem('user_email') || sessionStorage.getItem('user_email'));
     if (emailStr && typeof emailStr === 'string' && emailStr.includes('@')) {
        return emailStr.split('@')[0].replace(/[._0-9]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()).trim().split(' ')[0];
     }
@@ -173,16 +242,25 @@ export default function HomePage() {
 
   const firstName = getUserFirstName();
 
-  const filteredReports = reports.filter((r) => {
-    if (activeFilter === 'All') return true;
-    if (activeFilter === 'Overflow') return r.category === 'OVERFLOW' || (r.title && r.title.toLowerCase().includes('overflow'));
-    if (activeFilter === 'Illegal Dumping') return r.category === 'ILLEGAL_DUMPING' || (r.title && r.title.toLowerCase().includes('dumping'));
-    if (activeFilter === 'Blocked Drain') return r.category === 'BLOCKED_DRAIN' || (r.title && r.title.toLowerCase().includes('drain'));
-    return true;
-  });
+  const handleInstallClick = async () => {
+    if (canInstall) {
+      await promptInstall();
+    } else {
+      toast('App is already installed or install not available in this browser.', { icon: 'ℹ️' });
+    }
+  };
+
+  const totalReportsTrend = calculateTrendFromReports(reports, 'homeTotal', stats.totalReports);
+  const resolvedReportsTrend = calculateTrendFromReports(reports, 'homeResolved', stats.resolvedReports);
+  const creditsTrend = calculateTrendFromReports(reports, 'homeCredits', stats.totalCreditsEarned);
+  
+  const totalReportsPaths = generateSparklinePath(totalReportsTrend.dataPoints);
+  const resolvedReportsPaths = generateSparklinePath(resolvedReportsTrend.dataPoints);
+  const creditsPaths = generateSparklinePath(creditsTrend.dataPoints);
 
   return (
     <div className="min-h-screen bg-white-bg sm:bg-white font-body flex flex-col justify-between relative">
+      <SEO title="Dashboard" description="Your CleanReport Dashboard - Overview of sanitation reports and activity in your area." />
       <div>
         <AppNavbar activeTab="dashboard" />
 
@@ -191,14 +269,41 @@ export default function HomePage() {
           {/* Conditional Hero Section based on Auth State */}
           {!isLoggedIn ? (
             /* Logged Out Hero Section: No action buttons below subtext */
-            <div className="mb-6 sm:mb-8">
-              <h1 className="font-heading text-[30px] font-semibold leading-[38px] text-black mb-1 sm:mb-1.5 tracking-tight">
-                Clean and Report Waste Dumps
-              </h1>
-              <p className="text-xs sm:text-sm text-paragraph font-medium">
-                Report, track and monitor waste collection in your community
-              </p>
-            </div>
+            <>
+              {/* Unified Hero Section for Logged Out Users */}
+              <div className="mb-6 sm:mb-8">
+                <h1 className="font-heading text-[30px] font-semibold leading-[38px] text-black mb-1 sm:mb-1.5 tracking-tight">
+                  Clean and Report Waste Dumps
+                </h1>
+                <p className="text-xs sm:text-sm text-paragraph font-medium">
+                  Report, track and monitor waste collection in your community
+                </p>
+
+                {/* Mobile-only action buttons below the text */}
+                <div className="lg:hidden mt-6 flex flex-col gap-3">
+                  <Link 
+                    to="/register" 
+                    className="w-full px-4 py-3 bg-primary text-white font-bold rounded-xl text-center shadow-sm text-[15px] hover:bg-primary/90 transition-all active:scale-95"
+                  >
+                    Get Started
+                  </Link>
+                  <Link 
+                    to="/login" 
+                    className="w-full px-4 py-3 bg-white text-paragraph font-bold rounded-xl text-center shadow-sm text-[15px] border border-white-stroke hover:bg-white-bg transition-all active:scale-95"
+                  >
+                    Sign In
+                  </Link>
+                  {!isPWA && (
+                    <button 
+                      onClick={handleInstallClick}
+                      className="w-full mt-2 text-sm text-primary font-bold underline hover:text-primary-hover text-center"
+                    >
+                      Install App
+                    </button>
+                  )}
+                </div>
+              </div>
+            </>
           ) : (
             /* Logged In Hero Section: Welcome back + Retrieve Reward & Add New Report buttons */
             <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -214,10 +319,10 @@ export default function HomePage() {
               <div className="flex items-center gap-3 shrink-0">
                 <button
                   type="button"
-                  onClick={() => toast.success('Reward balance check coming soon!')}
+                  onClick={() => navigate('/rewards')}
                   className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-white-stroke bg-white text-black font-semibold text-xs sm:text-sm shadow-xs hover:bg-white-bg transition-colors"
                 >
-                  <Gift className="w-4 h-4 text-primary" /> Retrieve Reward
+                  <Gift className="w-4 h-4 text-primary" /> {credits > 0 ? `${credits} Eco-Points` : 'Retrieve Reward'}
                 </button>
                 <Link
                   to="/report"
@@ -230,102 +335,45 @@ export default function HomePage() {
           )}
 
           {/* Three Stat Cards — exact Figma structure */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="flex overflow-x-auto snap-x snap-mandatory md:grid md:grid-cols-3 gap-4 mb-8 pb-2 hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
 
             {/* 1. Total Reports */}
-            <div className="bg-white border border-white-stroke rounded-2xl p-5 shadow-sm relative overflow-hidden flex flex-col min-h-[140px]">
-              {/* Sparkline — full-width absolute background, bottom half */}
-              <div className="absolute bottom-0 right-0 w-2/3 h-16 pointer-events-none opacity-60">
-                <svg viewBox="0 0 120 48" preserveAspectRatio="none" className="w-full h-full">
-                  <path d="M0,40 Q30,32 50,22 T90,10 T120,4 L120,48 L0,48 Z" fill="#E9FFEA" />
-                  <path d="M0,40 Q30,32 50,22 T90,10 T120,4" fill="none" stroke="#127C2F" strokeWidth="1.5" strokeOpacity="0.4" />
-                </svg>
-              </div>
-              {/* Header row */}
-              <div className="flex items-center justify-between mb-4 relative z-10">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-xl bg-[#006FED] flex items-center justify-center text-white shadow-sm shrink-0">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <span className="text-sm font-semibold text-black">Total Reports</span>
-                </div>
-                <button className="text-black-icon hover:text-black shrink-0" aria-label="More options">
-                  <MoreVertical className="w-4 h-4" />
-                </button>
-              </div>
-              {/* Number + badge — same row, bottom */}
-              <div className="flex items-baseline gap-3 mt-auto relative z-10">
-                <span className="text-[28px] font-bold text-black tracking-tight leading-none">2,420</span>
-                <span className="inline-flex items-center gap-0.5 text-primary text-xs font-bold">
-                  <ArrowUpRight className="w-3.5 h-3.5" /> 40%
-                </span>
-              </div>
-            </div>
+            <AdminStatCard 
+               title="Total Reports" 
+               value={stats.totalReports.toLocaleString()} 
+               trend={totalReportsTrend} 
+               paths={totalReportsPaths} 
+               icon={FileText} 
+               iconColorClass="text-[#127C2F]" 
+               iconBgClass="bg-[#006FED] text-white" 
+            />
 
             {/* 2. Resolved Report */}
-            <div className="bg-white border border-white-stroke rounded-2xl p-5 shadow-sm relative overflow-hidden flex flex-col min-h-[140px]">
-              {/* Sparkline — full-width absolute background */}
-              <div className="absolute bottom-0 right-0 w-2/3 h-16 pointer-events-none opacity-60">
-                <svg viewBox="0 0 120 48" preserveAspectRatio="none" className="w-full h-full">
-                  <path d="M0,10 Q30,18 55,28 T90,36 T120,30 L120,48 L0,48 Z" fill="#FFE8E8" />
-                  <path d="M0,10 Q30,18 55,28 T90,36 T120,30" fill="none" stroke="#DB0404" strokeWidth="1.5" strokeOpacity="0.4" />
-                </svg>
-              </div>
-              {/* Header row */}
-              <div className="flex items-center justify-between mb-4 relative z-10">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-sm shrink-0">
-                    <CheckCircle2 className="w-5 h-5" />
-                  </div>
-                  <span className="text-sm font-semibold text-black">Resolved Report</span>
-                </div>
-                <button className="text-black-icon hover:text-black shrink-0" aria-label="More options">
-                  <MoreVertical className="w-4 h-4" />
-                </button>
-              </div>
-              {/* Number + badge — same row */}
-              <div className="flex items-baseline gap-3 mt-auto relative z-10">
-                <span className="text-[28px] font-bold text-black tracking-tight leading-none">1,210</span>
-                <span className="inline-flex items-center gap-0.5 text-alert-error text-xs font-bold">
-                  <ArrowDownRight className="w-3.5 h-3.5" /> 10%
-                </span>
-              </div>
-            </div>
+            <AdminStatCard 
+               title="Resolved Reports" 
+               value={stats.resolvedReports.toLocaleString()} 
+               trend={resolvedReportsTrend} 
+               paths={resolvedReportsPaths} 
+               icon={CheckCircle2} 
+               iconColorClass="text-[#DB0404]" 
+               iconBgClass="bg-primary text-white" 
+            />
 
             {/* 3. Community Points */}
-            <div className="bg-white border border-white-stroke rounded-2xl p-5 shadow-sm relative overflow-hidden flex flex-col min-h-[140px]">
-              {/* Sparkline — full-width absolute background */}
-              <div className="absolute bottom-0 right-0 w-2/3 h-16 pointer-events-none opacity-60">
-                <svg viewBox="0 0 120 48" preserveAspectRatio="none" className="w-full h-full">
-                  <path d="M0,36 Q30,28 55,18 T90,8 T120,4 L120,48 L0,48 Z" fill="#E9FFEA" />
-                  <path d="M0,36 Q30,28 55,18 T90,8 T120,4" fill="none" stroke="#127C2F" strokeWidth="1.5" strokeOpacity="0.4" />
-                </svg>
-              </div>
-              {/* Header row */}
-              <div className="flex items-center justify-between mb-4 relative z-10">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-white shadow-sm shrink-0">
-                    <Award className="w-5 h-5" />
-                  </div>
-                  <span className="text-sm font-semibold text-black">Community Points</span>
-                </div>
-                <button className="text-black-icon hover:text-black shrink-0" aria-label="More options">
-                  <MoreVertical className="w-4 h-4" />
-                </button>
-              </div>
-              {/* Number + badge — same row */}
-              <div className="flex items-baseline gap-3 mt-auto relative z-10">
-                <span className="text-[28px] font-bold text-black tracking-tight leading-none">316</span>
-                <span className="inline-flex items-center gap-0.5 text-primary text-xs font-bold">
-                  <ArrowUpRight className="w-3.5 h-3.5" /> 20%
-                </span>
-              </div>
-            </div>
+            <AdminStatCard 
+               title="Community Points" 
+               value={stats.totalCreditsEarned.toLocaleString()} 
+               trend={creditsTrend} 
+               paths={creditsPaths} 
+               icon={Award} 
+               iconColorClass="text-[#127C2F]" 
+               iconBgClass="bg-accent text-black" 
+            />
 
           </div>
 
           {/* Dark Promo Banner — exact Figma colors and structure */}
-          {!isBannerDismissed && (
+          {!isBannerDismissed && !isPWA && (
           <div className="bg-[#001310] rounded-2xl p-5 sm:p-7 text-white relative overflow-hidden shadow-md mb-8">
             {/* X close button — top-right, exact Figma */}
             <button
@@ -355,7 +403,7 @@ export default function HomePage() {
                 {/* Install App — bg-[#ABEFC6] fill, #001310 text — exact Figma */}
                 <button
                   type="button"
-                  onClick={() => toast.success('CleanReport mobile app installation link sent!')}
+                  onClick={handleInstallClick}
                   className="inline-flex items-center gap-2 bg-[#ABEFC6] text-[#001310] font-bold px-4 py-2.5 rounded-xl text-sm border border-[#ABEFC6] hover:bg-[#ABEFC6]/90 transition-colors shadow-sm"
                 >
                   <Smartphone className="w-4 h-4 text-[#001310]" /> Install App
@@ -363,7 +411,7 @@ export default function HomePage() {
                 {/* Learn More — dark filled bg, white text — exact Figma */}
                 <button
                   type="button"
-                  onClick={() => toast.success('Learn more modal coming soon!')}
+                  onClick={() => setIsInstallModalOpen(true)}
                   className="inline-flex items-center gap-1.5 bg-[#0a1f1c] border border-white/10 text-white font-semibold px-4 py-2.5 rounded-xl text-sm hover:bg-white/10 transition-colors"
                 >
                   Learn More
@@ -381,240 +429,96 @@ export default function HomePage() {
             {/* Left Column (Span 7): Regional Activity Map + Bottom Two Cards */}
             <div className="lg:col-span-7 flex flex-col gap-6">
               {/* 1. Regional Activity Map Card */}
-              <div className="bg-white border border-white-stroke rounded-2xl shadow-sm flex flex-col overflow-hidden">
-                {/* Header */}
-                <div className="p-4 sm:p-5 border-b border-white-stroke flex items-center justify-between bg-white z-10 relative">
-                  <h2 className="font-heading font-bold text-base sm:text-lg text-black">
-                    Regional Activity
-                  </h2>
-                  <div className="flex items-center gap-3">
-                    <div className="hidden sm:flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold text-paragraph">
-                      <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span> High Density
-                    </div>
-                    <div className="flex items-center gap-1 bg-white-bg2 p-1 rounded-lg border border-white-stroke">
-                      <button 
-                        onClick={() => setViewMode('map')}
-                        className={`p-1.5 rounded-md transition-colors ${viewMode === 'map' ? 'bg-primary text-white shadow-sm' : 'text-paragraph hover:text-black hover:bg-white-bg'}`}
-                        aria-label="Map View"
-                      >
-                        <MapPinned className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={() => setViewMode('list')}
-                        className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-primary text-white shadow-sm' : 'text-paragraph hover:text-black hover:bg-white-bg'}`}
-                        aria-label="List View"
-                      >
-                        <List className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
+              <LazyRender fallback={
+                <div className="bg-white border border-white-stroke rounded-2xl shadow-sm flex flex-col overflow-hidden h-[450px] items-center justify-center">
+                  <RefreshCw className="w-8 h-8 text-primary animate-spin mb-4" />
+                  <p className="text-paragraph font-medium">Loading map module...</p>
                 </div>
-
-                {/* Filter Chips Bar (Above Map) */}
-                <div className="px-4 py-3 bg-white-bg2 border-b border-white-stroke flex items-center gap-2 overflow-x-auto z-10 relative">
-                  {['All', 'Overflow', 'Illegal Dumping', 'Blocked Drain'].map((filter) => (
-                    <button
-                      key={filter}
-                      onClick={() => setActiveFilter(filter)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border ${
-                        activeFilter === filter
-                          ? 'bg-primary text-white border-primary shadow-sm'
-                          : 'bg-white text-paragraph border-white-stroke hover:text-black hover:bg-white-bg'
-                      }`}
-                    >
-                      {filter}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Status Color Legend */}
-                <div className="px-4 py-2 bg-white border-b border-white-stroke flex items-center gap-4 sm:gap-6 overflow-x-auto z-10 relative shrink-0">
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="w-2 h-2 rounded-full bg-[#f59e0b]"></span>
-                    <span className="text-[10px] text-paragraph font-semibold tracking-wide">Reported</span>
+              }>
+                <Suspense fallback={
+                  <div className="bg-white border border-white-stroke rounded-2xl shadow-sm flex flex-col overflow-hidden h-[450px] items-center justify-center">
+                    <RefreshCw className="w-8 h-8 text-primary animate-spin mb-4" />
+                    <p className="text-paragraph font-medium">Loading map module...</p>
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="w-2 h-2 rounded-full bg-[#3b82f6]"></span>
-                    <span className="text-[10px] text-paragraph font-semibold tracking-wide">Acknowledged</span>
+                }>
+                  <div className="bg-white border border-white-stroke rounded-2xl shadow-sm flex flex-col overflow-hidden relative">
+                    {reports.length === 0 ? (
+                      <div className="h-[450px] w-full flex flex-col items-center justify-center bg-white z-[300] px-4 text-center">
+                        <div className="w-16 h-16 bg-white border border-white-stroke rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+                          <FileEdit className="w-8 h-8 text-black" />
+                        </div>
+                        <h3 className="font-heading font-bold text-lg sm:text-xl text-black mb-2">No Report on Map</h3>
+                        <p className="text-xs sm:text-sm text-paragraph max-w-sm mb-8 leading-relaxed">
+                          There is no map details showing regional activity reporting
+                        </p>
+                        <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto px-4">
+                          <button 
+                            onClick={() => navigate('/report')}
+                            className="w-full sm:w-auto bg-primary text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-xl shadow-sm hover:bg-primary/90 transition-colors"
+                          >
+                            Manually Create a Report
+                          </button>
+                          <button 
+                            className="w-full sm:w-auto bg-white border border-[#22c55e] text-black font-semibold text-xs sm:text-sm px-6 py-3 rounded-xl hover:bg-white-bg transition-colors"
+                          >
+                            View Documentation
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <RegionalActivityMap reports={reports} mapStatus={mapStatus} onRetry={fetchReports} />
+                    )}
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="w-2 h-2 rounded-full bg-[#a855f7]"></span>
-                    <span className="text-[10px] text-paragraph font-semibold tracking-wide">In Progress</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="w-2 h-2 rounded-full bg-[#22c55e]"></span>
-                    <span className="text-[10px] text-paragraph font-semibold tracking-wide">Resolved</span>
-                  </div>
-                </div>
+                </Suspense>
+              </LazyRender>
 
-                {/* Map Area (Edge to Edge) */}
-                <div className="w-full h-80 sm:h-[380px] bg-[#f0ede5] relative overflow-hidden flex items-center justify-center bg-cover bg-center z-0">
-                  {mapStatus === 'loading' && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm z-20">
-                      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-2"></div>
-                      <span className="text-xs font-bold text-primary">Loading live map...</span>
-                    </div>
-                  )}
-                  {mapStatus === 'error' && (
-                    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-white text-alert-error text-xs font-bold px-4 py-2 rounded-full shadow-lg border border-alert-error/20 flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
-                      <span>Backend Sleeping</span>
-                      <button 
-                        onClick={fetchReports} 
-                        className="ml-1 bg-alert-error/10 hover:bg-alert-error/20 text-alert-error p-1 rounded-full transition-colors"
-                        title="Retry"
-                      >
-                        <RefreshCw className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  )}
-
-                  {viewMode === 'map' ? (
-                    <MapErrorBoundary onMapError={() => setViewMode('list')}>
-                      <MapContainer
-                        center={[6.5244, 3.3792]} // Lagos
-                        zoom={12}
-                        scrollWheelZoom={false}
-                        className="w-full h-full z-0"
-                        style={{ height: '100%', width: '100%' }}
-                        maxZoom={17}
-                      >
-                        <MapBoundsFit reports={filteredReports.filter((r) => r.latitude && r.longitude)} />
-                        <TileLayer
-                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                          maxZoom={17}
-                        />
-                        <MarkerClusterGroup
-                          chunkedLoading
-                          spiderfyOnMaxZoom={true}
-                          showCoverageOnHover={false}
-                          maxClusterRadius={40}
-                        >
-                          {filteredReports
-                            .filter((r) => r.latitude && r.longitude) // Ensure coordinates exist
-                            .map((report) => (
-                            <Marker
-                              key={report.id}
-                              position={[report.latitude, report.longitude]}
-                              icon={getMarkerIcon(report.status)}
-                            >
-                              <Popup className="custom-popup rounded-xl">
-                                <div className="w-[200px]">
-                                  {report.photoUrl && (
-                                    <img 
-                                      src={report.photoUrl} 
-                                      alt="Report evidence" 
-                                      className="w-full h-24 object-cover rounded-t-lg mb-2" 
-                                      onError={(e) => { e.target.style.display = 'none'; }}
-                                    />
-                                  )}
-                                  <div className={`p-3 ${report.photoUrl ? 'pt-0' : ''}`}>
-                                    <div className="flex items-center justify-between mb-1.5">
-                                      <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-sm ${
-                                        (report.status || '').toLowerCase() === 'resolved' ? 'bg-alert-successLight text-primary' :
-                                        (report.status || '').toLowerCase() === 'inprogress' || (report.status || '').toLowerCase() === 'in progress' ? 'bg-alert-inprogressLight text-alert-inprogress' :
-                                        (report.status || '').toLowerCase() === 'acknowledged' ? 'bg-alert-infoLight text-alert-info' :
-                                        'bg-alert-warningLight text-accent'
-                                      }`}>
-                                        {report.status || 'Reported'}
-                                      </span>
-                                      <span className="text-[9px] font-medium text-black-placeholder">{timeAgo(report.createdAt || report.date)}</span>
-                                    </div>
-                                    <h3 className="font-extrabold text-[13px] text-black uppercase mb-1 leading-tight">
-                                      {report.title || (report.category ? report.category.replace(/_/g, ' ') : 'Sanitation Issue')}
-                                    </h3>
-                                    <p className="text-[10px] text-paragraph line-clamp-2 mb-3 leading-snug">
-                                      {report.description || 'Sanitation issue report'}
-                                    </p>
-                                    
-                                    <Link 
-                                      to={`/reports/${report.id}`}
-                                      className="block w-full py-2 bg-primary/10 text-primary text-[10px] font-bold text-center rounded-lg hover:bg-primary/20 transition-colors"
-                                    >
-                                      View Report
-                                    </Link>
-                                  </div>
-                                </div>
-                              </Popup>
-                            </Marker>
-                          ))}
-                        </MarkerClusterGroup>
-                      </MapContainer>
-                    </MapErrorBoundary>
-                  ) : viewMode === 'list' ? (
-                    <div className="w-full h-full z-10 relative">
-                      <ReportListView reports={filteredReports} />
-                    </div>
-                  ) : null}
-
-                  {/* Bottom Left District Overview Overlay */}
-                  {viewMode === 'map' && (
-                    <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 bg-white border border-white-stroke rounded-lg p-3 sm:p-4 w-[200px] sm:w-[240px] shadow-lg z-[400] pointer-events-none">
-                      <h3 className="font-bold text-[11px] sm:text-xs text-black mb-1.5">District Overview</h3>
-                      <p className="text-[9px] sm:text-[10px] text-paragraph leading-relaxed">
-                        Displaying {filteredReports.length} total active reports across all locations. Zoom out to view reports outside of Lagos.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* 2. Bottom Two Cards (Local Goals + Energy Saving) placed inside Left Column right under Regional Activity */}
+              {/* 2. Bottom Two Cards (Area Stats) placed inside Left Column right under Regional Activity */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {/* Local Goals (Dark Card) */}
+                {/* Top Active Area (Dark Card) */}
                 <div className="bg-[#001310] text-white rounded-2xl p-6 sm:p-7 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[170px] border border-white/10">
                   <div className="relative z-10 mb-6">
                     <h3 className="font-heading font-bold text-base sm:text-lg text-white mb-1">
-                      Local Goals
+                      Top Active Area
                     </h3>
                     <p className="text-xs sm:text-sm text-white/80 font-medium">
-                      Progress on the Green District Initiative.
+                      Area with the most community reports.
                     </p>
                   </div>
 
                   <div className="relative z-10">
                     <div className="flex items-baseline justify-between mb-2">
-                      <span className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-                        512 / 1,000
+                      <span className="text-2xl sm:text-3xl font-bold tracking-tight text-white truncate max-w-[200px]">
+                        {areaStats.topActiveArea}
                       </span>
-                      <span className="text-xs sm:text-sm text-[#ABEFC6] font-semibold">
-                        Trees Planted
-                      </span>
-                    </div>
-                    <div className="w-full h-2.5 bg-white/20 rounded-full overflow-hidden">
-                      <div className="h-full bg-white rounded-full w-[51.2%] transition-all duration-500"></div>
                     </div>
                   </div>
 
-                  {/* Decorative Watermark Sprout — #ABEFC6 mint outline matching Figma */}
-                  <Sprout className="w-28 h-28 absolute -bottom-6 -right-6 text-[#ABEFC6]/15 pointer-events-none" />
+                  {/* Decorative Watermark */}
+                  <MapPinned className="w-28 h-28 absolute -bottom-6 -right-6 text-[#ABEFC6]/15 pointer-events-none" />
                 </div>
 
-                {/* Energy Saving (Light Card) */}
+                {/* Resolution Rate (Light Card) */}
                 <div className="bg-white border border-white-stroke rounded-2xl p-6 sm:p-7 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[170px]">
                   <div className="relative z-10 mb-6">
                     <h3 className="font-heading font-bold text-base sm:text-lg text-primary mb-1">
-                      Energy Saving
+                      Resolution Rate
                     </h3>
                     <p className="text-xs sm:text-sm text-paragraph font-medium">
-                      Community effort to reduce street light waste.
+                      Average resolution rate across areas.
                     </p>
                   </div>
 
                   <div className="flex items-center gap-3.5 relative z-10">
                     <span className="text-2xl sm:text-3xl font-bold text-primary tracking-tight shrink-0">
-                      14%
+                      {areaStats.resolutionRate}%
                     </span>
                     <p className="text-xs sm:text-sm text-primary leading-snug font-semibold">
-                      Efficiency increase since last quarter. You saved $12 this month.
+                      Reports successfully resolved.
                     </p>
                   </div>
 
-                  {/* Decorative Watermark Lightning */}
-                  <Zap className="w-24 h-24 absolute -bottom-5 -right-5 text-primary/15 pointer-events-none" />
+                  {/* Decorative Watermark */}
+                  <Activity className="w-24 h-24 absolute -bottom-5 -right-5 text-primary/15 pointer-events-none" />
                 </div>
               </div>
             </div>
@@ -663,7 +567,15 @@ export default function HomePage() {
                       </div>
                     )}
                     {reports.length === 0 && mapStatus === 'success' && (
-                      <div className="py-8 text-center text-sm text-paragraph">No recent reports found</div>
+                      <div className="flex-1 flex flex-col items-center justify-center py-12 text-center px-4">
+                        <div className="w-16 h-16 bg-white border border-white-stroke rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+                          <FileEdit className="w-8 h-8 text-black" />
+                        </div>
+                        <h3 className="font-heading font-bold text-lg text-black mb-3">No Recent Report Yet</h3>
+                        <p className="text-xs sm:text-sm text-paragraph max-w-[280px] mx-auto leading-relaxed mb-6">
+                          When citizens submit sanitation issues through the mobile app, they will appear here in real-time for review and assignment.
+                        </p>
+                      </div>
                     )}
                     {reports.slice(0, 6).map((report, idx) => {
                       const status = (report.status || 'Reported').toLowerCase();
@@ -704,22 +616,7 @@ export default function HomePage() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-white-stroke bg-white py-6 px-4 sm:px-8 mt-auto">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-black-placeholder">
-          <div>Copyright © CleanReport</div>
-          <div className="flex items-center gap-6">
-            <Link to="#" className="hover:text-black transition-colors">
-              Privacy
-            </Link>
-            <Link to="#" className="hover:text-black transition-colors">
-              Terms
-            </Link>
-            <Link to="#" className="hover:text-black transition-colors">
-              Cookies
-            </Link>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       {/* Floating Action Button (FAB) always shown for quick reporting */}
       <div className="fixed bottom-6 right-6 z-40">
@@ -732,6 +629,10 @@ export default function HomePage() {
         </Link>
       </div>
 
+      <InstallPWAModal 
+        isOpen={isInstallModalOpen} 
+        onClose={() => setIsInstallModalOpen(false)} 
+      />
     </div>
   );
 }

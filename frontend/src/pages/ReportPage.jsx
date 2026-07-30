@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
@@ -17,65 +17,16 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { uploadToCloudinary } from '../services/cloudinary';
+import { addPendingReport } from '../services/offlineQueue';
 import AppNavbar from '../components/AppNavbar';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
+import ReactGA from 'react-ga4';
+import Footer from '../components/Footer';
+import SEO from '../components/SEO';
+
+const ReportFormMap = React.lazy(() => import('../components/ReportFormMap'));
 
 // Custom red pin icon for Leaflet map marker
-const customPinIcon = L.divIcon({
-  className: 'custom-leaflet-pin',
-  html: `<div style="background-color: #F04438; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; border: 3px solid white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);">
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
-  </div>`,
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
-});
-
-// Component to handle map clicks for manual pinning
-function MapClickHandler({ setLatitude, setLongitude, setLocationStatus, setAreaName, setAddressText }) {
-  useMapEvents({
-    click: async (e) => {
-      const lat = e.latlng.lat;
-      const lng = e.latlng.lng;
-      setLatitude(lat);
-      setLongitude(lng);
-      setLocationStatus('loading');
-      try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16`);
-        const data = await res.json();
-        if (data && data.address) {
-          const area = data.address.suburb || data.address.neighbourhood || data.address.city_district || data.address.city || data.address.town || data.address.county || 'Pinned Location';
-          const street = data.address.road ? `${data.address.house_number || ''} ${data.address.road}`.trim() : (data.display_name.split(',')[0] || 'Selected on map');
-          const postcode = data.address.postcode || '';
-          setAreaName(area);
-          setAddressText(`${street}${postcode ? ', ' + postcode : ''}`);
-          setLocationStatus('success');
-          return;
-        }
-      } catch (err) {
-        console.warn('Reverse geocoding failed:', err);
-      }
-      setAreaName('Pinned Location');
-      setAddressText(`Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`);
-      setLocationStatus('success');
-    }
-  });
-  return null;
-}
-
-// Component to dynamically update map view when coordinates change
-function RecenterMap({ lat, lng }) {
-  const map = useMap();
-  useEffect(() => {
-    if (lat && lng) {
-      map.setView([lat, lng], map.getZoom());
-    }
-  }, [lat, lng, map]);
-  return null;
-}
-
-
+// CustomSelect component removed from this chunk, it's defined after
 
 const CustomSelect = ({ label, value, onChange, options, placeholder, required = false, hasUserIcons = false }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -159,6 +110,8 @@ export default function ReportPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showOfflineModal, setShowOfflineModal] = useState(false);
 
   const handleReset = () => {
     setPhoto(null);
@@ -170,6 +123,10 @@ export default function ReportPage() {
     setShowSuccessModal(false);
     window.scrollTo(0, 0);
   };
+
+  useEffect(() => {
+    ReactGA.event({ category: 'Report', action: 'form_opened' });
+  }, []);
 
   // Location states
   const [latitude, setLatitude] = useState(null);
@@ -218,7 +175,8 @@ export default function ReportPage() {
         try {
           // Free reverse geocoding via OpenStreetMap Nominatim API to get real user place name exactly as requested
           const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16`
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16`,
+            { headers: { "User-Agent": "CleanReport-App/1.0 (amoo-ayomikun)" } }
           );
           const data = await res.json();
           if (data && data.address) {
@@ -269,6 +227,7 @@ export default function ReportPage() {
 
     setPhoto(file);
     setPhotoPreviewUrl(URL.createObjectURL(file));
+    ReactGA.event({ category: 'Report', action: 'photo_uploaded' });
   };
 
   const handleDrop = (e) => {
@@ -283,6 +242,7 @@ export default function ReportPage() {
 
     setPhoto(file);
     setPhotoPreviewUrl(URL.createObjectURL(file));
+    ReactGA.event({ category: 'Report', action: 'photo_uploaded' });
   };
 
   const handleDragOver = (e) => {
@@ -300,7 +260,9 @@ export default function ReportPage() {
     
     try {
       const query = encodeURIComponent(manualLocationInput.trim()); // search anywhere
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`, {
+        headers: { "User-Agent": "CleanReport-App/1.0 (amoo-ayomikun)" }
+      });
       const data = await res.json();
       
       if (data && data.length > 0) {
@@ -327,22 +289,20 @@ export default function ReportPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check if user is logged in BEFORE validating form or uploading photo
+    const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
+    if (!token || token === 'undefined' || token === 'null') {
+      setShowAuthModal(true);
+      return;
+    }
+
     if (!photo || !category) {
       toast.error('Please attach an evidence photo and select a report category.');
       return;
     }
 
     try {
-      setIsUploadingPhoto(true);
-      let photoUrl = '';
-      try {
-        photoUrl = await uploadToCloudinary(photo);
-      } finally {
-        setIsUploadingPhoto(false);
-      }
-
-      setIsSubmitting(true);
-
       // Map UI Category strings to backend enum
       let mappedCategory = 'ILLEGAL_DUMPING';
       if (category === 'Overflow') mappedCategory = 'OVERFLOW';
@@ -361,6 +321,34 @@ export default function ReportPage() {
         ? 'Location not automatically captured' 
         : (addressText || areaName || 'Pin Location, Lagos');
 
+      if (!navigator.onLine) {
+        const offlinePayload = {
+          title: `${category} report`,
+          photo: photo, // Store the raw File/Blob
+          photoUrl: '', // Will be uploaded during sync
+          latitude: latitude !== null ? latitude : 6.5244,
+          longitude: longitude !== null ? longitude : 3.3792,
+          category: mappedCategory,
+          description: description.trim() || 'Sanitation issue report',
+          address: finalAddress,
+          urgency: mappedUrgency,
+          isAnonymous: Boolean(isAnonymous),
+        };
+        await addPendingReport(offlinePayload);
+        setShowOfflineModal(true);
+        return;
+      }
+
+      setIsUploadingPhoto(true);
+      let photoUrl = '';
+      try {
+        photoUrl = await uploadToCloudinary(photo);
+      } finally {
+        setIsUploadingPhoto(false);
+      }
+
+      setIsSubmitting(true);
+
       const payload = {
         title: `${category} report`,
         photoUrl: photoUrl,
@@ -376,28 +364,10 @@ export default function ReportPage() {
       const response = await api.post('/reports', payload);
       const createdReport = response.data?.data;
       
-      try {
-        const overrides = JSON.parse(localStorage.getItem('report_overrides') || '{}');
-        const newOverride = {
-          photoUrl: photoUrl,
-          category: mappedCategory,
-          title: `${category} report`,
-          timestamp: Date.now()
-        };
-        
-        if (createdReport && createdReport.id) {
-          overrides[createdReport.id] = newOverride;
-        } else {
-          const pending = JSON.parse(localStorage.getItem('pending_overrides') || '[]');
-          pending.push(newOverride);
-          localStorage.setItem('pending_overrides', JSON.stringify(pending));
-        }
-        localStorage.setItem('report_overrides', JSON.stringify(overrides));
-      } catch (e) {
-        console.error('Failed to save local override:', e);
-      }
+      // Override logic removed
 
       setShowSuccessModal(true);
+      ReactGA.event({ category: 'Report', action: 'report_submitted', label: mappedCategory });
     } catch (error) {
       console.error('Submission error:', error);
       let serverMsg = 'Failed to submit report. Please try again.';
@@ -425,6 +395,7 @@ export default function ReportPage() {
 
   return (
     <div className="min-h-screen bg-white font-body flex flex-col justify-between relative">
+      <SEO title="Place a Request" description="Place a new clean request on CleanReport." />
       <div>
         <AppNavbar activeTab="reports" />
 
@@ -467,11 +438,12 @@ export default function ReportPage() {
           <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl" noValidate>
             {/* 1. Attach Evidence Photo */}
             <div>
-              <label className="block text-xs sm:text-sm font-semibold text-black mb-2">
+              <label htmlFor="photo-upload" className="block text-xs sm:text-sm font-semibold text-black mb-2">
                 Attach Evidence Photo <span className="text-alert-error">*</span>
               </label>
 
               <input
+                id="photo-upload"
                 type="file"
                 accept="image/*"
                 capture="environment"
@@ -482,9 +454,11 @@ export default function ReportPage() {
 
               {photoPreviewUrl ? (
                 <div className="relative rounded-xl overflow-hidden border border-white-stroke bg-white-bg p-3 shadow-sm">
-                  <img
+                  <img loading="lazy"
                     src={photoPreviewUrl}
                     alt="Evidence preview"
+                    width="400"
+                    height="256"
                     className="w-full h-48 sm:h-64 object-cover rounded-lg"
                   />
                   <button
@@ -521,37 +495,31 @@ export default function ReportPage() {
 
               {/* Map Card */}
               <div className="bg-white border border-white-stroke rounded-xl p-4 shadow-sm">
-                <div className="text-xs font-bold uppercase tracking-wider text-black flex items-center gap-1.5 mb-3">
-                  <MapPin className="w-3.5 h-3.5 text-black shrink-0" /> LOCATION
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-xs font-bold uppercase tracking-wider text-black flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-black shrink-0" /> LOCATION
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingLocation((prev) => !prev)}
+                    className="text-xs font-semibold text-primary hover:underline shrink-0"
+                  >
+                    {isEditingLocation ? 'Cancel Edit' : 'Edit Location'}
+                  </button>
                 </div>
 
                 <div className="w-full h-48 rounded-xl overflow-hidden relative mb-3 border border-white-stroke shadow-sm z-0 bg-[#e5e3df]">
-                  {/* Always render the real interactive Leaflet map */}
-                  <MapContainer
-                    center={latitude !== null && longitude !== null ? [latitude, longitude] : [6.5244, 3.3792]} // Default to Lagos if no coords
-                    zoom={15}
-                    scrollWheelZoom={false}
-                    className="w-full h-full z-0"
-                    style={{ height: '100%', width: '100%', minHeight: '192px' }}
-                  >
-                    <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    {latitude !== null && longitude !== null && (
-                      <Marker position={[latitude, longitude]} icon={customPinIcon} />
-                    )}
-                    {latitude !== null && longitude !== null && (
-                      <RecenterMap lat={latitude} lng={longitude} />
-                    )}
-                    <MapClickHandler
+                  <React.Suspense fallback={<div className="w-full h-full bg-white-stroke animate-pulse flex items-center justify-center text-sm text-paragraph">Loading map...</div>}>
+                    <ReportFormMap 
+                      latitude={latitude}
+                      longitude={longitude}
                       setLatitude={setLatitude}
                       setLongitude={setLongitude}
                       setLocationStatus={setLocationStatus}
                       setAreaName={setAreaName}
                       setAddressText={setAddressText}
                     />
-                  </MapContainer>
+                  </React.Suspense>
 
                   {/* Overlays for loading/error states */}
                   {locationStatus === 'loading' && (
@@ -562,39 +530,31 @@ export default function ReportPage() {
                   )}
                 </div>
 
-                <div className="flex items-center justify-between gap-4 pt-1">
-                  <div>
-                    <div className="text-sm font-semibold text-black">
-                      {locationStatus === 'loading'
-                        ? 'Fetching location...'
-                        : locationStatus === 'error'
-                        ? (addressText.includes('denied') ? 'Location access denied' : 'Location unavailable')
-                        : areaName || 'Pin Location, Lagos'}
-                    </div>
-                    <div className="text-xs text-black-icon flex items-center gap-1 mt-0.5">
-                      {locationStatus === 'error' && <XCircle className="w-3.5 h-3.5 text-alert-error shrink-0" />}
-                      <span className={locationStatus === 'error' ? 'text-alert-error font-medium' : ''}>
-                        {locationStatus === 'loading'
-                          ? 'Acquiring high-accuracy GPS coordinates...'
-                          : locationStatus === 'error'
-                          ? 'Click the map to drop a pin, or tap Edit Location to type'
-                          : addressText}
-                      </span>
-                    </div>
+                <div className="pt-1">
+                  <div className="text-sm font-semibold text-black">
+                    {locationStatus === 'loading'
+                      ? 'Fetching location...'
+                      : locationStatus === 'error'
+                      ? (addressText.includes('denied') ? 'Location access denied' : 'Location unavailable')
+                      : areaName || 'Pin Location, Lagos'}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingLocation((prev) => !prev)}
-                    className="text-xs sm:text-sm font-semibold text-primary hover:underline shrink-0"
-                  >
-                    Edit Location
-                  </button>
+                  <div className="text-xs text-black-icon flex items-center gap-1 mt-0.5">
+                    {locationStatus === 'error' && <XCircle className="w-3.5 h-3.5 text-alert-error shrink-0" />}
+                    <span className={locationStatus === 'error' ? 'text-alert-error font-medium' : ''}>
+                      {locationStatus === 'loading'
+                        ? 'Acquiring high-accuracy GPS coordinates...'
+                        : locationStatus === 'error'
+                        ? 'Click the map to drop a pin, or tap Edit Location to type'
+                        : addressText}
+                    </span>
+                  </div>
                 </div>
 
                 {isEditingLocation && (
                   <div className="mt-3 pt-3 border-t border-white-stroke flex gap-2">
                     <input
                       type="text"
+                      aria-label="Enter street address or area name manually"
                       value={manualLocationInput}
                       onChange={(e) => setManualLocationInput(e.target.value)}
                       placeholder="Enter street address or area name manually..."
@@ -676,6 +636,7 @@ export default function ReportPage() {
                 }`}
                 role="switch"
                 aria-checked={isAnonymous}
+                aria-label="Toggle anonymous submission"
               >
                 <span
                   className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition duration-200 ease-in-out ${
@@ -749,27 +710,14 @@ export default function ReportPage() {
         </main>
       </div>
 
-      {/* Desktop Footer */}
-      <footer className="hidden md:flex items-center justify-between max-w-4xl mx-auto w-full px-8 py-6 border-t border-white-stroke text-xs text-black-icon mt-12">
-        <div>Copyright © CleanReport</div>
-        <div className="flex items-center gap-4">
-          <Link to="#" className="hover:underline">
-            Privacy
-          </Link>
-          <Link to="#" className="hover:underline">
-            Terms
-          </Link>
-          <Link to="#" className="hover:underline">
-            Cookies
-          </Link>
-        </div>
-      </footer>
+      {/* Footer */}
+      <Footer />
 
       {showSuccessModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-          <div className="bg-white rounded-[24px] p-6 sm:p-10 w-full max-w-[440px] text-center shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-[24px] p-6 sm:p-8 w-full max-w-[400px] text-center shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="mx-auto flex justify-center mb-6">
-              <svg width="140" height="140" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg width="100" height="100" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
                 {/* Center Green Circle */}
                 <circle cx="60" cy="60" r="32" fill="#187A38" />
                 {/* White Checkmark */}
@@ -805,16 +753,16 @@ export default function ReportPage() {
             <h2 className="text-[28px] font-bold text-black mb-3 font-heading tracking-tight">
               Clean Request Sent
             </h2>
-            <p className="text-[15px] text-paragraph mb-8 leading-relaxed max-w-[340px] mx-auto">
+            <p className="text-[14px] text-paragraph mb-6 leading-relaxed max-w-[320px] mx-auto">
               Your request for a clean has been successfully sent. You will be updated with a reward if approved
             </p>
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {/* 1. View My Reports (Only show if user is logged in) */}
-              {localStorage.getItem('access_token') && (
+              {(localStorage.getItem('access_token') || sessionStorage.getItem('access_token')) && (
                 <button
                   type="button"
                   onClick={() => navigate('/my-reports')}
-                  className="w-full bg-[#187A38] text-white font-semibold py-3.5 rounded-xl hover:bg-[#14662E] transition-colors"
+                  className="w-full bg-[#187A38] text-white font-semibold py-3 rounded-xl hover:bg-[#14662E] transition-colors"
                 >
                   View My Reports
                 </button>
@@ -824,8 +772,8 @@ export default function ReportPage() {
               <button
                 type="button"
                 onClick={() => navigate('/reports')}
-                className={`w-full font-semibold py-3.5 rounded-xl transition-colors ${
-                  localStorage.getItem('access_token')
+                className={`w-full font-semibold py-3 rounded-xl transition-colors ${
+                  (localStorage.getItem('access_token') || sessionStorage.getItem('access_token'))
                     ? 'bg-white text-[#187A38] border-2 border-[#187A38] hover:bg-alert-successLight'
                     : 'bg-[#187A38] text-white hover:bg-[#14662E]'
                 }`}
@@ -837,7 +785,7 @@ export default function ReportPage() {
               <button
                 type="button"
                 onClick={handleReset}
-                className="w-full bg-white text-black font-semibold py-3.5 rounded-xl border border-[#d1d5db] hover:bg-[#f3f4f6] transition-colors"
+                className="w-full bg-white text-black font-semibold py-3 rounded-xl border border-[#d1d5db] hover:bg-[#f3f4f6] transition-colors"
               >
                 Request for another Clean up
               </button>
@@ -845,6 +793,83 @@ export default function ReportPage() {
           </div>
         </div>
       )}
+
+      {/* Offline Success Modal */}
+      {showOfflineModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="bg-white rounded-[24px] p-6 sm:p-8 w-full max-w-[400px] text-center shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="mx-auto flex justify-center mb-6">
+              <div className="w-24 h-24 bg-alert-warningLight rounded-full flex items-center justify-center">
+                <UploadCloud className="w-12 h-12 text-alert-warning" />
+              </div>
+            </div>
+            <h2 className="text-[28px] font-bold text-black mb-3 font-heading tracking-tight">
+              Saved Offline
+            </h2>
+            <p className="text-[14px] text-paragraph mb-6 leading-relaxed max-w-[320px] mx-auto">
+              You are currently offline. Your report has been saved securely and will be automatically uploaded as soon as you reconnect to the internet.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setShowOfflineModal(false);
+                navigate('/my-reports');
+              }}
+              className="w-full bg-[#187A38] text-white font-semibold py-3 rounded-xl hover:bg-[#14662E] transition-colors shadow-sm"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Auth Modal (Prompt for Unauthenticated Users) */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-200"
+            onClick={() => setShowAuthModal(false)}
+          />
+          <div className="bg-white rounded-3xl w-full max-w-sm p-8 shadow-xl flex flex-col items-center text-center relative overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Close Button */}
+            <button 
+              onClick={() => setShowAuthModal(false)}
+              className="absolute top-4 right-4 text-black-placeholder hover:text-black transition-colors"
+              aria-label="Close modal"
+            >
+              <XCircle className="w-6 h-6" />
+            </button>
+            
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-5 shrink-0">
+              <User className="w-8 h-8 text-primary" />
+            </div>
+            
+            <h3 className="font-heading font-bold text-2xl text-black mb-2">
+              Authentication Required
+            </h3>
+            
+            <p className="text-paragraph text-sm mb-8 leading-relaxed">
+              Please sign up or log in to submit a report and help keep your community clean.
+            </p>
+            
+            <div className="flex flex-col gap-3 w-full">
+              <button 
+                onClick={() => navigate('/register')}
+                className="w-full bg-primary text-white font-bold py-3.5 rounded-xl hover:bg-primary/90 transition-colors shadow-sm"
+              >
+                Sign Up
+              </button>
+              <button 
+                onClick={() => navigate('/login')}
+                className="w-full bg-white text-black font-bold py-3.5 rounded-xl border border-white-stroke hover:bg-white-bg transition-colors"
+              >
+                Log In
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

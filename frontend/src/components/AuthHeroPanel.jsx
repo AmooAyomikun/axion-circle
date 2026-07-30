@@ -1,5 +1,5 @@
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import loginHero from '../assets/login-hero.jpg';
+import loginHero from '../assets/login-hero.webp';
 
 export default function AuthHeroPanel() {
   return (
@@ -7,8 +7,11 @@ export default function AuthHeroPanel() {
       {/* Real background image */}
       <img
         src={loginHero}
-        alt="CleanReport community impact"
+        alt="Community members cleaning up the environment"
+        width="960"
+        height="1080"
         className="absolute inset-0 w-full h-full object-cover"
+        fetchpriority="high"
       />
 
 

@@ -16,6 +16,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import AppNavbar from '../components/AppNavbar';
+import { optimizeCloudinaryUrl } from '../utils/cloudinary';
 
 const getCardPhotoUrl = (report) => {
   if (
@@ -25,14 +26,15 @@ const getCardPhotoUrl = (report) => {
     report.photoUrl !== 'undefined' &&
     report.photoUrl.trim() !== ''
   ) {
-    return report.photoUrl;
+    return optimizeCloudinaryUrl(report.photoUrl, 400);
   }
   return 'https://placehold.co/600x400/eeeeee/999999?text=No+Image';
 };
 
-const statusTabs = ['All', 'Reported', 'In Progress', 'Resolved', 'Acknowledged'];
+const statusTabs = ['All', 'Reported', 'Acknowledged', 'In Progress', 'Resolved'];
 
 import api from '../services/api';
+import SEO from '../components/SEO';
 
 export default function MyReportsPage() {
   const navigate = useNavigate();
@@ -40,6 +42,7 @@ export default function MyReportsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [reports, setReports] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [credits, setCredits] = useState(0);
 
   const mapBackendReportToFrontend = (report) => {
     const formatEnum = (str) => {
@@ -84,11 +87,11 @@ export default function MyReportsPage() {
 
   const getUserInfo = () => {
     try {
-      const storedUser = localStorage.getItem('user');
+      const storedUser = (localStorage.getItem('user') || sessionStorage.getItem('user'));
       if (storedUser && storedUser !== 'undefined' && storedUser !== 'null') {
         const parsed = JSON.parse(storedUser);
-        let dName = String(parsed?.displayName || parsed?.name || parsed?.fullName || parsed?.username || localStorage.getItem('user_name') || '');
-        const email = String(parsed?.email || localStorage.getItem('user_email') || '');
+        let dName = String(parsed?.displayName || parsed?.name || parsed?.fullName || parsed?.username || (localStorage.getItem('user_name') || sessionStorage.getItem('user_name')) || '');
+        const email = String(parsed?.email || (localStorage.getItem('user_email') || sessionStorage.getItem('user_email')) || '');
         if (!dName || dName.trim() === '') {
            if (email && email.includes('@')) {
                dName = email.split('@')[0].replace(/[._0-9]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()).trim();
@@ -99,8 +102,8 @@ export default function MyReportsPage() {
         return { displayName: dName, email: email };
       }
     } catch (e) {}
-    let dName = String(localStorage.getItem('user_name') || '');
-    const email = String(localStorage.getItem('user_email') || '');
+    let dName = String((localStorage.getItem('user_name') || sessionStorage.getItem('user_name')) || '');
+    const email = String((localStorage.getItem('user_email') || sessionStorage.getItem('user_email')) || '');
     if (!dName || dName.trim() === '') {
        if (email && email.includes('@')) {
            dName = email.split('@')[0].replace(/[._0-9]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()).trim();
@@ -114,7 +117,17 @@ export default function MyReportsPage() {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const response = await api.get(`/reports/my?t=${Date.now()}`);
+        const [response, creditsRes] = await Promise.all([
+          api.get(`/reports/my?t=${Date.now()}`),
+          api.get('/credits/balance').catch(() => ({ data: { data: { creditBalance: 0 } } }))
+        ]);
+        
+        if (creditsRes?.data?.data?.balance !== undefined || creditsRes?.data?.data?.creditBalance !== undefined) {
+          setCredits(creditsRes.data.data.balance ?? creditsRes.data.data.creditBalance);
+        } else if (creditsRes?.data?.balance !== undefined || creditsRes?.data?.creditBalance !== undefined) {
+          setCredits(creditsRes.data.balance ?? creditsRes.data.creditBalance);
+        }
+
         const data = response.data?.data;
         let backendReports = Array.isArray(data) ? data : (data?.content || []);
         
@@ -128,8 +141,8 @@ export default function MyReportsPage() {
         }
         
         try {
-          const overrides = JSON.parse(localStorage.getItem('report_overrides') || '{}');
-          let pending = JSON.parse(localStorage.getItem('pending_overrides') || '[]');
+          const overrides = JSON.parse((localStorage.getItem('reported_overrides') || sessionStorage.getItem('reported_overrides')) || '{}');
+          let pending = JSON.parse((localStorage.getItem('pending_reports') || sessionStorage.getItem('pending_reports')) || '[]');
           
           backendReports = backendReports.map(report => {
             let modified = { ...report };
@@ -161,7 +174,7 @@ export default function MyReportsPage() {
         console.error('Failed to fetch reports from backend:', error);
         // Fallback to local storage and default data if API fails
         try {
-          const stored = localStorage.getItem('user_my_reports');
+          const stored = (localStorage.getItem('saved_reports') || sessionStorage.getItem('saved_reports'));
           if (stored) {
             const parsed = JSON.parse(stored);
             if (Array.isArray(parsed) && parsed.length > 0) {
@@ -182,12 +195,11 @@ export default function MyReportsPage() {
   }, []);
 
   const handleRetrieveReward = () => {
-    toast.success('You have earned +50 Eco-Points from your reports! Check Rewards.');
     navigate('/rewards');
   };
 
   const handleClearSavedReports = () => {
-    localStorage.removeItem('user_my_reports');
+    localStorage.removeItem('saved_reports'); sessionStorage.removeItem('saved_reports');
     setReports([]);
     toast.success('Local test submissions cleared.');
   };
@@ -213,7 +225,7 @@ export default function MyReportsPage() {
     const s = status.toLowerCase();
     if (s === 'reported') {
       return {
-        pillClass: 'bg-status-reported/15 text-status-reported border border-status-reported/30',
+        pillClass: 'bg-status-reported/15 text-[#8B4500] border border-status-reported/30',
         text: 'Reported',
       };
     }
@@ -246,6 +258,7 @@ export default function MyReportsPage() {
     if (indicator === 'alert') {
       return (
         <div className="w-7 h-7 rounded-full bg-alert-errorLight text-alert-error flex items-center justify-center border border-alert-error/20 shadow-2xs shrink-0">
+        <SEO title="My Reports" />
           <Bell className="w-3.5 h-3.5 fill-alert-error text-alert-error" />
         </div>
       );
@@ -288,7 +301,7 @@ export default function MyReportsPage() {
                 onClick={handleRetrieveReward}
                 className="px-4 py-2.5 rounded-xl border border-white-stroke bg-white text-black font-semibold text-xs sm:text-sm shadow-2xs hover:bg-white-bg transition-all flex items-center gap-2 active:scale-95 cursor-pointer"
               >
-                <Gift className="w-4 h-4 text-black-icon" /> Retrieve Reward
+                <Gift className="w-4 h-4 text-black-icon" /> {credits > 0 ? `${credits} Eco-Points` : 'Rewards'}
               </button>
               <Link
                 to="/report"
@@ -331,8 +344,22 @@ export default function MyReportsPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="search your reports..."
+                  aria-label="Search your reports"
                   className="w-full pl-9 pr-4 py-2 border border-white-stroke rounded-xl text-xs sm:text-sm bg-white-bg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-black font-medium placeholder:text-black-placeholder"
                 />
+              </div>
+
+              {/* My Reports Toggle Desktop */}
+              <div className="flex items-center gap-2 pl-2 sm:pl-3 border-l border-white-stroke">
+                <span className="text-xs sm:text-sm font-medium text-paragraph">My Reports</span>
+                <button
+                  type="button"
+                  onClick={() => navigate('/reports')}
+                  className="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none bg-primary hover:bg-primary/90"
+                  aria-label="Toggle My Reports"
+                >
+                  <span className="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-4" />
+                </button>
               </div>
             </div>
           </div>
@@ -347,8 +374,22 @@ export default function MyReportsPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="search your reports..."
+                aria-label="Search your reports"
                 className="w-full pl-9 pr-4 py-2.5 border border-white-stroke rounded-xl text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-black font-medium placeholder:text-black-placeholder shadow-xs"
               />
+            </div>
+
+            {/* My Reports Toggle Mobile */}
+            <div className="flex items-center justify-between px-1">
+              <span className="text-sm font-medium text-paragraph">Show only my reports</span>
+              <button
+                type="button"
+                onClick={() => navigate('/reports')}
+                className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none bg-primary hover:bg-primary/90"
+                aria-label="Toggle My Reports"
+              >
+                <span className="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-5" />
+              </button>
             </div>
 
             {/* Scrollable Status Pills */}
@@ -382,7 +423,7 @@ export default function MyReportsPage() {
           ) : filteredReports.length === 0 ? (
             <div className="bg-white border border-white-stroke rounded-2xl p-12 text-center my-8 shadow-2xs">
               <Sprout className="w-12 h-12 text-white-stroke mx-auto mb-3 animate-pulse" />
-              <h3 className="text-base sm:text-lg font-bold text-black mb-1">No submitted reports found</h3>
+              <h2 className="text-base sm:text-lg font-bold text-black mb-1">No submitted reports found</h2>
               <p className="text-xs sm:text-sm text-paragraph mb-6">
                 You have not submitted any reports matching your current filter status or search keyword.
               </p>
@@ -420,15 +461,22 @@ export default function MyReportsPage() {
                         <img
                           src={getCardPhotoUrl(report)}
                           alt={report.title}
+                          width="400"
+                          height="176"
+                          loading="lazy"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = fallbackImage;
+                          }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       </div>
 
                       {/* Title */}
-                      <h3 className="font-heading font-bold text-base sm:text-lg text-black mb-2 group-hover:text-primary transition-colors">
+                      <h2 className="font-heading font-bold text-base sm:text-lg text-black mb-2 group-hover:text-primary transition-colors">
                         {report.title}
-                      </h3>
+                      </h2>
 
                       {/* Description Text */}
                       <p className="text-xs sm:text-sm text-paragraph line-clamp-3 mb-4 leading-relaxed">
@@ -460,6 +508,7 @@ export default function MyReportsPage() {
                         <Link
                           to={`/reports/${report.id}`}
                           className="text-xs sm:text-sm font-bold text-primary hover:text-primary/80 flex items-center gap-1 group/link cursor-pointer"
+                          aria-label={`Show details for ${report.title || 'report'}`}
                         >
                           Show Details
                           <ChevronRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
