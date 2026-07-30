@@ -276,7 +276,7 @@ export default function AdminReportsTable({ reports, pageData, filters, onFilter
               </tr>
             ) : (
               paginatedReports.map((report) => {
-                const s = (report.status || 'Reported').toLowerCase();
+                const s = (report.status || 'Reported').toLowerCase().replace(/[_ ]/g, '');
                 const statusTheme = statusConfig[s] || statusConfig.reported;
                 
                 const u = (report.urgency || 'medium').toLowerCase();

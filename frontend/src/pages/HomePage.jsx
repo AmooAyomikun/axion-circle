@@ -578,11 +578,10 @@ export default function HomePage() {
                       </div>
                     )}
                     {reports.slice(0, 6).map((report, idx) => {
-                      const status = (report.status || 'Reported').toLowerCase();
+                      const status = (report.status || 'Reported').toLowerCase().replace(/[_ ]/g, '');
                       const statusConfig = {
                         'resolved': { bg: 'bg-alert-successLight', text: 'text-primary', border: 'border-alert-successStroke', label: 'Resolved' },
                         'inprogress': { bg: 'bg-alert-inprogressLight', text: 'text-alert-inprogress', border: 'border-alert-inprogressStroke', label: 'In Progress' },
-                        'in progress': { bg: 'bg-alert-inprogressLight', text: 'text-alert-inprogress', border: 'border-alert-inprogressStroke', label: 'In Progress' },
                         'acknowledged': { bg: 'bg-alert-infoLight', text: 'text-alert-info', border: 'border-alert-infoStroke', label: 'Acknowledged' },
                       };
                       const config = statusConfig[status] || { bg: 'bg-alert-warningLight', text: 'text-accent', border: 'border-alert-warningStroke', label: 'Reported' };
