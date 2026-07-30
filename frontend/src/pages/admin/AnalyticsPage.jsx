@@ -20,7 +20,20 @@ import api from '../../services/api';
 
 // contributorsData moved to state
 
-// CustomPieLabel removed to use Legend instead to avoid overlapping text
+const CustomPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value, name, color }) => {
+  const RADIAN = Math.PI / 180;
+  const radius = innerRadius + (outerRadius - innerRadius) + 40;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  const textAnchor = x > cx ? 'start' : 'end';
+  const displayName = name === 'illegal Dumping' ? 'illegal Dump' : name;
+  return (
+    <text x={x} y={y} fill="#1F2937" textAnchor={textAnchor} dominantBaseline="central" className="text-xs font-bold font-heading">
+      <tspan x={x} dy="-0.5em">{displayName}</tspan>
+      <tspan x={x} dy="1.4em" fill="#127C2F" className="font-medium">{value}%</tspan>
+    </text>
+  );
+};
 
 const CustomPieTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
@@ -205,7 +218,7 @@ export default function AnalyticsPage() {
   const totalTrend = calculateTrendFromReports(reports, 'total', stats.total);
   const resolvedTrend = calculateTrendFromReports(reports, 'resolved', stats.resolved);
   
-  // Pending trend
+  const ackTrend = calculateTrendFromReports(reports, 'acknowledged', stats.acknowledged);
   const pendingTrend = calculateTrendFromReports(reports, 'pending', stats.pending);
   pendingTrend.isPositive = false; // Force negative UI mapping for "Pending" as per design (red arrow down)
   
@@ -213,6 +226,7 @@ export default function AnalyticsPage() {
 
   const totalPaths = generateSparklinePath(totalTrend.dataPoints);
   const resolvedPaths = generateSparklinePath(resolvedTrend.dataPoints);
+  const ackPaths = generateSparklinePath(ackTrend.dataPoints);
   const pendingPaths = generateSparklinePath(pendingTrend.dataPoints);
   const avgTimePaths = generateSparklinePath(avgTimeTrend.dataPoints);
 
@@ -268,8 +282,8 @@ export default function AnalyticsPage() {
               <AdminStatCard 
                 title="Acknowledged Reports" 
                 value={stats.acknowledged} 
-                trend={{ percentage: 0, isPositive: true }} 
-                paths={totalPaths} 
+                trend={ackTrend} 
+                paths={ackPaths} 
                 icon={Clock} 
                 iconBgClass="bg-[#F59E0B] text-white" 
               />
@@ -309,15 +323,16 @@ export default function AnalyticsPage() {
                 
                 <div className="flex-1 h-[220px] w-full flex items-center justify-center mt-2">
                   <ResponsiveContainer width="100%" height="100%">
-                    <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                    <PieChart margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
                       <Pie
                         data={categoriesData}
-                        cx="40%"
+                        cx="50%"
                         cy="50%"
                         innerRadius={45}
                         outerRadius={75}
                         dataKey="value"
-                        labelLine={false}
+                        labelLine={{ stroke: '#D1D5DB', strokeWidth: 1 }}
+                        label={<CustomPieLabel />}
                         stroke="#ffffff"
                         strokeWidth={2}
                         paddingAngle={3}
@@ -329,13 +344,6 @@ export default function AnalyticsPage() {
                         ))}
                       </Pie>
                       <Tooltip content={<CustomPieTooltip />} />
-                      <Legend 
-                        layout="vertical" 
-                        verticalAlign="middle" 
-                        align="right"
-                        iconType="circle"
-                        wrapperStyle={{ fontSize: '11px', color: '#4B5563', right: '0px' }}
-                      />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
