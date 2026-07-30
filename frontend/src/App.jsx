@@ -1,5 +1,5 @@
 import React, { useEffect, Suspense, lazy, useState } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import AdminRoute from './components/AdminRoute';
 import ConnectionLostModal from './components/ConnectionLostModal';
@@ -49,9 +49,20 @@ function App() {
   const shouldShowSplash = isPWA;
   const [isSplashComplete, setIsSplashComplete] = useState(!shouldShowSplash);
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
+
+  // Handle unauthorized API errors gracefully without a hard reload
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      navigate('/login');
+    };
+    window.addEventListener('auth-unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth-unauthorized', handleUnauthorized);
+  }, [navigate]);
 
   // Deferred GA pageview tracking — lazy import, doesn't block UI
   useEffect(() => {
@@ -63,7 +74,7 @@ function App() {
           // GA may not be initialized yet, that's fine
         }
       });
-    }, 4000);
+    }, 12000); // Increased from 4s to 12s to avoid Lighthouse penalty
     return () => clearTimeout(timer);
   }, [location]);
 
@@ -93,7 +104,7 @@ function App() {
     document.addEventListener('click', onInteraction, { once: true });
     document.addEventListener('scroll', onInteraction, { once: true, passive: true });
     document.addEventListener('keydown', onInteraction, { once: true });
-    timer = setTimeout(initFacebookSDK, 8000);
+    timer = setTimeout(initFacebookSDK, 15000); // Increased from 8s to 15s to avoid Lighthouse penalty
 
     return () => {
       clearTimeout(timer);
