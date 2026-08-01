@@ -26,9 +26,11 @@ public class AdminUserService {
     @Transactional(readOnly = true)
     public Page<AdminUserResponse> listUsers(UserRole role, String search, Pageable pageable) {
         String searchTerm = (search != null && !search.isBlank()) ? search.trim() : null;
+        int limit = pageable.getPageSize();
+        long offset = pageable.getOffset();
         Page<User> users = (role != null)
-                ? userRepository.findAllByRoleAndSearch(role.name(), searchTerm, pageable)
-                : userRepository.findAllBySearch(searchTerm, pageable);
+                ? userRepository.findAllByRoleAndSearch(role.name(), searchTerm, limit, offset, pageable)
+                : userRepository.findAllBySearch(searchTerm, limit, offset, pageable);
         return users.map(this::mapToResponse);
     }
 

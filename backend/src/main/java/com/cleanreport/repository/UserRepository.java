@@ -24,19 +24,23 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Query("SELECT u FROM User u ORDER BY u.creditBalance DESC")
     List<User> findTopByCredits(Pageable pageable);
 
-    @Query(value = "SELECT * FROM users WHERE role = CAST(:role AS user_role) AND (:search IS NULL OR LOWER(display_name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', :search, '%'))) ORDER BY created_at DESC",
+    @Query(value = "SELECT * FROM users WHERE role = CAST(:role AS user_role) AND (:search IS NULL OR LOWER(display_name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', :search, '%'))) ORDER BY created_at DESC LIMIT :limit OFFSET :offset",
            countQuery = "SELECT COUNT(*) FROM users WHERE role = CAST(:role AS user_role) AND (:search IS NULL OR LOWER(display_name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', :search, '%')))",
            nativeQuery = true)
     org.springframework.data.domain.Page<User> findAllByRoleAndSearch(
             @Param("role") String role,
             @Param("search") String search,
+            @Param("limit") int limit,
+            @Param("offset") long offset,
             Pageable pageable);
 
-    @Query(value = "SELECT * FROM users WHERE (:search IS NULL OR LOWER(display_name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', :search, '%'))) ORDER BY created_at DESC",
+    @Query(value = "SELECT * FROM users WHERE (:search IS NULL OR LOWER(display_name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', :search, '%'))) ORDER BY created_at DESC LIMIT :limit OFFSET :offset",
            countQuery = "SELECT COUNT(*) FROM users WHERE (:search IS NULL OR LOWER(display_name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', :search, '%')))",
            nativeQuery = true)
     org.springframework.data.domain.Page<User> findAllBySearch(
             @Param("search") String search,
+            @Param("limit") int limit,
+            @Param("offset") long offset,
             Pageable pageable);
 
     @Query("SELECT COUNT(r) FROM Report r WHERE r.reporter.id = :userId")
