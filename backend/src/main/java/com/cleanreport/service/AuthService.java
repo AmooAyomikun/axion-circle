@@ -70,8 +70,17 @@ public class AuthService {
             throw new UnauthorizedException("Invalid email or password");
         }
 
+        if (user.getDeletedAt() != null) {
+            throw new UnauthorizedException("This account has been removed. Please contact support.");
+        }
+        if (Boolean.TRUE.equals(user.getSuspended())) {
+            throw new UnauthorizedException("This account has been suspended. Please contact support.");
+        }
+
         log.info("User logged in: {}", user.getEmail());
         boolean rememberMe = request.getRememberMe() != null && request.getRememberMe();
+        user.setLastLoginAt(java.time.Instant.now());
+        userRepository.save(user);
         return buildAuthResponse(user, rememberMe);
     }
 
