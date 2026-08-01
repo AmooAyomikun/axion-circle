@@ -24,7 +24,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Query("SELECT u FROM User u ORDER BY u.creditBalance DESC")
     List<User> findTopByCredits(Pageable pageable);
 
-    @Query(value = "SELECT * FROM users WHERE role = CAST(:role AS user_role) AND (:search IS NULL OR LOWER(display_name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', :search, '%'))) ORDER BY created_at DESC LIMIT :limit OFFSET :offset",
+    @Query(value = "SELECT * FROM users WHERE role = CAST(:role AS user_role) AND (COALESCE(:search, '') = '' OR LOWER(display_name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', :search, '%'))) ORDER BY created_at DESC LIMIT :limit OFFSET :offset",
            nativeQuery = true)
     List<User> findAllByRoleAndSearch(
             @Param("role") String role,
@@ -32,18 +32,18 @@ public interface UserRepository extends JpaRepository<User, UUID> {
             @Param("limit") int limit,
             @Param("offset") long offset);
 
-    @Query(value = "SELECT COUNT(*) FROM users WHERE role = CAST(:role AS user_role) AND (:search IS NULL OR LOWER(display_name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', :search, '%')))",
+    @Query(value = "SELECT COUNT(*) FROM users WHERE role = CAST(:role AS user_role) AND (COALESCE(:search, '') = '' OR LOWER(display_name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', :search, '%')))",
            nativeQuery = true)
     long countByRoleAndSearch(@Param("role") String role, @Param("search") String search);
 
-    @Query(value = "SELECT * FROM users WHERE (:search IS NULL OR LOWER(display_name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', :search, '%'))) ORDER BY created_at DESC LIMIT :limit OFFSET :offset",
+    @Query(value = "SELECT * FROM users WHERE (COALESCE(:search, '') = '' OR LOWER(display_name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', :search, '%'))) ORDER BY created_at DESC LIMIT :limit OFFSET :offset",
            nativeQuery = true)
     List<User> findAllBySearch(
             @Param("search") String search,
             @Param("limit") int limit,
             @Param("offset") long offset);
 
-    @Query(value = "SELECT COUNT(*) FROM users WHERE (:search IS NULL OR LOWER(display_name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', :search, '%')))",
+    @Query(value = "SELECT COUNT(*) FROM users WHERE (COALESCE(:search, '') = '' OR LOWER(display_name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', :search, '%')))",
            nativeQuery = true)
     long countBySearch(@Param("search") String search);
 
