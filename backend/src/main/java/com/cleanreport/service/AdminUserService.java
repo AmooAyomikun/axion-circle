@@ -27,7 +27,7 @@ public class AdminUserService {
 
     @Transactional(readOnly = true)
     public Page<AdminUserResponse> listUsers(UserRole role, String search, Pageable pageable) {
-        String searchTerm = (search != null && !search.isBlank()) ? search.trim() : null;
+        String searchTerm = (search != null && !search.isBlank()) ? search.trim() : "";
         int limit = pageable.getPageSize();
         long offset = pageable.getOffset();
 
