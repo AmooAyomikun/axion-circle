@@ -47,6 +47,10 @@ public class User {
     @Builder.Default
     private Integer streakCount = 0;
 
+    @Column(name = "suspended", nullable = false)
+    @Builder.Default
+    private Boolean suspended = false;
+
     @Column(name = "last_report_date")
     private java.time.LocalDate lastReportDate;
 

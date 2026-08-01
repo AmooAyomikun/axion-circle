@@ -1,6 +1,7 @@
 package com.cleanreport.repository;
 
 import com.cleanreport.model.entity.User;
+import com.cleanreport.model.entity.Report;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -22,4 +23,13 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     @Query("SELECT u FROM User u ORDER BY u.creditBalance DESC")
     List<User> findTopByCredits(Pageable pageable);
+
+    @Query("SELECT u FROM User u WHERE (:role IS NULL OR u.role = :role) AND (:search IS NULL OR LOWER(u.displayName) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')))")
+    org.springframework.data.domain.Page<User> findAllByRoleAndSearch(
+            @Param("role") com.cleanreport.model.enums.UserRole role,
+            @Param("search") String search,
+            Pageable pageable);
+
+    @Query("SELECT COUNT(r) FROM Report r WHERE r.reporter.id = :userId")
+    Long countReportsByUserId(@Param("userId") UUID userId);
 }
