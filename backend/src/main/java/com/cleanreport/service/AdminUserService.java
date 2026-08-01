@@ -27,7 +27,7 @@ public class AdminUserService {
     public Page<AdminUserResponse> listUsers(UserRole role, String search, Pageable pageable) {
         String searchTerm = (search != null && !search.isBlank()) ? search.trim() : null;
         Page<User> users = (role != null)
-                ? userRepository.findAllByRoleAndSearch(role, searchTerm, pageable)
+                ? userRepository.findAllByRoleAndSearch(role.name(), searchTerm, pageable)
                 : userRepository.findAllBySearch(searchTerm, pageable);
         return users.map(this::mapToResponse);
     }
