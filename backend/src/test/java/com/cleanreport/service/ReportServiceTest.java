@@ -5,16 +5,19 @@ import com.cleanreport.dto.response.DashboardStatsResponse;
 import com.cleanreport.dto.response.ReportResponse;
 import com.cleanreport.exception.ResourceNotFoundException;
 import com.cleanreport.model.entity.Report;
+import com.cleanreport.model.entity.ReportFlag;
 import com.cleanreport.model.entity.ReportUpvote;
 import com.cleanreport.model.entity.User;
 import com.cleanreport.model.enums.ReportCategory;
 import com.cleanreport.model.enums.ReportStatus;
 import com.cleanreport.model.enums.ReportUrgency;
 import com.cleanreport.model.enums.UserRole;
+import com.cleanreport.repository.ReportFlagRepository;
 import com.cleanreport.repository.ReportRepository;
 import com.cleanreport.repository.ReportUpvoteRepository;
 import com.cleanreport.repository.StatusHistoryRepository;
 import com.cleanreport.repository.UserRepository;
+import com.cleanreport.service.AbuseDetectionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -59,11 +62,15 @@ class ReportServiceTest {
     @Mock
     private ReportUpvoteRepository reportUpvoteRepository;
     @Mock
+    private ReportFlagRepository reportFlagRepository;
+    @Mock
     private StatusHistoryRepository statusHistoryRepository;
     @Mock
     private GeocodingService geocodingService;
     @Mock
     private CreditService creditService;
+    @Mock
+    private AbuseDetectionService abuseDetectionService;
 
     @InjectMocks
     private ReportService reportService;
@@ -105,6 +112,12 @@ class ReportServiceTest {
         // mapToResponse() counts upvotes on every response it builds — lenient because
         // several tests never reach response mapping (not-found / stats paths).
         lenient().when(reportUpvoteRepository.countByReportId(any(UUID.class))).thenReturn(0L);
+        // flagRepository returns empty list for all reports by default
+        lenient().when(reportFlagRepository.findByReportIdOrderByCreatedAtDesc(any(UUID.class)))
+                .thenReturn(java.util.List.of());
+        // abuseDetectionService returns empty list by default
+        lenient().when(abuseDetectionService.inspect(any(Report.class)))
+                .thenReturn(java.util.List.of());
     }
 
     @Test

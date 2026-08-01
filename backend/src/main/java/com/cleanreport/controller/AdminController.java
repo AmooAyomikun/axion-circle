@@ -2,10 +2,13 @@ package com.cleanreport.controller;
 
 import com.cleanreport.dto.request.UpdateStatusRequest;
 import com.cleanreport.dto.response.ApiResponse;
+import com.cleanreport.dto.response.ReportFlagResponse;
 import com.cleanreport.dto.response.ReportResponse;
 import com.cleanreport.dto.response.StatusHistoryResponse;
+import com.cleanreport.model.entity.ReportFlag;
 import com.cleanreport.model.enums.ReportCategory;
 import com.cleanreport.model.enums.ReportStatus;
+import com.cleanreport.repository.ReportFlagRepository;
 import com.cleanreport.service.ReportService;
 import com.cleanreport.service.StatusService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -35,6 +39,7 @@ public class AdminController {
 
     private final ReportService reportService;
     private final StatusService statusService;
+    private final ReportFlagRepository reportFlagRepository;
 
     @Operation(
             summary = "List all reports with advanced filters (Admin only)",
@@ -107,6 +112,27 @@ public class AdminController {
             Authentication authentication) {
         StatusHistoryResponse response = statusService.updateStatus(id, request, authentication.getName());
         return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @Operation(
+            summary = "Get abuse flags for a report (Admin only)",
+            description = "Returns all system-generated abuse/quality flags for a report. Non-empty list means the report should be reviewed before processing.",
+            security = @SecurityRequirement(name = "Bearer Auth"))
+    @GetMapping("/{id}/flags")
+    public ResponseEntity<ApiResponse<List<ReportFlagResponse>>> getFlags(@PathVariable UUID id) {
+        List<ReportFlagResponse> flags = reportFlagRepository.findByReportIdOrderByCreatedAtDesc(id)
+                .stream()
+                .map(f -> ReportFlagResponse.builder()
+                        .id(f.getId())
+                        .flagType(f.getFlagType())
+                        .details(f.getDetails())
+                        .autoFlagged(f.getAutoFlagged())
+                        .reviewedByName(f.getReviewedBy() != null ? f.getReviewedBy().getDisplayName() : null)
+                        .reviewedAt(f.getReviewedAt())
+                        .createdAt(f.getCreatedAt())
+                        .build())
+                .toList();
+        return ResponseEntity.ok(ApiResponse.ok(flags));
     }
 
     private String validateSortField(String sortBy) {

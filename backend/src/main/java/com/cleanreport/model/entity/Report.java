@@ -36,6 +36,9 @@ public class Report {
     @Column(name = "photo_url", nullable = false)
     private String photoUrl;
 
+    @Column(name = "photo_hash", length = 64)
+    private String photoHash;
+
     @Column(name = "photo_after_url")
     private String photoAfterUrl;
 
