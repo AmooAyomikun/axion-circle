@@ -24,13 +24,17 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Query("SELECT u FROM User u ORDER BY u.creditBalance DESC")
     List<User> findTopByCredits(Pageable pageable);
 
-    @Query("SELECT u FROM User u WHERE u.role = :role AND (:search IS NULL OR LOWER(u.displayName) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')))")
+    @Query(value = "SELECT * FROM users WHERE role = CAST(:role AS user_role) AND (:search IS NULL OR LOWER(display_name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', :search, '%'))) ORDER BY created_at DESC",
+           countQuery = "SELECT COUNT(*) FROM users WHERE role = CAST(:role AS user_role) AND (:search IS NULL OR LOWER(display_name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', :search, '%')))",
+           nativeQuery = true)
     org.springframework.data.domain.Page<User> findAllByRoleAndSearch(
-            @Param("role") com.cleanreport.model.enums.UserRole role,
+            @Param("role") String role,
             @Param("search") String search,
             Pageable pageable);
 
-    @Query("SELECT u FROM User u WHERE (:search IS NULL OR LOWER(u.displayName) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')))")
+    @Query(value = "SELECT * FROM users WHERE (:search IS NULL OR LOWER(display_name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', :search, '%'))) ORDER BY created_at DESC",
+           countQuery = "SELECT COUNT(*) FROM users WHERE (:search IS NULL OR LOWER(display_name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', :search, '%')))",
+           nativeQuery = true)
     org.springframework.data.domain.Page<User> findAllBySearch(
             @Param("search") String search,
             Pageable pageable);
