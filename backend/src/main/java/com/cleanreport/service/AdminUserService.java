@@ -10,10 +10,12 @@ import com.cleanreport.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -28,10 +30,18 @@ public class AdminUserService {
         String searchTerm = (search != null && !search.isBlank()) ? search.trim() : null;
         int limit = pageable.getPageSize();
         long offset = pageable.getOffset();
-        Page<User> users = (role != null)
-                ? userRepository.findAllByRoleAndSearch(role.name(), searchTerm, limit, offset, pageable)
-                : userRepository.findAllBySearch(searchTerm, limit, offset, pageable);
-        return users.map(this::mapToResponse);
+
+        List<User> users;
+        long total;
+        if (role != null) {
+            users = userRepository.findAllByRoleAndSearch(role.name(), searchTerm, limit, offset);
+            total = userRepository.countByRoleAndSearch(role.name(), searchTerm);
+        } else {
+            users = userRepository.findAllBySearch(searchTerm, limit, offset);
+            total = userRepository.countBySearch(searchTerm);
+        }
+        List<AdminUserResponse> content = users.stream().map(this::mapToResponse).toList();
+        return new PageImpl<>(content, pageable, total);
     }
 
     @Transactional(readOnly = true)
