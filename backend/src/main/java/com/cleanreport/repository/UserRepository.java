@@ -24,28 +24,32 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Query("SELECT u FROM User u ORDER BY u.creditBalance DESC")
     List<User> findTopByCredits(Pageable pageable);
 
-    @Query(value = "SELECT * FROM users WHERE role = CAST(:role AS user_role) AND (COALESCE(:search, '') = '' OR LOWER(display_name) LIKE LOWER(CONCAT('%', CAST(:search AS TEXT), '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', CAST(:search AS TEXT), '%'))) ORDER BY created_at DESC LIMIT :limit OFFSET :offset",
+    @Query(value = "SELECT * FROM users WHERE role = CAST(:role AS user_role) AND (:includeDeleted = TRUE OR deleted_at IS NULL) AND (:inactiveDays = 0 OR last_login_at IS NULL OR last_login_at < NOW() - (:inactiveDays || ' days')::INTERVAL) AND (COALESCE(:search, '') = '' OR LOWER(display_name) LIKE LOWER(CONCAT('%', CAST(:search AS TEXT), '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', CAST(:search AS TEXT), '%'))) ORDER BY created_at DESC LIMIT :limit OFFSET :offset",
            nativeQuery = true)
     List<User> findAllByRoleAndSearch(
             @Param("role") String role,
             @Param("search") String search,
+            @Param("includeDeleted") boolean includeDeleted,
+            @Param("inactiveDays") int inactiveDays,
             @Param("limit") int limit,
             @Param("offset") long offset);
 
-    @Query(value = "SELECT COUNT(*) FROM users WHERE role = CAST(:role AS user_role) AND (COALESCE(:search, '') = '' OR LOWER(display_name) LIKE LOWER(CONCAT('%', CAST(:search AS TEXT), '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', CAST(:search AS TEXT), '%')))",
+    @Query(value = "SELECT COUNT(*) FROM users WHERE role = CAST(:role AS user_role) AND (:includeDeleted = TRUE OR deleted_at IS NULL) AND (:inactiveDays = 0 OR last_login_at IS NULL OR last_login_at < NOW() - (:inactiveDays || ' days')::INTERVAL) AND (COALESCE(:search, '') = '' OR LOWER(display_name) LIKE LOWER(CONCAT('%', CAST(:search AS TEXT), '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', CAST(:search AS TEXT), '%')))",
            nativeQuery = true)
-    long countByRoleAndSearch(@Param("role") String role, @Param("search") String search);
+    long countByRoleAndSearch(@Param("role") String role, @Param("search") String search, @Param("includeDeleted") boolean includeDeleted, @Param("inactiveDays") int inactiveDays);
 
-    @Query(value = "SELECT * FROM users WHERE (COALESCE(:search, '') = '' OR LOWER(display_name) LIKE LOWER(CONCAT('%', CAST(:search AS TEXT), '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', CAST(:search AS TEXT), '%'))) ORDER BY created_at DESC LIMIT :limit OFFSET :offset",
+    @Query(value = "SELECT * FROM users WHERE (:includeDeleted = TRUE OR deleted_at IS NULL) AND (:inactiveDays = 0 OR last_login_at IS NULL OR last_login_at < NOW() - (:inactiveDays || ' days')::INTERVAL) AND (COALESCE(:search, '') = '' OR LOWER(display_name) LIKE LOWER(CONCAT('%', CAST(:search AS TEXT), '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', CAST(:search AS TEXT), '%'))) ORDER BY created_at DESC LIMIT :limit OFFSET :offset",
            nativeQuery = true)
     List<User> findAllBySearch(
             @Param("search") String search,
+            @Param("includeDeleted") boolean includeDeleted,
+            @Param("inactiveDays") int inactiveDays,
             @Param("limit") int limit,
             @Param("offset") long offset);
 
-    @Query(value = "SELECT COUNT(*) FROM users WHERE (COALESCE(:search, '') = '' OR LOWER(display_name) LIKE LOWER(CONCAT('%', CAST(:search AS TEXT), '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', CAST(:search AS TEXT), '%')))",
+    @Query(value = "SELECT COUNT(*) FROM users WHERE (:includeDeleted = TRUE OR deleted_at IS NULL) AND (:inactiveDays = 0 OR last_login_at IS NULL OR last_login_at < NOW() - (:inactiveDays || ' days')::INTERVAL) AND (COALESCE(:search, '') = '' OR LOWER(display_name) LIKE LOWER(CONCAT('%', CAST(:search AS TEXT), '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', CAST(:search AS TEXT), '%')))",
            nativeQuery = true)
-    long countBySearch(@Param("search") String search);
+    long countBySearch(@Param("search") String search, @Param("includeDeleted") boolean includeDeleted, @Param("inactiveDays") int inactiveDays);
 
     @Query("SELECT COUNT(r) FROM Report r WHERE r.reporter.id = :userId")
     Long countReportsByUserId(@Param("userId") UUID userId);

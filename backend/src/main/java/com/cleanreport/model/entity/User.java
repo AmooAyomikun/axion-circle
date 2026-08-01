@@ -51,6 +51,12 @@ public class User {
     @Builder.Default
     private Boolean suspended = false;
 
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    @Column(name = "last_login_at")
+    private Instant lastLoginAt;
+
     @Column(name = "last_report_date")
     private java.time.LocalDate lastReportDate;
 
