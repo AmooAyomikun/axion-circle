@@ -24,9 +24,14 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Query("SELECT u FROM User u ORDER BY u.creditBalance DESC")
     List<User> findTopByCredits(Pageable pageable);
 
-    @Query("SELECT u FROM User u WHERE (:role IS NULL OR u.role = :role) AND (:search IS NULL OR LOWER(u.displayName) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')))")
+    @Query("SELECT u FROM User u WHERE u.role = :role AND (:search IS NULL OR LOWER(u.displayName) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')))")
     org.springframework.data.domain.Page<User> findAllByRoleAndSearch(
             @Param("role") com.cleanreport.model.enums.UserRole role,
+            @Param("search") String search,
+            Pageable pageable);
+
+    @Query("SELECT u FROM User u WHERE (:search IS NULL OR LOWER(u.displayName) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')))")
+    org.springframework.data.domain.Page<User> findAllBySearch(
             @Param("search") String search,
             Pageable pageable);
 
