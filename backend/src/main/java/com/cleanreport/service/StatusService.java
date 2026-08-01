@@ -30,6 +30,12 @@ public class StatusService {
             ReportStatus.RESOLVED
     );
 
+    // Terminal states — no further transitions allowed from these
+    private static final java.util.Set<ReportStatus> TERMINAL_STATUSES = java.util.Set.of(
+            ReportStatus.RESOLVED,
+            ReportStatus.REJECTED
+    );
+
     private final ReportRepository reportRepository;
     private final StatusHistoryRepository statusHistoryRepository;
     private final UserRepository userRepository;
@@ -93,9 +99,22 @@ public class StatusService {
     }
 
     private void validateForwardTransition(ReportStatus current, ReportStatus target) {
+        // Block any transition FROM a terminal state
+        if (TERMINAL_STATUSES.contains(current)) {
+            throw new IllegalArgumentException(
+                    String.format("Cannot transition from %s — this is a terminal state. No further changes allowed.", current));
+        }
+        // REJECTED is only allowed from REPORTED (admin rejects an unverified report)
+        if (target == ReportStatus.REJECTED) {
+            if (current != ReportStatus.REPORTED) {
+                throw new IllegalArgumentException(
+                        "REJECTED is only allowed from REPORTED. A report already in progress cannot be rejected.");
+            }
+            return; // valid — skip forward-order check
+        }
+        // Normal forward-only check for the main flow
         int currentIndex = STATUS_ORDER.indexOf(current);
         int targetIndex = STATUS_ORDER.indexOf(target);
-
         if (targetIndex <= currentIndex) {
             throw new IllegalArgumentException(
                     String.format("Cannot transition from %s to %s. Status can only move forward: REPORTED → ACKNOWLEDGED → IN_PROGRESS → RESOLVED",

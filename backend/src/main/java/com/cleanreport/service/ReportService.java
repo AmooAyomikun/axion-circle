@@ -11,6 +11,7 @@ import com.cleanreport.model.enums.ReportStatus;
 import com.cleanreport.model.enums.ReportUrgency;
 import com.cleanreport.repository.ReportRepository;
 import com.cleanreport.repository.ReportUpvoteRepository;
+import com.cleanreport.repository.ReportFlagRepository;
 import com.cleanreport.repository.StatusHistoryRepository;
 import com.cleanreport.repository.UserRepository;
 import com.cleanreport.model.entity.ReportUpvote;
@@ -43,9 +44,11 @@ public class ReportService {
     private final ReportRepository reportRepository;
     private final UserRepository userRepository;
     private final ReportUpvoteRepository reportUpvoteRepository;
+    private final ReportFlagRepository reportFlagRepository;
     private final StatusHistoryRepository statusHistoryRepository;
     private final GeocodingService geocodingService;
     private final CreditService creditService;
+    private final AbuseDetectionService abuseDetectionService;
     private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), SRID_WGS84);
 
     @Transactional
@@ -58,6 +61,13 @@ public class ReportService {
 
         // Award credits for report submission
         creditService.awardReportSubmitCredits(reporter, saved);
+
+        // Run abuse detection asynchronously — flags are informational, never block submission
+        try {
+            abuseDetectionService.inspect(saved);
+        } catch (Exception e) {
+            log.warn("Abuse detection failed for report {}: {}", saved.getId(), e.getMessage());
+        }
 
         return mapToResponse(saved);
     }
@@ -263,6 +273,7 @@ public class ReportService {
         int upvotesCount = (int) reportUpvoteRepository.countByReportId(report.getId());
         boolean hasUpvoted = currentUserId != null &&
                 reportUpvoteRepository.existsByReportIdAndUserId(report.getId(), currentUserId);
+        int flagCount = (int) reportFlagRepository.findByReportIdOrderByCreatedAtDesc(report.getId()).size();
 
         return ReportResponse.builder()
                 .id(report.getId())
@@ -284,6 +295,7 @@ public class ReportService {
                 .areaName(report.getAreaName())
                 .upvotesCount(upvotesCount)
                 .hasUpvoted(hasUpvoted)
+                .flagCount(flagCount)
                 .createdAt(report.getCreatedAt())
                 .updatedAt(report.getUpdatedAt())
                 .build();

@@ -38,6 +38,7 @@ public class ReportResponse {
     private String areaName;
     private Integer upvotesCount;
     private Boolean hasUpvoted;
+    private Integer flagCount;  // Number of abuse flags — non-zero means admin should review
     private Instant createdAt;
     private Instant updatedAt;
 }
