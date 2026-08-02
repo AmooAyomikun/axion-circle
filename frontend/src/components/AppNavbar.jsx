@@ -128,7 +128,7 @@ export default function AppNavbar({ activeTab = '' }) {
   return (
     <>
       {/* Desktop Header */}
-      <header className="hidden lg:flex items-center justify-between px-8 py-4 border-b border-white-stroke bg-white sticky top-0 z-30 shadow-xs">
+      <header className="hidden lg:flex items-center justify-between px-8 py-4 border-b border-white-stroke bg-white sticky top-0 z-40 shadow-xs">
         <Link to="/" className="flex items-center shrink-0" aria-label="Home">
           <NavbarLogo className="h-8 sm:h-9 w-auto object-contain" />
         </Link>
@@ -299,7 +299,7 @@ export default function AppNavbar({ activeTab = '' }) {
       </header>
 
       {/* Mobile Header */}
-      <header className="lg:hidden flex items-center justify-between px-4 py-3.5 border-b border-white-stroke bg-white sticky top-0 z-30 shadow-xs">
+      <header className="lg:hidden flex items-center justify-between px-4 py-3.5 border-b border-white-stroke bg-white sticky top-0 z-40 shadow-xs">
         <Link to="/" className="flex items-center shrink-0" aria-label="Home">
           <NavbarLogo className="h-8 sm:h-9 w-auto object-contain" />
         </Link>
