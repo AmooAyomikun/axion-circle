@@ -18,7 +18,8 @@ const statusConfig = {
   resolved: { bg: 'bg-[#ECFDF3]', text: 'text-[#10B981]', border: 'border-[#10B981]/20', dot: 'bg-[#10B981]', label: 'Resolved' },
   'in progress': { bg: 'bg-[#F3E8FF]', text: 'text-[#9333EA]', border: 'border-[#9333EA]/20', dot: 'bg-[#9333EA]', label: 'In Progress' },
   inprogress: { bg: 'bg-[#F3E8FF]', text: 'text-[#9333EA]', border: 'border-[#9333EA]/20', dot: 'bg-[#9333EA]', label: 'In Progress' },
-  acknowledged: { bg: 'bg-[#EFF6FF]', text: 'text-[#3B82F6]', border: 'border-[#3B82F6]/20', dot: 'bg-[#3B82F6]', label: 'Acknowledged' }
+  acknowledged: { bg: 'bg-[#EFF6FF]', text: 'text-[#3B82F6]', border: 'border-[#3B82F6]/20', dot: 'bg-[#3B82F6]', label: 'Acknowledged' },
+  rejected: { bg: 'bg-[#FEE2E2]', text: 'text-[#EF4444]', border: 'border-[#EF4444]/20', dot: 'bg-[#EF4444]', label: 'Rejected' }
 };
 
 const getTimelineIcon = (isCompleted, isActive) => {
@@ -53,6 +54,8 @@ export default function AdminReportDetailPage() {
   const [notFound, setNotFound] = useState(false);
   const [geoAddress, setGeoAddress] = useState(null);
   const [geoDistrict, setGeoDistrict] = useState(null);
+  const [flags, setFlags] = useState([]);
+  const [isFlagsLoading, setIsFlagsLoading] = useState(false);
 
   // Modal States
   const [isChangeStatusModalOpen, setIsChangeStatusModalOpen] = useState(false);
@@ -75,6 +78,9 @@ export default function AdminReportDetailPage() {
       case 'Reported':
         setInternalNote('Your report has been received and logged.');
         break;
+      case 'Rejected':
+        setInternalNote('This report has been reviewed and rejected.');
+        break;
       default:
         setInternalNote('');
     }
@@ -89,8 +95,21 @@ export default function AdminReportDetailPage() {
         api.get(`/reports/${id}/status`).catch(() => ({ data: { data: [] } }))
       ]);
 
-      setReport(reportRes.data?.data || reportRes.data);
+      const reportData = reportRes.data?.data || reportRes.data;
+      setReport(reportData);
       setStatusHistory(statusRes.data?.data || statusRes.data || []);
+      
+      if (reportData?.flagCount > 0) {
+        setIsFlagsLoading(true);
+        try {
+          const flagsRes = await api.get(`/admin/reports/${id}/flags`);
+          setFlags(flagsRes.data?.data || flagsRes.data || []);
+        } catch (flagError) {
+          console.error('Failed to fetch flags:', flagError);
+        } finally {
+          setIsFlagsLoading(false);
+        }
+      }
     } catch (error) {
       if (error.response?.status === 404) {
         setNotFound(true);
@@ -194,6 +213,7 @@ export default function AdminReportDetailPage() {
   if (currentStatusStr === 'acknowledged') activeStageIndex = 1;
   else if (currentStatusStr === 'in_progress' || currentStatusStr === 'inprogress') activeStageIndex = 2;
   else if (currentStatusStr === 'resolved') activeStageIndex = 3;
+  else if (currentStatusStr === 'rejected') activeStageIndex = -1;
 
   const timeline = STAGES.map((stageName, index) => {
     // Attempt to find a matching history record
@@ -277,6 +297,17 @@ export default function AdminReportDetailPage() {
               <span className={`w-1.5 h-1.5 rounded-full ${currentStatusConfig.dot}`}></span>
               <span className={`${currentStatusConfig.text} font-bold text-xs`}>{currentStatusConfig.label}</span>
             </div>
+            {report?.flagCount > 0 && (
+              <>
+                <div className="w-[1px] h-8 bg-[#E5E7EB]"></div>
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-[#FEE2E2] border border-[#EF4444]/20 rounded-full">
+                  <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center shrink-0 shadow-xs">
+                    <span className="text-[#EF4444] font-bold text-[10px]">{report.flagCount}</span>
+                  </div>
+                  <span className="text-[#EF4444] font-bold text-xs uppercase tracking-wider">Flags</span>
+                </div>
+              </>
+            )}
             {/* Divider */}
             <div className="w-[1px] h-8 bg-[#E5E7EB]"></div>
             {/* Urgency Pill */}
@@ -292,7 +323,7 @@ export default function AdminReportDetailPage() {
           </div>
 
           {/* Buttons Row / Stack */}
-          {activeStageIndex < 3 && (
+          {activeStageIndex >= 0 && activeStageIndex < 3 && (
             <div className="flex flex-col lg:flex-row items-center gap-3 w-full lg:w-auto">
               <button 
                 onClick={() => {
@@ -397,6 +428,38 @@ export default function AdminReportDetailPage() {
                 </div>
               </div>
 
+              {/* Abuse Flags Card */}
+              {report?.flagCount > 0 && (
+                <div className="bg-white border border-alert-error/30 rounded-2xl overflow-hidden shadow-xs relative">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-alert-error"></div>
+                  <div className="px-5 py-3.5 bg-alert-errorLight/50 border-b border-alert-error/20 flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-xs">
+                      <span className="text-alert-error font-bold text-xs">{report.flagCount}</span>
+                    </div>
+                    <h3 className="font-bold text-alert-error text-sm">Anti-Abuse Flags</h3>
+                  </div>
+                  <div className="p-0">
+                    {isFlagsLoading ? (
+                      <div className="p-6 text-center text-sm text-paragraph animate-pulse">Loading flags...</div>
+                    ) : flags.length === 0 ? (
+                      <div className="p-6 text-center text-sm text-paragraph">No flags found.</div>
+                    ) : (
+                      <div className="flex flex-col">
+                        {flags.map((flag, idx) => (
+                          <div key={idx} className="p-4 border-b border-white-stroke last:border-b-0 hover:bg-white-bg transition-colors">
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="text-xs font-bold text-black uppercase tracking-wider">{flag.flagType?.replace(/_/g, ' ')}</span>
+                              <span className="text-[10px] font-medium text-paragraph">{formatDateTime(flag.createdAt)}</span>
+                            </div>
+                            <p className="text-[13px] text-paragraph leading-relaxed">{flag.details || 'System automatically flagged this report based on anti-abuse rules.'}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Status Timeline */}
               <div className="bg-white border border-white-stroke rounded-2xl shadow-xs p-6">
                 <div className="relative">
@@ -470,6 +533,9 @@ export default function AdminReportDetailPage() {
                         {stage}
                       </option>
                     ))}
+                    {currentStatusStr === 'reported' && (
+                      <option value="Rejected">Rejected</option>
+                    )}
                   </select>
                   <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
                     <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
