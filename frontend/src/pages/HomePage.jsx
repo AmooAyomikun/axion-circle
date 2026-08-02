@@ -583,6 +583,7 @@ export default function HomePage() {
                         'resolved': { bg: 'bg-alert-successLight', text: 'text-primary', border: 'border-alert-successStroke', label: 'Resolved' },
                         'inprogress': { bg: 'bg-alert-inprogressLight', text: 'text-alert-inprogress', border: 'border-alert-inprogressStroke', label: 'In Progress' },
                         'acknowledged': { bg: 'bg-alert-infoLight', text: 'text-alert-info', border: 'border-alert-infoStroke', label: 'Acknowledged' },
+                        'rejected': { bg: 'bg-[#FEE2E2]', text: 'text-[#EF4444]', border: 'border-[#EF4444]/20', label: 'Rejected' },
                       };
                       const config = statusConfig[status] || { bg: 'bg-alert-warningLight', text: 'text-accent', border: 'border-alert-warningStroke', label: 'Reported' };
 
