@@ -242,7 +242,14 @@ export default function LoginPage() {
         setServerError('Connection failed. Please try again.');
         return;
       }
-      setServerError('Invalid email or password');
+      
+      // Check for specific backend errors, e.g. suspended accounts
+      const apiErrorMsg = error.response?.data?.message || error.response?.data?.error;
+      if (apiErrorMsg && (apiErrorMsg.toLowerCase().includes('suspend') || apiErrorMsg.toLowerCase().includes('remov'))) {
+        setServerError('This account has been suspended/removed. Contact support.');
+      } else {
+        setServerError('Invalid email or password');
+      }
     } finally {
       setIsSubmitting(false);
     }
