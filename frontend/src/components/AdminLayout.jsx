@@ -208,7 +208,7 @@ export default function AdminLayout({ children }) {
       </aside>
 
       {/* Mobile Header */}
-      <header className="lg:hidden fixed top-0 inset-x-0 h-16 bg-white border-b border-white-stroke flex items-center justify-between px-4 z-30">
+      <header className="lg:hidden fixed top-0 inset-x-0 h-16 bg-white border-b border-white-stroke flex items-center justify-between px-4 z-40">
         <Link to="/" className="flex items-center">
           <NavbarLogo className="h-7 w-auto object-contain" />
         </Link>
@@ -285,7 +285,7 @@ export default function AdminLayout({ children }) {
       {/* Main Content Area */}
       <main className="flex-1 lg:ml-64 flex flex-col min-h-screen pt-16 lg:pt-0 overflow-x-hidden">
         {/* Desktop Top Nav */}
-        <div className="hidden lg:flex items-center justify-between px-8 py-4 bg-white sticky top-0 z-10 border-b border-white-stroke">
+        <div className="hidden lg:flex items-center justify-between px-8 py-4 bg-white sticky top-0 z-40 border-b border-white-stroke">
           <div className="flex items-center gap-4">
             <h1 className="text-[22px] font-heading font-bold text-black">Welcome Back {displayName.split(' ')[0]}! 👋</h1>
             <div className="flex items-center gap-2 px-3 py-2 bg-[#F3F4F6] border border-white-stroke rounded-xl shadow-xs">
