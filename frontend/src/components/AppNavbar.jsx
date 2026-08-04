@@ -137,10 +137,10 @@ export default function AppNavbar({ activeTab = '' }) {
           <nav className="flex items-center gap-1.5 p-1 bg-white border border-white-stroke rounded-2xl font-medium text-xs text-paragraph shadow-xs">
             <Link
               to="/"
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold transition-colors ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl transition-colors ${
                 activeTab === 'dashboard'
                   ? 'bg-alert-successLight text-primary font-bold'
-                  : 'text-paragraph hover:text-black font-semibold'
+                  : 'text-paragraph hover:text-black font-medium'
               }`}
             >
               <LayoutGrid className={`w-4 h-4 shrink-0 ${activeTab === 'dashboard' ? 'text-primary' : 'text-black-icon'}`} />
@@ -148,10 +148,10 @@ export default function AppNavbar({ activeTab = '' }) {
             </Link>
             <Link
               to="/reports"
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold transition-colors ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl transition-colors ${
                 activeTab === 'reports'
                   ? 'bg-alert-successLight text-primary font-bold'
-                  : 'text-paragraph hover:text-black font-semibold'
+                  : 'text-paragraph hover:text-black font-medium'
               }`}
             >
               <FileText className={`w-4 h-4 shrink-0 ${activeTab === 'reports' ? 'text-primary' : 'text-black-icon'}`} />
@@ -159,10 +159,10 @@ export default function AppNavbar({ activeTab = '' }) {
             </Link>
             <Link
               to="/rewards"
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold transition-colors ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl transition-colors ${
                 activeTab === 'rewards'
                   ? 'bg-alert-successLight text-primary font-bold'
-                  : 'text-paragraph hover:text-black font-semibold'
+                  : 'text-paragraph hover:text-black font-medium'
               }`}
             >
               <Gift className={`w-4 h-4 shrink-0 ${activeTab === 'rewards' ? 'text-primary' : 'text-black-icon'}`} />
