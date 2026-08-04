@@ -54,11 +54,11 @@ const TIPS = [
 ];
 
 const LEVELS = [
-  { name: 'Observer', icon: '👀', threshold: 0, color: 'text-gray-400' },
-  { name: 'Reporter', icon: '🔥', threshold: 50, color: 'text-orange-500' },
-  { name: 'Guardian', icon: '🛡️', threshold: 200, color: 'text-green-500' },
-  { name: 'Champion', icon: '🏆', threshold: 500, color: 'text-yellow-500' },
-  { name: 'Legend', icon: '💎', threshold: 1000, color: 'text-blue-500' }
+  { name: 'Observer', icon: <Circle className="w-4 h-4" />, threshold: 0, color: 'text-gray-400' },
+  { name: 'Reporter', icon: <Flame className="w-4 h-4" />, threshold: 50, color: 'text-orange-500' },
+  { name: 'Guardian', icon: <Shield className="w-4 h-4" />, threshold: 200, color: 'text-green-500' },
+  { name: 'Champion', icon: <Trophy className="w-4 h-4" />, threshold: 500, color: 'text-yellow-500' },
+  { name: 'Legend', icon: <Hexagon className="w-4 h-4" />, threshold: 1000, color: 'text-blue-500' }
 ];
 
 const MOCK_REWARDS = [
@@ -303,15 +303,13 @@ export default function RewardsPage() {
               <div className="flex flex-col gap-10">
                 {/* Credit Balance Card */}
                 <div className="bg-[#0A1F13] rounded-[2rem] p-6 sm:p-8 text-white flex flex-col relative overflow-hidden shadow-lg h-fit">
-                {/* Background decorative gradient */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
                 
                 <div className="relative z-10 flex flex-col h-full">
                   <div className="flex justify-between items-start mb-6">
                     <p className="text-gray-200 text-sm font-medium">Credit Balance</p>
-                    <div className="bg-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm">
-                      <span className="text-base leading-none">🏆</span> 
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">Champion</span>
+                    <div className="bg-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm text-gray-800">
+                      <Trophy className="w-4 h-4 text-purple-600" />
+                      <span className="text-purple-700">Champion</span>
                     </div>
                   </div>
 
@@ -322,7 +320,7 @@ export default function RewardsPage() {
 
                   <div className="flex flex-wrap items-center gap-3 mb-10">
                     <div className="bg-white text-orange-500 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5">
-                      🔥 {balance.streakCount || 7} days streak
+                      <Flame className="w-3.5 h-3.5" fill="currentColor" /> {balance.streakCount || 7} days streak
                     </div>
                     {balance.multiplier >= 1.0 && (
                       <div className="bg-white text-[#127C2F] px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5">
@@ -346,7 +344,7 @@ export default function RewardsPage() {
                     {/* Progress Bar */}
                     <div className="w-full bg-black/40 h-2.5 rounded-full mb-4 overflow-hidden">
                       <div 
-                        className="h-full rounded-full bg-gradient-to-r from-green-500 via-emerald-400 to-cyan-100" 
+                        className="h-full rounded-full bg-[#127C2F]" 
                         style={{ width: `${progressPercent}%` }}
                       ></div>
                     </div>
@@ -408,8 +406,8 @@ export default function RewardsPage() {
                   <h3 className="font-heading text-xl font-bold flex items-center gap-2 text-gray-800">
                     <Trophy className="w-5 h-5 text-gray-700" /> Community Leaderboard
                   </h3>
-                  <div className="bg-gradient-to-r from-orange-400 to-yellow-400 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm">
-                    💎 Legend
+                  <div className="bg-yellow-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm">
+                    <Hexagon className="w-3 h-3 fill-current" /> Legend
                   </div>
                 </div>
 
@@ -438,9 +436,9 @@ export default function RewardsPage() {
                         <p className="font-bold text-base text-gray-900 truncate leading-tight">{leaderboard[0].displayName.split(' ')[0]}</p>
                         <p className="text-[10px] font-bold text-[#127C2F]">1st Position</p>
                       </div>
-                      <div className="bg-gradient-to-br from-yellow-400 to-orange-500 text-white w-full rounded-[1.25rem] py-4 px-1 text-center shadow-lg transform scale-105 flex flex-col justify-center items-center h-24">
+                      <div className="bg-yellow-500 text-white w-full rounded-[1.25rem] py-4 px-1 text-center shadow-lg transform scale-105 flex flex-col justify-center items-center h-24">
                         <p className="font-bold text-xl sm:text-2xl leading-none mb-1">{leaderboard[0].creditScore ?? leaderboard[0].lifetimeCredits ?? 0}</p>
-                        <p className="text-[10px] text-orange-100 leading-none">Credit Score</p>
+                        <p className="text-[10px] text-yellow-100 leading-none">Credit Score</p>
                       </div>
                     </div>
                   )}
@@ -531,7 +529,7 @@ export default function RewardsPage() {
                           </div>
                         )}
                         {/* Tag */}
-                        <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-md text-white text-[10px] font-semibold px-3 py-1 rounded-full">
+                        <div className="absolute top-3 left-3 bg-gray-900/80 text-white text-[10px] font-bold px-3 py-1 rounded-full">
                           {reward.category || 'Reward'}
                         </div>
                       </div>
@@ -587,10 +585,10 @@ export default function RewardsPage() {
                             </div>
                             <span className={`px-3 py-1 text-[10px] font-bold rounded-full flex items-center gap-1 ${
                               isCollected ? 'bg-[#E9FFEA] text-[#127C2F]' :
-                              isApproved ? 'bg-blue-50 text-blue-500' :
-                              'bg-yellow-50 text-yellow-500'
+                              isApproved ? 'bg-blue-50 text-blue-600' :
+                              'bg-yellow-50 text-yellow-600'
                             }`}>
-                              {claim.status} {isCollected && '✔'}
+                              {claim.status} {isCollected && <CheckCircle className="w-3 h-3" />}
                             </span>
                           </div>
                           
