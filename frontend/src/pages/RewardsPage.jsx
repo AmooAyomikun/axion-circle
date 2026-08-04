@@ -308,8 +308,8 @@ export default function RewardsPage() {
                   <div className="flex justify-between items-start mb-6">
                     <p className="text-gray-200 text-sm font-medium">Credit Balance</p>
                     <div className="bg-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm text-gray-800">
-                      <Trophy className="w-4 h-4 text-purple-600" />
-                      <span className="text-purple-700">Champion</span>
+                      <span className="text-[#127C2F]">{currentLevelInfo.icon}</span>
+                      <span className="text-[#127C2F] capitalize">{currentLevelInfo.name}</span>
                     </div>
                   </div>
 
@@ -320,7 +320,7 @@ export default function RewardsPage() {
 
                   <div className="flex flex-wrap items-center gap-3 mb-10">
                     <div className="bg-white text-orange-500 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5">
-                      <Flame className="w-3.5 h-3.5" fill="currentColor" /> {balance.streakCount || 7} days streak
+                      <Flame className="w-3.5 h-3.5" fill="currentColor" /> {balance.streakCount || 0} days streak
                     </div>
                     {balance.multiplier >= 1.0 && (
                       <div className="bg-white text-[#127C2F] px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5">
@@ -406,9 +406,6 @@ export default function RewardsPage() {
                   <h3 className="font-heading text-xl font-bold flex items-center gap-2 text-gray-800">
                     <Trophy className="w-5 h-5 text-gray-700" /> Community Leaderboard
                   </h3>
-                  <div className="bg-yellow-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm">
-                    <Hexagon className="w-3 h-3 fill-current" /> Legend
-                  </div>
                 </div>
 
                 {/* Podium */}
@@ -460,15 +457,15 @@ export default function RewardsPage() {
                 </div>
 
                 {/* List View */}
-                <div className="flex-1 space-y-2 pr-1">
-                  {leaderboard.slice(3, 6).map((user, idx) => {
+                <div className="flex-1 space-y-2 pr-2 max-h-[350px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+                  {leaderboard.slice(3).map((user, idx) => {
                     const rank = idx + 4;
                     const isMe = user.displayName === localStorage.getItem('user_name');
                     
                     return (
                       <div key={user.userId || idx} className={`flex items-center justify-between p-3 rounded-xl border shadow-sm transition-colors ${isMe ? 'bg-[#E9FFEA] border-[#ABEFC6]' : 'bg-gray-50 border-gray-100'}`}>
                         <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${isMe ? 'bg-[#127C2F] text-white' : 'bg-gray-200 text-gray-500'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 ${isMe ? 'bg-[#127C2F] text-white' : 'bg-gray-200 text-gray-500'}`}>
                             {rank}
                           </div>
                           <div>
@@ -491,6 +488,10 @@ export default function RewardsPage() {
                       </div>
                     );
                   })}
+                  
+                  {leaderboard.length <= 3 && (
+                    <p className="text-center text-gray-500 text-sm py-4">No more users on the leaderboard yet.</p>
+                  )}
                 </div>
               </div>
             </section>
