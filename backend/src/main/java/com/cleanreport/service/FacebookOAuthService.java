@@ -126,6 +126,7 @@ public class FacebookOAuthService {
                 .displayName(user.getDisplayName())
                 .role(user.getRole())
                 .creditBalance(user.getCreditBalance())
+                .avatarUrl(user.getAvatarUrl())
                 .build();
 
         return AuthResponse.builder()
