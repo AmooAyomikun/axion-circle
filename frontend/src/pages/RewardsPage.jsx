@@ -121,9 +121,9 @@ const MOCK_CLAIMS = [
 const PodiumCup = ({ rank }) => {
   const isFirst = rank === 1;
   const colors = {
-    1: { fill: '#FBBF24', stroke: '#D97706', badge: '#92400E' }, // Gold
-    2: { fill: '#E5E7EB', stroke: '#9CA3AF', badge: '#4B5563' }, // Silver
-    3: { fill: '#F97316', stroke: '#C2410C', badge: '#7C2D12' }  // Bronze
+    1: { fill: '#FBBF24', stroke: '#D97706', text: '#FFFFFF' }, // Gold
+    2: { fill: '#E5E7EB', stroke: '#9CA3AF', text: '#4B5563' }, // Silver
+    3: { fill: '#F97316', stroke: '#C2410C', text: '#FFFFFF' }  // Bronze
   };
   const c = colors[rank];
   const sizeClass = isFirst ? 'w-24 h-24' : 'w-16 h-16';
@@ -143,12 +143,11 @@ const PodiumCup = ({ rank }) => {
         {/* Detail lines on bowl */}
         <path d="M 30 25 L 30 50" fill="none" stroke={c.stroke} strokeWidth="4" strokeLinecap="round" opacity="0.4" />
         <path d="M 70 25 L 70 50" fill="none" stroke={c.stroke} strokeWidth="4" strokeLinecap="round" opacity="0.4" />
+        {/* Rank Number in center */}
+        <text x="50" y="45" fontFamily="Inter, sans-serif" fontWeight="900" fontSize="28" fill={c.text} textAnchor="middle" dominantBaseline="middle" className="drop-shadow-sm">
+          {rank}
+        </text>
       </svg>
-      {/* Badge */}
-      <div className={`absolute -bottom-2 bg-white border-2 rounded-full flex items-center justify-center font-bold ${isFirst ? 'w-8 h-8 text-sm' : 'w-6 h-6 text-[10px]'}`}
-           style={{ borderColor: c.fill, color: c.badge }}>
-        {rank}
-      </div>
     </div>
   );
 };
@@ -277,7 +276,7 @@ export default function RewardsPage() {
         <section className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <div className="text-xs text-gray-500 mb-2 flex items-center gap-2 font-medium">
-              <Link to="/dashboard" className="hover:text-primary">Dashboard</Link>
+              <Link to="/dashboard" className="hover:text-primary hover:underline">Dashboard</Link>
               <ChevronRight className="w-3.5 h-3.5" />
               <span className="text-primary">Rewards</span>
             </div>
@@ -286,7 +285,7 @@ export default function RewardsPage() {
           </div>
           <button 
             onClick={() => setShowHowItWorks(true)}
-            className="flex items-center justify-center gap-1.5 bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary/90 transition-colors text-sm w-full md:w-auto"
+            className="flex items-center justify-center gap-2 bg-[#127C2F] text-white px-5 py-2.5 rounded-lg font-bold hover:bg-[#0e6325] transition-colors text-sm w-full md:w-auto shadow-sm"
           >
             <Info className="w-4 h-4" /> See How it Works
           </button>
@@ -303,29 +302,30 @@ export default function RewardsPage() {
               
               <div className="flex flex-col gap-10">
                 {/* Credit Balance Card */}
-                <div className="bg-[#0A2518] rounded-3xl p-6 sm:p-8 text-white flex flex-col relative overflow-hidden shadow-xl h-fit">
+                <div className="bg-[#0A1F13] rounded-[2rem] p-6 sm:p-8 text-white flex flex-col relative overflow-hidden shadow-lg h-fit">
                 {/* Background decorative gradient */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
                 
                 <div className="relative z-10 flex flex-col h-full">
                   <div className="flex justify-between items-start mb-6">
-                    <p className="text-gray-300 text-sm font-medium">Credit Balance</p>
-                    <div className="bg-white text-gray-900 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm">
-                      <Trophy className="w-3.5 h-3.5 text-primary" /> {currentLevelInfo.name}
+                    <p className="text-gray-200 text-sm font-medium">Credit Balance</p>
+                    <div className="bg-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm">
+                      <span className="text-base leading-none">🏆</span> 
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">Champion</span>
                     </div>
                   </div>
 
                   <div className="flex items-baseline gap-2 mb-4">
-                    <h2 className="text-5xl sm:text-6xl font-heading font-black">{balance.balance}</h2>
-                    <span className="text-lg text-gray-300 font-medium">Credits</span>
+                    <h2 className="text-6xl sm:text-7xl font-heading font-bold tracking-tight">{balance.balance}</h2>
+                    <span className="text-xl text-gray-200 font-medium">Credits</span>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3 mb-10">
-                    <div className="bg-orange-500/20 text-orange-400 border border-orange-500/30 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5">
-                      <Flame className="w-3.5 h-3.5" fill="currentColor" /> {balance.streakCount || 7} days streak
+                    <div className="bg-white text-orange-500 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5">
+                      🔥 {balance.streakCount || 7} days streak
                     </div>
-                    {balance.multiplier > 1.0 && (
-                      <div className="bg-green-500/20 text-green-400 border border-green-500/30 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5">
+                    {balance.multiplier >= 1.0 && (
+                      <div className="bg-white text-[#127C2F] px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5">
                         <Zap className="w-3.5 h-3.5" fill="currentColor" /> {balance.multiplier}x earning boost
                       </div>
                     )}
@@ -346,7 +346,7 @@ export default function RewardsPage() {
                     {/* Progress Bar */}
                     <div className="w-full bg-black/40 h-2.5 rounded-full mb-4 overflow-hidden">
                       <div 
-                        className="h-full rounded-full bg-gradient-to-r from-green-500 via-emerald-400 to-cyan-400" 
+                        className="h-full rounded-full bg-gradient-to-r from-green-500 via-emerald-400 to-cyan-100" 
                         style={{ width: `${progressPercent}%` }}
                       ></div>
                     </div>
@@ -357,7 +357,7 @@ export default function RewardsPage() {
                         const isActive = level.name === currentLevelInfo.name;
                         return (
                           <div key={level.name} className={`flex items-center gap-1 ${isActive ? 'text-white' : 'text-gray-400 opacity-60'}`}>
-                            {isActive ? <CheckCircle className="w-3 h-3 text-green-400" /> : <span className={level.color}>{level.icon}</span>}
+                            <span className={isActive ? '' : level.color}>{level.icon}</span>
                             <span className="hidden sm:inline">{level.name}</span>
                           </div>
                         );
@@ -385,16 +385,16 @@ export default function RewardsPage() {
                   className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-2"
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
-                  <div className="w-full sm:w-[calc(50%-0.375rem)] snap-start rounded-xl p-4 bg-blue-50/80 border border-blue-100/50 flex-shrink-0 relative overflow-hidden shadow-sm">
-                    <h4 className="font-bold text-xs text-blue-900 mb-1.5">Levels Multiply Everything</h4>
-                    <p className="text-[10px] text-blue-800/80 leading-relaxed font-medium">Each level adds an earning boost. Guardian earns 1.2x, Champion 1.5x, Legend 2x on every credit you make.</p>
+                  <div className="w-full sm:w-[calc(50%-0.375rem)] snap-start rounded-xl p-4 bg-[#F5F3FF] border-l-4 border-[#8B5CF6] flex-shrink-0 relative overflow-hidden shadow-sm">
+                    <h4 className="font-bold text-xs text-gray-900 mb-1.5">Levels Multiply Everything</h4>
+                    <p className="text-[10px] text-gray-600 leading-relaxed font-medium">Each level adds an earning boost. Guardian earns 1.2x, Champion 1.5x, Legend 2x on every credit you make.</p>
                   </div>
-                  <div className="w-full sm:w-[calc(50%-0.375rem)] snap-start rounded-xl p-4 bg-yellow-50/80 border border-yellow-100/50 flex-shrink-0 relative overflow-hidden shadow-sm">
-                    <h4 className="font-bold text-xs text-yellow-900 mb-1.5">Report Daily to Keep Streaks</h4>
-                    <p className="text-[10px] text-yellow-800/80 leading-relaxed font-medium">A submitted report each day keeps your flame alive. Streaks of 7+ days pay a bonus of 15 credits.</p>
+                  <div className="w-full sm:w-[calc(50%-0.375rem)] snap-start rounded-xl p-4 bg-[#F0FDF4] border-l-4 border-[#127C2F] flex-shrink-0 relative overflow-hidden shadow-sm">
+                    <h4 className="font-bold text-xs text-gray-900 mb-1.5">Report Daily to Keep Streaks</h4>
+                    <p className="text-[10px] text-gray-600 leading-relaxed font-medium">A submitted report each day keeps your flame alive. Streaks of 7+ days pay a bonus of 15 credits.</p>
                   </div>
                   {/* Third Tip */}
-                  <div className="w-full sm:w-[calc(50%-0.375rem)] snap-start rounded-xl p-4 bg-purple-50/80 border border-purple-100/50 flex-shrink-0 relative overflow-hidden shadow-sm">
+                  <div className="w-full sm:w-[calc(50%-0.375rem)] snap-start rounded-xl p-4 bg-purple-50/80 border-l-4 border-purple-400 flex-shrink-0 relative overflow-hidden shadow-sm">
                     <h4 className="font-bold text-xs text-purple-900 mb-1.5">Resolution Bonus</h4>
                     <p className="text-[10px] text-purple-800/80 leading-relaxed font-medium">When your reported issue gets resolved, you earn a massive bonus based on the severity of the issue.</p>
                   </div>
@@ -405,10 +405,10 @@ export default function RewardsPage() {
             {/* Community Leaderboard Card */}
             <div className="bg-white border border-gray-200 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col h-full">
                 <div className="flex justify-between items-center mb-8">
-                  <h3 className="font-heading text-xl font-bold flex items-center gap-2">
+                  <h3 className="font-heading text-xl font-bold flex items-center gap-2 text-gray-800">
                     <Trophy className="w-5 h-5 text-gray-700" /> Community Leaderboard
                   </h3>
-                  <div className="bg-yellow-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm">
+                  <div className="bg-gradient-to-r from-orange-400 to-yellow-400 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm">
                     💎 Legend
                   </div>
                 </div>
@@ -421,9 +421,9 @@ export default function RewardsPage() {
                       <PodiumCup rank={2} />
                       <div className="text-center mb-2">
                         <p className="font-bold text-sm text-gray-900 truncate leading-tight">{leaderboard[1].displayName.split(' ')[0]}</p>
-                        <p className="text-[10px] font-bold text-green-600">2nd Position</p>
+                        <p className="text-[10px] font-bold text-[#127C2F]">2nd Position</p>
                       </div>
-                      <div className="bg-black text-white w-full rounded-xl py-3 px-1 text-center shadow-lg flex flex-col justify-center items-center h-20">
+                      <div className="bg-[#0f172a] text-white w-full rounded-[1.25rem] py-3 px-1 text-center shadow-lg flex flex-col justify-center items-center h-20">
                         <p className="font-bold text-lg leading-none mb-1">{leaderboard[1].creditScore ?? leaderboard[1].lifetimeCredits ?? 0}</p>
                         <p className="text-[10px] text-gray-400 leading-none">Credit Score</p>
                       </div>
@@ -436,11 +436,11 @@ export default function RewardsPage() {
                       <PodiumCup rank={1} />
                       <div className="text-center mb-2">
                         <p className="font-bold text-base text-gray-900 truncate leading-tight">{leaderboard[0].displayName.split(' ')[0]}</p>
-                        <p className="text-[10px] font-bold text-green-600">1st Position</p>
+                        <p className="text-[10px] font-bold text-[#127C2F]">1st Position</p>
                       </div>
-                      <div className="bg-yellow-500 text-white w-full rounded-xl py-4 px-1 text-center shadow-lg transform scale-105 flex flex-col justify-center items-center h-24">
+                      <div className="bg-gradient-to-br from-yellow-400 to-orange-500 text-white w-full rounded-[1.25rem] py-4 px-1 text-center shadow-lg transform scale-105 flex flex-col justify-center items-center h-24">
                         <p className="font-bold text-xl sm:text-2xl leading-none mb-1">{leaderboard[0].creditScore ?? leaderboard[0].lifetimeCredits ?? 0}</p>
-                        <p className="text-[10px] text-yellow-100 leading-none">Credit Score</p>
+                        <p className="text-[10px] text-orange-100 leading-none">Credit Score</p>
                       </div>
                     </div>
                   )}
@@ -451,9 +451,9 @@ export default function RewardsPage() {
                       <PodiumCup rank={3} />
                       <div className="text-center mb-2">
                         <p className="font-bold text-sm text-gray-900 truncate leading-tight">{leaderboard[2].displayName.split(' ')[0]}</p>
-                        <p className="text-[10px] font-bold text-green-600">3rd Position</p>
+                        <p className="text-[10px] font-bold text-[#127C2F]">3rd Position</p>
                       </div>
-                      <div className="bg-orange-500 text-white w-full rounded-xl py-3 px-1 text-center shadow-md flex flex-col justify-center items-center h-20">
+                      <div className="bg-[#f97316] text-white w-full rounded-[1.25rem] py-3 px-1 text-center shadow-md flex flex-col justify-center items-center h-20">
                         <p className="font-bold text-lg leading-none mb-1">{leaderboard[2].creditScore ?? leaderboard[2].lifetimeCredits ?? 0}</p>
                         <p className="text-[10px] text-orange-100 leading-none">Credit Score</p>
                       </div>
@@ -468,16 +468,16 @@ export default function RewardsPage() {
                     const isMe = user.displayName === localStorage.getItem('user_name');
                     
                     return (
-                      <div key={user.userId || idx} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100 shadow-sm">
+                      <div key={user.userId || idx} className={`flex items-center justify-between p-3 rounded-xl border shadow-sm transition-colors ${isMe ? 'bg-[#E9FFEA] border-[#ABEFC6]' : 'bg-gray-50 border-gray-100'}`}>
                         <div className="flex items-center gap-3">
-                          <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] ${isMe ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${isMe ? 'bg-[#127C2F] text-white' : 'bg-gray-200 text-gray-500'}`}>
                             {rank}
                           </div>
                           <div>
-                            <p className="font-bold text-gray-900 text-sm flex items-center gap-2">
+                            <p className={`font-bold text-sm flex items-center gap-2 ${isMe ? 'text-[#127C2F]' : 'text-gray-900'}`}>
                               {isMe ? 'You' : user.displayName}
                             </p>
-                            <p className="text-[10px] text-gray-400 font-medium">
+                            <p className={`text-[10px] font-medium ${isMe ? 'text-[#127C2F]/70' : 'text-gray-400'}`}>
                               {(() => {
                                 const top3Score = leaderboard[2] ? (leaderboard[2].creditScore ?? leaderboard[2].lifetimeCredits ?? 0) : 0;
                                 const userScore = user.creditScore ?? user.lifetimeCredits ?? 0;
@@ -487,7 +487,7 @@ export default function RewardsPage() {
                             </p>
                           </div>
                         </div>
-                        <div className={`font-bold text-sm ${isMe ? 'text-primary' : 'text-gray-900'}`}>
+                        <div className={`font-bold text-sm ${isMe ? 'text-[#127C2F]' : 'text-gray-900'}`}>
                           {user.creditScore ?? user.lifetimeCredits ?? 0}
                         </div>
                       </div>
@@ -505,8 +505,8 @@ export default function RewardsPage() {
                   <p className="text-sm text-gray-500">Credits only no currency, no physical pickup. Everything is delivered as a digital code.</p>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => scrollContainer(rewardsScrollRef, -1)} className="p-2 border border-gray-200 rounded-full hover:bg-gray-100 text-primary transition-colors"><ChevronLeft className="w-5 h-5" /></button>
-                  <button onClick={() => scrollContainer(rewardsScrollRef, 1)} className="p-2 border border-gray-200 rounded-full hover:bg-gray-100 text-primary transition-colors bg-primary text-white hover:text-white"><ChevronRight className="w-5 h-5" /></button>
+                  <button onClick={() => scrollContainer(rewardsScrollRef, -1)} className="w-8 h-8 flex items-center justify-center border border-[#127C2F] text-[#127C2F] rounded-full hover:bg-green-50 transition-colors"><ChevronLeft className="w-5 h-5" /></button>
+                  <button onClick={() => scrollContainer(rewardsScrollRef, 1)} className="w-8 h-8 flex items-center justify-center bg-[#127C2F] text-white rounded-full hover:bg-[#0e6325] transition-colors"><ChevronRight className="w-5 h-5" /></button>
                 </div>
               </div>
 
@@ -522,7 +522,7 @@ export default function RewardsPage() {
                 ) : (
                   rewards.map(reward => (
                     <div key={reward.id} className="min-w-[280px] sm:min-w-[320px] bg-white rounded-2xl border border-gray-200 overflow-hidden snap-start flex-shrink-0 shadow-sm flex flex-col">
-                      <div className="relative h-48 bg-gray-100">
+                      <div className="relative h-40 bg-gray-100">
                         {reward.imageUrl ? (
                           <img src={reward.imageUrl} alt={reward.name} className="w-full h-full object-cover" loading="lazy" />
                         ) : (
@@ -531,25 +531,25 @@ export default function RewardsPage() {
                           </div>
                         )}
                         {/* Tag */}
-                        <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1 rounded-full">
+                        <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-md text-white text-[10px] font-semibold px-3 py-1 rounded-full">
                           {reward.category || 'Reward'}
                         </div>
                       </div>
-                      <div className="p-5 flex flex-col flex-1">
-                        <h4 className="font-bold text-lg text-gray-900 mb-1">{reward.name}</h4>
-                        <p className="text-sm text-gray-500 mb-4 flex-1 line-clamp-2">{reward.description}</p>
+                      <div className="p-5 flex flex-col flex-1 bg-white">
+                        <h4 className="font-bold text-base text-gray-900 mb-1">{reward.name}</h4>
+                        <p className="text-xs text-gray-500 mb-4 flex-1 line-clamp-2">{reward.description}</p>
                         
                         <div className="flex items-center justify-between mt-auto mb-4">
-                          <span className="font-bold text-primary">{reward.creditsRequired} credits</span>
-                          <span className="text-sm text-gray-500">{reward.quantityAvailable} left</span>
+                          <span className="font-bold text-[#127C2F] text-sm">{reward.creditsRequired} credits</span>
+                          <span className="text-xs text-gray-500 font-medium">{reward.quantityAvailable} left</span>
                         </div>
                         
                         <button 
                           onClick={() => handleClaim(reward)}
                           disabled={isClaiming || balance.balance < reward.creditsRequired || reward.quantityAvailable <= 0}
-                          className={`w-full py-2 rounded-lg font-bold text-sm border-2 transition-colors ${
+                          className={`w-full py-2.5 rounded-lg font-bold text-sm border transition-colors ${
                             balance.balance >= reward.creditsRequired && reward.quantityAvailable > 0
-                              ? 'border-primary text-primary hover:bg-primary/5 bg-white'
+                              ? 'border-[#127C2F] text-[#127C2F] hover:bg-green-50 bg-white'
                               : 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed'
                           }`}
                         >
@@ -585,50 +585,53 @@ export default function RewardsPage() {
                               <h4 className="font-bold text-gray-900">{claim.reward?.name || 'Unknown Reward'}</h4>
                               <p className="text-xs text-gray-500">Claimed {timeAgo(claim.claimedAt)}</p>
                             </div>
-                            <span className={`px-3 py-1 text-xs font-bold rounded-full ${
-                              isCollected ? 'bg-blue-50 text-blue-600' :
-                              isApproved ? 'bg-green-50 text-green-600' :
-                              'bg-yellow-50 text-yellow-600'
+                            <span className={`px-3 py-1 text-[10px] font-bold rounded-full flex items-center gap-1 ${
+                              isCollected ? 'bg-[#E9FFEA] text-[#127C2F]' :
+                              isApproved ? 'bg-blue-50 text-blue-500' :
+                              'bg-yellow-50 text-yellow-500'
                             }`}>
-                              {claim.status}
+                              {claim.status} {isCollected && '✔'}
                             </span>
                           </div>
                           
                           {/* Progress Bar (3 stages) */}
-                          <div className="mt-3">
-                            <div className="flex gap-1.5 h-1.5 mb-1.5">
-                              <div className={`flex-1 rounded-full ${isPending || isApproved || isCollected ? (isCollected ? 'bg-blue-500' : isApproved ? 'bg-alert-success' : 'bg-orange-400') : 'bg-gray-200'}`}></div>
-                              <div className={`flex-1 rounded-full ${isApproved || isCollected ? (isCollected ? 'bg-blue-500' : 'bg-alert-success') : 'bg-gray-200'}`}></div>
-                              <div className={`flex-1 rounded-full ${isCollected ? 'bg-blue-500' : 'bg-gray-200'}`}></div>
+                          <div className="mt-4">
+                            <div className="flex gap-1.5 h-1.5 mb-2">
+                              {/* Segment 1 */}
+                              <div className={`flex-1 rounded-full ${isCollected ? 'bg-[#127C2F]' : isApproved ? 'bg-blue-500' : 'bg-yellow-400'}`}></div>
+                              {/* Segment 2 */}
+                              <div className={`flex-1 rounded-full ${isCollected ? 'bg-[#127C2F]' : isApproved ? 'bg-blue-500' : 'bg-gray-200'}`}></div>
+                              {/* Segment 3 */}
+                              <div className={`flex-1 rounded-full ${isCollected ? 'bg-[#127C2F]' : 'bg-gray-200'}`}></div>
                             </div>
                             <div className="flex justify-between text-[9px] font-bold text-gray-400 px-1 uppercase tracking-wider">
-                              <span className={isPending || isApproved || isCollected ? (isCollected ? 'text-blue-500' : isApproved ? 'text-alert-success' : 'text-orange-400') : ''}>Pending</span>
-                              <span className={isApproved || isCollected ? (isCollected ? 'text-blue-500' : 'text-alert-success') : ''}>Approved</span>
-                              <span className={isCollected ? 'text-blue-500' : ''}>Collected</span>
+                              <span className={isCollected ? 'text-[#127C2F]' : isApproved ? 'text-blue-500' : 'text-yellow-500'}>Pending</span>
+                              <span className={isCollected ? 'text-[#127C2F]' : isApproved ? 'text-blue-500' : ''}>Approved</span>
+                              <span className={isCollected ? 'text-[#127C2F]' : ''}>Collected</span>
                             </div>
                           </div>
 
                           {/* Action Area based on status */}
                           {claim.redemptionCode && (
-                            <div className="mt-1 bg-green-50 border border-green-200 rounded-lg p-2.5 flex justify-between items-center">
-                              <span className="font-mono text-xs font-bold text-green-700">{claim.redemptionCode}</span>
+                            <div className="mt-2 bg-[#F0FDF4] border border-green-100 rounded-lg p-3 flex justify-between items-center">
+                              <span className="font-mono text-xs font-bold text-[#166534]">{claim.redemptionCode}</span>
                               <button 
                                 onClick={() => copyToClipboard(claim.redemptionCode)}
                                 className="flex items-center gap-1 text-[10px] font-bold text-gray-500 hover:text-gray-700"
                               >
-                                <Copy className="w-3 h-3" /> copy
+                                <Copy className="w-3.5 h-3.5" /> copy
                               </button>
                             </div>
                           )}
                           
                           {!claim.redemptionCode && isApproved && (
-                            <button className="mt-1 w-full py-2 bg-alert-success text-white rounded-lg text-sm font-bold hover:bg-alert-success/90">
+                            <button className="mt-2 w-full py-2.5 bg-[#127C2F] text-white rounded-lg text-sm font-bold hover:bg-[#0e6325] transition-colors">
                               Mark as Claimed
                             </button>
                           )}
                           
                           {isPending && (
-                            <p className="text-[10px] text-gray-400 mt-1 italic">Waiting for partner approval — this usually takes a few moments.</p>
+                            <p className="text-[10px] text-gray-500 mt-2 italic font-medium">Waiting for partner approval — this usually takes a few moments.</p>
                           )}
                         </div>
                       );
@@ -662,10 +665,7 @@ export default function RewardsPage() {
                             <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-xs text-gray-400">{formatDate(tx.createdAt)}</p>
-                            <p className={`text-sm font-bold mt-0.5 ${tx.amount > 0 ? 'text-primary' : 'text-red-500'}`}>
-                              {tx.amount > 0 ? '+' : ''}{tx.amount}
-                            </p>
+                            <p className="text-[10px] font-medium text-gray-500">{formatDate(tx.createdAt)}</p>
                           </div>
                         </div>
                       );
