@@ -457,7 +457,7 @@ export default function RewardsPage() {
                 </div>
 
                 {/* List View */}
-                <div className="flex-1 space-y-2 pr-2 max-h-[350px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+                <div className="flex-1 space-y-2 pr-2 max-h-[210px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
                   {leaderboard.slice(3).map((user, idx) => {
                     const rank = idx + 4;
                     const isMe = user.displayName === localStorage.getItem('user_name');
@@ -493,6 +493,35 @@ export default function RewardsPage() {
                     <p className="text-center text-gray-500 text-sm py-4">No more users on the leaderboard yet.</p>
                   )}
                 </div>
+
+                {/* Fixed "You" Row if user is not in the fetched leaderboard */}
+                {!leaderboard.some(u => u.displayName === localStorage.getItem('user_name')) && (
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <div className="flex items-center justify-between p-3 rounded-xl border shadow-sm bg-[#E9FFEA] border-[#ABEFC6]">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 bg-[#127C2F] text-white">
+                          -
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm flex items-center gap-2 text-[#127C2F]">
+                            You
+                          </p>
+                          <p className="text-[10px] font-medium text-[#127C2F]/70">
+                            {(() => {
+                              const top3Score = leaderboard[2] ? (leaderboard[2].creditScore ?? leaderboard[2].lifetimeCredits ?? 0) : 0;
+                              const userScore = balance.balance ?? 0;
+                              const diff = top3Score - userScore;
+                              return diff > 0 ? `${diff} credits to break into the top 3` : 'Keep climbing!';
+                            })()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="font-bold text-sm text-[#127C2F]">
+                        {balance.balance ?? 0}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </section>
 
