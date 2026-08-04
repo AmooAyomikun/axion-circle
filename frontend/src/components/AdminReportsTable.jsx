@@ -485,7 +485,11 @@ export default function AdminReportsTable({ reports, pageData, filters, onFilter
                 <div className="flex items-start gap-2 pt-2">
                   <Info className="w-4 h-4 text-black-icon shrink-0 mt-0.5" />
                   <p className="text-xs text-paragraph leading-tight">
-                    Setting the status to <span className="font-semibold text-primary">{newStatusDisplay}</span> will automatically notify the citizen reporter and credit their account with 50 impact points.
+                    {newStatus === 'REJECTED' || newStatus === 'Rejected' ? (
+                      <>Setting the status to <span className="font-semibold text-alert-error">Rejected</span> will automatically notify the citizen reporter. No credits will be awarded.</>
+                    ) : (
+                      <>Setting the status to <span className="font-semibold text-primary">{newStatusDisplay}</span> will automatically notify the citizen reporter and credit their account with 50 impact points.</>
+                    )}
                   </p>
                 </div>
               </div>
