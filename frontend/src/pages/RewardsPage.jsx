@@ -463,9 +463,9 @@ export default function RewardsPage() {
                     const isMe = user.displayName === localStorage.getItem('user_name');
                     
                     return (
-                      <div key={user.userId || idx} className={`flex items-center justify-between p-3 rounded-xl border shadow-sm transition-colors ${isMe ? 'bg-[#E9FFEA] border-[#ABEFC6]' : 'bg-gray-50 border-gray-100'}`}>
+                      <div key={user.userId || idx} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-white shadow-sm transition-colors">
                         <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 ${isMe ? 'bg-[#127C2F] text-white' : 'bg-gray-200 text-gray-500'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-[10px] flex-shrink-0 ${isMe ? 'bg-[#127C2F] text-white' : 'bg-gray-200 text-gray-500'}`}>
                             {rank}
                           </div>
                           <div>
@@ -494,12 +494,11 @@ export default function RewardsPage() {
                   )}
                 </div>
 
-                {/* Fixed "You" Row if user is not in the fetched leaderboard */}
                 {!leaderboard.some(u => u.displayName === localStorage.getItem('user_name')) && (
                   <div className="mt-3 pt-3 border-t border-gray-100">
-                    <div className="flex items-center justify-between p-3 rounded-xl border shadow-sm bg-[#E9FFEA] border-[#ABEFC6]">
+                    <div className="flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-white shadow-sm">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 bg-[#127C2F] text-white">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-[10px] flex-shrink-0 bg-[#127C2F] text-white">
                           -
                         </div>
                         <div>

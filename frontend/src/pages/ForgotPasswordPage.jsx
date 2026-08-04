@@ -71,6 +71,13 @@ export default function ForgotPasswordPage() {
             </p>
             
             <button
+              onClick={() => navigate('/reset-password')}
+              className="w-full px-4 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 active:scale-[0.99] transition-all shadow-sm mb-3"
+            >
+              Enter Reset Token
+            </button>
+            
+            <button
               onClick={handleResend}
               disabled={isSubmitting}
               className="w-full px-4 py-3 bg-white border border-white-stroke text-black font-semibold rounded-lg hover:bg-white-bg active:scale-[0.99] transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
