@@ -13,11 +13,15 @@ import com.cleanreport.repository.ReportRepository;
 import com.cleanreport.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Service
@@ -55,11 +59,14 @@ public class CommentService {
         // Notify report owner (if commenter is not the owner)
         if (!report.getReporter().getId().equals(author.getId())) {
             String title = "New comment on " + report.getReferenceNumber();
-            String message = author.getDisplayName() + " commented: " + 
+            String message = author.getDisplayName() + " commented: " +
                     request.getContent().substring(0, Math.min(50, request.getContent().length())) +
                     (request.getContent().length() > 50 ? "..." : "");
             notificationService.createNotification(report.getReporter(), report, "COMMENT_ADDED", title, message);
         }
+
+        // Scan for @mentions and notify each tagged user
+        scanAndNotifyMentions(saved, author, report);
 
         return mapToResponse(saved);
     }
@@ -110,5 +117,44 @@ public class CommentService {
                 .isModerator(comment.getIsModerator())
                 .createdAt(comment.getCreatedAt())
                 .build();
+    }
+
+    /**
+     * Scans comment content for @username patterns and sends a TAG notification
+     * to each matched user. Matches against displayName (lowercased, spaces→_).
+     * Never notifies the author themselves.
+     */
+    private void scanAndNotifyMentions(Comment comment, User author, Report report) {
+        // Match @word or @word_word patterns (same format as UserSearchResponse.username)
+        Pattern pattern = Pattern.compile("@([A-Za-z0-9_]+)");
+        Matcher matcher = pattern.matcher(comment.getContent());
+
+        List<String> mentionedTerms = new ArrayList<>();
+        while (matcher.find()) {
+            mentionedTerms.add(matcher.group(1).toLowerCase());
+        }
+
+        if (mentionedTerms.isEmpty()) return;
+
+        for (String term : mentionedTerms) {
+            // Search users whose displayName slug matches the @mention
+            List<User> matches = userRepository.searchByDisplayName(
+                    term.replace("_", " "), PageRequest.of(0, 5));
+
+            for (User tagged : matches) {
+                // Don't notify the author tagging themselves
+                if (tagged.getId().equals(author.getId())) continue;
+
+                String title = author.getDisplayName() + " mentioned you";
+                String message = author.getDisplayName() + " tagged you in a comment on "
+                        + report.getReferenceNumber() + ": \""
+                        + comment.getContent().substring(0, Math.min(60, comment.getContent().length()))
+                        + (comment.getContent().length() > 60 ? "..." : "") + "\"";
+
+                notificationService.createNotification(tagged, report, "TAG", title, message);
+                log.info("Tag notification sent to {} from mention @{} in comment {}",
+                        tagged.getEmail(), term, comment.getId());
+            }
+        }
     }
 }
