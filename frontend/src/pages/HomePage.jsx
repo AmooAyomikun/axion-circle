@@ -164,7 +164,14 @@ export default function HomePage() {
         
         let maxCount = 0;
         for (const [area, count] of Object.entries(areaCounts)) {
-          if (count > maxCount && !area.toLowerCase().includes('location') && area !== 'Unknown') {
+          const areaLower = area.toLowerCase();
+          if (
+            count > maxCount && 
+            !areaLower.includes('location') && 
+            area !== 'Unknown' &&
+            !areaLower.startsWith('lat:') &&
+            !areaLower.startsWith('lat ')
+          ) {
             maxCount = count;
             topArea = area;
           }
