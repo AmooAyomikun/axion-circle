@@ -97,6 +97,8 @@ export default function HomePage() {
     topActiveArea: 'Loading...',
     resolutionRate: 0
   });
+  const [areaStatsList, setAreaStatsList] = useState([]);
+  const [areaStatsLoading, setAreaStatsLoading] = useState(true);
 
   const fetchReports = async () => {
     try {
@@ -128,6 +130,15 @@ export default function HomePage() {
         }
       } catch (err) {
         // user not logged in or endpoint failed
+      }
+
+      try {
+        const areaStatsRes = await api.get('/areas/stats');
+        setAreaStatsList(areaStatsRes.data?.data || areaStatsRes.data || []);
+      } catch (err) {
+        // endpoint might not be ready or failed
+      } finally {
+        setAreaStatsLoading(false);
       }
 
       let apiReports = [];
@@ -611,6 +622,68 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Area Statistics Cards */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-heading font-bold text-lg sm:text-xl text-black flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-primary" /> Community Areas
+              </h2>
+            </div>
+            
+            {areaStatsLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : areaStatsList.length === 0 ? (
+              <div className="bg-white border border-white-stroke rounded-2xl p-8 text-center shadow-sm">
+                <p className="text-gray-500 text-sm">No area statistics available yet.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {areaStatsList.map((area, idx) => {
+                  const total = area.totalReports || 0;
+                  const resolved = area.resolvedReports || 0;
+                  const percent = total > 0 ? Math.round((resolved / total) * 100) : 0;
+                  
+                  return (
+                    <div key={idx} className="bg-white border border-white-stroke rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+                      <div className="flex justify-between items-start mb-4">
+                        <h3 className="font-bold text-gray-900 truncate pr-2">{area.areaName || 'Unknown Area'}</h3>
+                        <span className="bg-[#127C2F]/10 text-[#127C2F] text-[10px] font-bold px-2 py-1 rounded-full whitespace-nowrap">
+                          {percent}% Resolved
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between items-end mb-2 mt-auto">
+                        <div className="flex flex-col">
+                          <span className="text-2xl font-bold font-heading text-gray-900 leading-none">{total}</span>
+                          <span className="text-[10px] text-gray-500 font-medium">Total Reports</span>
+                        </div>
+                        <div className="text-right flex flex-col">
+                          <span className="text-sm font-bold text-[#127C2F] leading-none">{resolved}</span>
+                          <span className="text-[10px] text-gray-500 font-medium">Resolved</span>
+                        </div>
+                      </div>
+                      
+                      <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-[#127C2F] rounded-full transition-all duration-500" 
+                          style={{ width: `${percent}%` }}
+                        ></div>
+                      </div>
+                      
+                      {area.pendingReports > 0 && (
+                        <p className="text-[10px] text-orange-500 mt-3 font-medium flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" /> {area.pendingReports} pending resolution
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </main>
       </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Gift, Coins, Info, Trophy, ChevronLeft, ChevronRight, Copy, CheckCircle, Ticket, ArrowRight, X, Flame, Zap, Shield, Hexagon, Circle, User } from 'lucide-react';
+import { Gift, Coins, Info, Trophy, ChevronLeft, ChevronRight, Copy, CheckCircle, Ticket, ArrowRight, X, Flame, Zap, Shield, Hexagon, Circle, User, Crown } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AppNavbar from '../components/AppNavbar';
 import Footer from '../components/Footer';
@@ -32,34 +32,17 @@ function formatDate(dateInput) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-const TIPS = [
-  {
-    id: 1,
-    title: 'Levels Multiply Everything',
-    description: 'Each level adds an earning boost. Guardian earns 1.2x, Champion 1.5x, Legend 2x on every credit you make.',
-    bgColor: 'bg-blue-50 text-blue-900 border-l-4 border-blue-400',
-  },
-  {
-    id: 2,
-    title: 'Report Daily to Keep Streaks',
-    description: 'A submitted report each day keeps your flame alive. Streaks of 7+ days pay a bonus of 15 credits.',
-    bgColor: 'bg-yellow-50 text-yellow-900 border-l-4 border-yellow-400',
-  },
-  {
-    id: 3,
-    title: 'Resolution Bonus',
-    description: 'When your reported issue gets resolved, you earn a massive bonus based on the severity of the issue.',
-    bgColor: 'bg-purple-50 text-purple-900 border-l-4 border-purple-400',
-  }
+const LEVELS = [
+  { name: 'Observer', icon: <Circle className="w-4 h-4" />, threshold: 0, color: 'text-gray-500', bg: 'bg-gray-100', text: 'text-gray-600' },
+  { name: 'Reporter', icon: <Shield className="w-4 h-4" />, threshold: 50, color: 'text-blue-500', bg: 'bg-blue-100', text: 'text-blue-600' },
+  { name: 'Guardian', icon: <Hexagon className="w-4 h-4" />, threshold: 200, color: 'text-green-500', bg: 'bg-green-100', text: 'text-green-600' },
+  { name: 'Champion', icon: <Trophy className="w-4 h-4" />, threshold: 500, color: 'text-purple-500', bg: 'bg-purple-100', text: 'text-purple-600' },
+  { name: 'Legend', icon: <Crown className="w-4 h-4" />, threshold: 1000, color: 'text-yellow-500', bg: 'bg-yellow-100', text: 'text-yellow-700' }
 ];
 
-const LEVELS = [
-  { name: 'Observer', icon: <Circle className="w-4 h-4" />, threshold: 0, color: 'text-gray-400' },
-  { name: 'Reporter', icon: <Flame className="w-4 h-4" />, threshold: 50, color: 'text-orange-500' },
-  { name: 'Guardian', icon: <Shield className="w-4 h-4" />, threshold: 200, color: 'text-green-500' },
-  { name: 'Champion', icon: <Trophy className="w-4 h-4" />, threshold: 500, color: 'text-yellow-500' },
-  { name: 'Legend', icon: <Hexagon className="w-4 h-4" />, threshold: 1000, color: 'text-blue-500' }
-];
+const getLevelInfo = (score) => {
+  return [...LEVELS].reverse().find(l => score >= l.threshold) || LEVELS[0];
+};
 
 const MOCK_REWARDS = [
   {
@@ -163,6 +146,37 @@ export default function RewardsPage() {
   const [transactions, setTransactions] = useState([]);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
+
+  // Get current user ID for correct "You" matching
+  let currentUserId = null;
+  let currentUserDisplayName = localStorage.getItem('user_name');
+  try {
+    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+    if (userStr) {
+      const parsed = JSON.parse(userStr);
+      currentUserId = parsed.id || parsed._id;
+    }
+  } catch (e) {}
+
+  const checkIsMe = (user) => {
+    if (currentUserId && user.userId) {
+      return String(user.userId) === String(currentUserId);
+    }
+    
+    // Fallback: If userId is missing, match by name. 
+    // If there are duplicate names, break the tie using their actual credit balance!
+    if (user.displayName === currentUserDisplayName) {
+      const userScore = user.creditScore ?? user.lifetimeCredits ?? 0;
+      const localScore = balance.balance ?? 0;
+      
+      if (userScore === localScore) return true;
+      
+      // If only one user has this name on the board, it's safe to assume it's them
+      const nameMatches = leaderboard.filter(u => u.displayName === currentUserDisplayName);
+      if (nameMatches.length === 1) return true;
+    }
+    return false;
+  };
 
   // Carousels
   const tipsScrollRef = useRef(null);
@@ -383,18 +397,18 @@ export default function RewardsPage() {
                   className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-2"
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
-                  <div className="w-full sm:w-[calc(50%-0.375rem)] snap-start rounded-xl p-4 bg-[#F5F3FF] border-l-4 border-[#8B5CF6] flex-shrink-0 relative overflow-hidden shadow-sm">
-                    <h4 className="font-bold text-xs text-gray-900 mb-1.5">Levels Multiply Everything</h4>
-                    <p className="text-[10px] text-gray-600 leading-relaxed font-medium">Each level adds an earning boost. Guardian earns 1.2x, Champion 1.5x, Legend 2x on every credit you make.</p>
+                  <div className="w-full sm:w-[calc(50%-0.375rem)] snap-start rounded-xl p-4 bg-blue-50 border-l-4 border-blue-400 flex-shrink-0 relative overflow-hidden shadow-sm">
+                    <h4 className="font-bold text-xs text-blue-900 mb-1.5">Levels Multiply Everything</h4>
+                    <p className="text-[10px] text-blue-800/80 leading-relaxed font-medium">Each level adds an earning boost. Guardian earns 1.2x, Champion 1.5x, Legend 2x on every credit you make.</p>
                   </div>
-                  <div className="w-full sm:w-[calc(50%-0.375rem)] snap-start rounded-xl p-4 bg-[#F0FDF4] border-l-4 border-[#127C2F] flex-shrink-0 relative overflow-hidden shadow-sm">
-                    <h4 className="font-bold text-xs text-gray-900 mb-1.5">Report Daily to Keep Streaks</h4>
-                    <p className="text-[10px] text-gray-600 leading-relaxed font-medium">A submitted report each day keeps your flame alive. Streaks of 7+ days pay a bonus of 15 credits.</p>
+                  <div className="w-full sm:w-[calc(50%-0.375rem)] snap-start rounded-xl p-4 bg-green-50 border-l-4 border-[#127C2F] flex-shrink-0 relative overflow-hidden shadow-sm">
+                    <h4 className="font-bold text-xs text-green-900 mb-1.5">Report Daily to Keep Streaks</h4>
+                    <p className="text-[10px] text-green-800/80 leading-relaxed font-medium">A submitted report each day keeps your flame alive. Streaks of 7+ days pay a bonus of 15 credits.</p>
                   </div>
                   {/* Third Tip */}
-                  <div className="w-full sm:w-[calc(50%-0.375rem)] snap-start rounded-xl p-4 bg-purple-50/80 border-l-4 border-purple-400 flex-shrink-0 relative overflow-hidden shadow-sm">
-                    <h4 className="font-bold text-xs text-purple-900 mb-1.5">Resolution Bonus</h4>
-                    <p className="text-[10px] text-purple-800/80 leading-relaxed font-medium">When your reported issue gets resolved, you earn a massive bonus based on the severity of the issue.</p>
+                  <div className="w-full sm:w-[calc(50%-0.375rem)] snap-start rounded-xl p-4 bg-orange-50 border-l-4 border-orange-400 flex-shrink-0 relative overflow-hidden shadow-sm">
+                    <h4 className="font-bold text-xs text-orange-900 mb-1.5">Resolution Bonus</h4>
+                    <p className="text-[10px] text-orange-800/80 leading-relaxed font-medium">When your reported issue gets resolved, you earn a massive bonus based on the severity of the issue.</p>
                   </div>
                 </div>
               </section>
@@ -415,7 +429,9 @@ export default function RewardsPage() {
                     <div className="flex flex-col items-center flex-1">
                       <PodiumCup rank={2} />
                       <div className="text-center mb-2">
-                        <p className="font-bold text-sm text-gray-900 truncate leading-tight">{leaderboard[1].displayName.split(' ')[0]}</p>
+                        <p className="font-bold text-sm text-gray-900 truncate leading-tight">
+                          {checkIsMe(leaderboard[1]) ? 'You' : leaderboard[1].displayName.split(' ')[0]}
+                        </p>
                         <p className="text-[10px] font-bold text-[#127C2F]">2nd Position</p>
                       </div>
                       <div className="bg-[#0f172a] text-white w-full rounded-[1.25rem] py-3 px-1 text-center shadow-lg flex flex-col justify-center items-center h-20">
@@ -430,10 +446,15 @@ export default function RewardsPage() {
                     <div className="flex flex-col items-center flex-1 z-10 -mt-6">
                       <PodiumCup rank={1} />
                       <div className="text-center mb-2">
-                        <p className="font-bold text-base text-gray-900 truncate leading-tight">{leaderboard[0].displayName.split(' ')[0]}</p>
+                        <p className="font-bold text-base text-gray-900 truncate leading-tight">
+                          {checkIsMe(leaderboard[0]) ? 'You' : leaderboard[0].displayName.split(' ')[0]}
+                        </p>
                         <p className="text-[10px] font-bold text-[#127C2F]">1st Position</p>
                       </div>
-                      <div className="bg-yellow-500 text-white w-full rounded-[1.25rem] py-4 px-1 text-center shadow-lg transform scale-105 flex flex-col justify-center items-center h-24">
+                      <div className="bg-yellow-500 text-white w-full rounded-[1.25rem] py-4 px-1 text-center shadow-lg transform scale-105 flex flex-col justify-center items-center h-24 relative">
+                        <div className="absolute -top-3 right-[-10px] bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center shadow-sm">
+                          TOP CONTRIBUTOR
+                        </div>
                         <p className="font-bold text-xl sm:text-2xl leading-none mb-1">{leaderboard[0].creditScore ?? leaderboard[0].lifetimeCredits ?? 0}</p>
                         <p className="text-[10px] text-yellow-100 leading-none">Credit Score</p>
                       </div>
@@ -445,7 +466,9 @@ export default function RewardsPage() {
                     <div className="flex flex-col items-center flex-1">
                       <PodiumCup rank={3} />
                       <div className="text-center mb-2">
-                        <p className="font-bold text-sm text-gray-900 truncate leading-tight">{leaderboard[2].displayName.split(' ')[0]}</p>
+                        <p className="font-bold text-sm text-gray-900 truncate leading-tight">
+                          {checkIsMe(leaderboard[2]) ? 'You' : leaderboard[2].displayName.split(' ')[0]}
+                        </p>
                         <p className="text-[10px] font-bold text-[#127C2F]">3rd Position</p>
                       </div>
                       <div className="bg-[#f97316] text-white w-full rounded-[1.25rem] py-3 px-1 text-center shadow-md flex flex-col justify-center items-center h-20">
@@ -457,33 +480,33 @@ export default function RewardsPage() {
                 </div>
 
                 {/* List View */}
-                <div className="flex-1 space-y-2 pr-2 max-h-[210px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+                <div className="flex-1 space-y-2 pr-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent" style={{ maxHeight: '205px' }}>
                   {leaderboard.slice(3).map((user, idx) => {
                     const rank = idx + 4;
-                    const isMe = user.displayName === localStorage.getItem('user_name');
-                    
+                    const isMe = checkIsMe(user);
+                    const userScore = user.creditScore ?? user.lifetimeCredits ?? 0;
+
                     return (
-                      <div key={user.userId || idx} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-white shadow-sm transition-colors">
+                      <div key={user.userId || idx} className={`flex items-center justify-between p-3 rounded-xl border transition-colors ${isMe ? 'border-[#127C2F]/40 bg-green-50/40' : 'border-gray-100 bg-white'}`}>
                         <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-[10px] flex-shrink-0 ${isMe ? 'bg-[#127C2F] text-white' : 'bg-gray-200 text-gray-500'}`}>
-                            {rank}
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${isMe ? 'bg-[#127C2F]/10 text-[#127C2F]' : 'bg-gray-100 text-gray-500'}`}>
+                            #{rank}
                           </div>
                           <div>
-                            <p className={`font-bold text-sm flex items-center gap-2 ${isMe ? 'text-[#127C2F]' : 'text-gray-900'}`}>
+                            <p className={`font-bold text-sm ${isMe ? 'text-[#127C2F]' : 'text-gray-900'}`}>
                               {isMe ? 'You' : user.displayName}
                             </p>
                             <p className={`text-[10px] font-medium ${isMe ? 'text-[#127C2F]/70' : 'text-gray-400'}`}>
                               {(() => {
                                 const top3Score = leaderboard[2] ? (leaderboard[2].creditScore ?? leaderboard[2].lifetimeCredits ?? 0) : 0;
-                                const userScore = user.creditScore ?? user.lifetimeCredits ?? 0;
                                 const diff = top3Score - userScore;
                                 return diff > 0 ? `${diff} credits to break into the top 3` : 'Keep climbing!';
                               })()}
                             </p>
                           </div>
                         </div>
-                        <div className={`font-bold text-sm ${isMe ? 'text-[#127C2F]' : 'text-gray-900'}`}>
-                          {user.creditScore ?? user.lifetimeCredits ?? 0}
+                        <div className={`font-bold text-base ${isMe ? 'text-[#127C2F]' : 'text-gray-900'}`}>
+                          {userScore}
                         </div>
                       </div>
                     );
@@ -494,30 +517,30 @@ export default function RewardsPage() {
                   )}
                 </div>
 
-                {!leaderboard.some(u => u.displayName === localStorage.getItem('user_name')) && (
+                {!leaderboard.some(u => checkIsMe(u)) && (
                   <div className="mt-3 pt-3 border-t border-gray-100">
-                    <div className="flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-white shadow-sm">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-[10px] flex-shrink-0 bg-[#127C2F] text-white">
-                          -
+                    <div className="flex items-center justify-between p-3 rounded-xl border border-[#127C2F]/30 bg-green-50/30 shadow-sm">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 bg-[#127C2F]/10 text-[#127C2F]">
+                            -
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm text-[#127C2F]">
+                              You
+                            </p>
+                            <p className="text-[10px] font-medium text-[#127C2F]/70">
+                              {(() => {
+                                const top3Score = leaderboard[2] ? (leaderboard[2].creditScore ?? leaderboard[2].lifetimeCredits ?? 0) : 0;
+                                const userScore = balance.balance ?? 0;
+                                const diff = top3Score - userScore;
+                                return diff > 0 ? `${diff} credits to break into the top 3` : 'Keep climbing!';
+                              })()}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-bold text-sm flex items-center gap-2 text-[#127C2F]">
-                            You
-                          </p>
-                          <p className="text-[10px] font-medium text-[#127C2F]/70">
-                            {(() => {
-                              const top3Score = leaderboard[2] ? (leaderboard[2].creditScore ?? leaderboard[2].lifetimeCredits ?? 0) : 0;
-                              const userScore = balance.balance ?? 0;
-                              const diff = top3Score - userScore;
-                              return diff > 0 ? `${diff} credits to break into the top 3` : 'Keep climbing!';
-                            })()}
-                          </p>
+                        <div className="font-bold text-base text-[#127C2F]">
+                          {balance.balance ?? 0}
                         </div>
-                      </div>
-                      <div className="font-bold text-sm text-[#127C2F]">
-                        {balance.balance ?? 0}
-                      </div>
                     </div>
                   </div>
                 )}
@@ -719,11 +742,10 @@ export default function RewardsPage() {
             </button>
             <h3 className="text-2xl font-heading font-bold mb-4">How it Works</h3>
             <div className="space-y-4 text-gray-600 text-sm">
-              <p><strong>1. Report Issues:</strong> Submit valid environmental reports (like blocked drains or illegal dumping).</p>
-              <p><strong>2. Earn Credits:</strong> You receive base credits for every approved report. Bonus credits apply if your report is resolved by authorities.</p>
-              <p><strong>3. Keep Streaks Alive:</strong> Reporting consecutive days multiplies your earning potential via streak bonuses.</p>
-              <p><strong>4. Level Up:</strong> As your lifetime credits grow, your rank increases (Observer → Legend), granting permanent earning multipliers.</p>
-              <p><strong>5. Claim Rewards:</strong> Exchange your spendable balance for digital rewards from our partners!</p>
+              <p><strong>1. Report Issues:</strong> Submit valid environmental reports (+2 credits). Get bonus credits when verified (+5) and resolved (+10).</p>
+              <p><strong>2. Streaks:</strong> A submitted report each day keeps your flame alive. 7-day streak grants +3 bonus, 30-day grants +15 bonus.</p>
+              <p><strong>3. Level Up:</strong> As your lifetime credits grow, your rank increases (Observer → Legend), granting permanent earning multipliers (up to 2x!).</p>
+              <p><strong>4. Claim Rewards:</strong> Exchange your spendable balance for digital rewards from our partners!</p>
             </div>
             <button 
               onClick={() => setShowHowItWorks(false)}
