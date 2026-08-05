@@ -360,6 +360,7 @@ export default function AdminReportDetailPage() {
                     width="600"
                     height="400"
                     className="w-full h-[300px] sm:h-[400px] object-cover rounded-xl"
+                    onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }}
                   />
                 </div>
               </div>

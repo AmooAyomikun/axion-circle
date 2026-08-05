@@ -459,9 +459,9 @@ export default function HomePage() {
                     <p className="text-paragraph font-medium">Loading map module...</p>
                   </div>
                 }>
-                  <div className="bg-white border border-white-stroke rounded-2xl shadow-sm flex flex-col overflow-hidden relative">
+                  <div className="bg-white border border-white-stroke rounded-2xl shadow-sm flex flex-col overflow-hidden relative h-[450px]">
                     {reports.length === 0 ? (
-                      <div className="h-[450px] w-full flex flex-col items-center justify-center bg-white z-[300] px-4 text-center">
+                      <div className="h-full w-full flex flex-col items-center justify-center bg-white z-[300] px-4 text-center">
                         <div className="w-16 h-16 bg-white border border-white-stroke rounded-2xl flex items-center justify-center mb-6 shadow-sm">
                           <FileEdit className="w-8 h-8 text-black" />
                         </div>
@@ -611,7 +611,9 @@ export default function HomePage() {
                             <span className={`${config.bg} ${config.text} border ${config.border} px-2.5 py-0.5 rounded-full text-[11px] font-semibold`}>
                               {config.label}
                             </span>
-                            <span className="text-[11px] text-black-placeholder">{timeAgo(report.createdAt || report.date)}</span>
+                            <span className="text-[11px] text-black-placeholder">
+                              {new Date(report.createdAt || report.date).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                            </span>
                           </div>
                           <h3 className="text-xs sm:text-sm font-bold text-black">{report.title || report.category || 'Sanitation Issue'}</h3>
                           <div className="flex items-center gap-1 text-[11px] text-black-icon mt-0.5">

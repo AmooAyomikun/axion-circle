@@ -6,7 +6,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 're
 import MarkerClusterGroup from '@changey/react-leaflet-markercluster';
 import L from 'leaflet';
 import { MapPinned, List, RefreshCw, AlertCircle, MapPinOff, X, MapPin } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import MapErrorBoundary from './MapErrorBoundary';
 import ReportListView from './ReportListView';
 import fallbackImage from '../assets/fallback-image.svg';
@@ -98,6 +98,8 @@ const MapCenterTracker = ({ onCityChange }) => {
 };
 
 export default function RegionalActivityMap({ reports, mapStatus, onRetry }) {
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith('/admin');
   const [activeFilter, setActiveFilter] = useState('All');
   const [viewMode, setViewMode] = useState('map'); // 'map' | 'list'
   const [currentCity, setCurrentCity] = useState('Lagos');
@@ -128,7 +130,7 @@ export default function RegionalActivityMap({ reports, mapStatus, onRetry }) {
   });
 
   return (
-    <div className="bg-white border border-white-stroke rounded-2xl shadow-sm flex flex-col overflow-hidden h-full">
+    <div className="bg-white border border-white-stroke rounded-2xl shadow-sm flex flex-col overflow-hidden h-[450px]">
       {/* Header */}
       <div className="p-4 sm:p-5 border-b border-white-stroke flex items-center justify-between bg-white z-10 relative">
         <h2 className="font-heading font-bold text-base sm:text-lg text-black">
@@ -195,7 +197,7 @@ export default function RegionalActivityMap({ reports, mapStatus, onRetry }) {
       </div>
 
       {/* Map Area (Edge to Edge) */}
-      <div className="w-full flex-1 min-h-[350px] bg-[#f0ede5] relative overflow-hidden bg-cover bg-center z-0 block">
+      <div className="w-full flex-1 min-h-0 bg-[#f0ede5] relative overflow-hidden bg-cover bg-center z-0 block">
         {mapStatus === 'loading' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm z-20">
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-2"></div>
@@ -289,7 +291,7 @@ export default function RegionalActivityMap({ reports, mapStatus, onRetry }) {
                           </p>
                           
                           <Link 
-                            to={`/reports/${report.id}`}
+                            to={isAdmin ? `/admin/reports/${report.id}` : `/reports/${report.id}`}
                             className="block w-full py-2 bg-primary/10 text-primary text-[10px] font-bold text-center rounded-lg hover:bg-primary/20 transition-colors"
                             aria-label={`View details for ${report.title || 'report'} - Ref ${report.referenceId || report.id}`}
                           >

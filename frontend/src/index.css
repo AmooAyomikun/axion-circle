@@ -143,3 +143,21 @@
     contain-intrinsic-size: 0 500px;
   }
 }
+
+@layer components {
+  /* Leaflet custom popup styling overrides */
+  .custom-popup .leaflet-popup-content-wrapper {
+    @apply p-0 overflow-hidden shadow-xl border border-white-stroke;
+  }
+  .custom-popup .leaflet-popup-content {
+    @apply m-0 w-full;
+  }
+  .custom-popup .leaflet-popup-tip {
+    @apply shadow-xl border border-white-stroke border-t-0 border-l-0;
+  }
+  /* Ensure popup close button is positioned nicely */
+  .custom-popup .leaflet-popup-close-button {
+    @apply text-white hover:text-white bg-black/30 hover:bg-black/50 rounded-full w-6 h-6 flex items-center justify-center top-2 right-2;
+    z-index: 20;
+  }
+}

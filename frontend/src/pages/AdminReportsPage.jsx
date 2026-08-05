@@ -34,7 +34,7 @@ export default function AdminReportsPage() {
   
   const [filters, setFilters] = useState({
     page: 0,
-    size: 5,
+    size: 50,
     status: '',
     category: '',
     sortBy: 'createdAt',
@@ -289,9 +289,9 @@ export default function AdminReportsPage() {
                   <h2 className="font-heading font-bold text-base sm:text-lg text-black">
                     Recent Report
                   </h2>
-                  <button className="text-xs sm:text-sm font-semibold text-paragraph hover:underline">
+                  <Link to="/admin/reports" className="text-xs sm:text-sm font-semibold text-paragraph hover:underline">
                     view all
-                  </button>
+                  </Link>
                 </div>
                 {reports.length === 0 ? (
                   <div className="flex-1 flex flex-col items-center justify-center py-12 text-center px-4">
@@ -327,8 +327,8 @@ export default function AdminReportsPage() {
                               <div className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${bg} ${text}`}>
                                 {label}
                               </div>
-                              <span className="text-[10px] text-paragraph font-medium">
-                                {new Date(report.createdAt || report.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                              <span className="text-[10px] text-paragraph font-medium whitespace-nowrap ml-2">
+                                {new Date(report.createdAt || report.date).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
                               </span>
                             </div>
                             <span className="font-extrabold text-black text-[13px] leading-tight group-hover:text-primary transition-colors capitalize">
