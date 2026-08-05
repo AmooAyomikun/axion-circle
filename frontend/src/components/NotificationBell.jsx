@@ -119,6 +119,8 @@ export default function NotificationBell() {
         return <MessageCircle className="w-5 h-5 text-primary" />;
       case 'status_change':
         return <CheckCircle className="w-5 h-5 text-alert-success" />;
+      case 'report_submitted':
+        return <CheckCircle className="w-5 h-5 text-[#127C2F]" />;
       case 'alert':
         return <AlertCircle className="w-5 h-5 text-alert-error" />;
       default:

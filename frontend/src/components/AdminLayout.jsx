@@ -13,7 +13,8 @@ import {
   Menu,
   X,
   Calendar,
-  BarChart2
+  BarChart2,
+  Users
 } from 'lucide-react';
 import NavbarLogo from './NavbarLogo';
 import NotificationBell from './NotificationBell';
@@ -133,6 +134,7 @@ export default function AdminLayout({ children }) {
     { name: 'Report', icon: FileText, path: '/admin/reports' },
     { name: 'Reward Management', icon: Gift, path: '/rewards' },
     { name: 'Analytics', icon: BarChart2, path: '/admin/analytics' },
+    { name: 'Users', icon: Users, path: '/admin/users' },
     { name: 'Profile', icon: User, path: '/profile' }
   ];
 
@@ -283,7 +285,7 @@ export default function AdminLayout({ children }) {
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 lg:ml-64 flex flex-col min-h-screen pt-16 lg:pt-0 overflow-x-hidden">
+      <main className="flex-1 lg:ml-64 flex flex-col min-w-0 min-h-screen pt-16 lg:pt-0 overflow-x-hidden">
         {/* Desktop Top Nav */}
         <div className="hidden lg:flex items-center justify-between px-8 py-4 bg-white sticky top-0 z-40 border-b border-white-stroke">
           <div className="flex items-center gap-4">
