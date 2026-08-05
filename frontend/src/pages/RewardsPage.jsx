@@ -6,6 +6,7 @@ import AppNavbar from '../components/AppNavbar';
 import Footer from '../components/Footer';
 import api from '../services/api';
 import SEO from '../components/SEO';
+import RewardDetailModal from '../components/RewardDetailModal';
 
 // Custom Relative Time Formatter
 function timeAgo(dateInput) {
@@ -146,6 +147,7 @@ export default function RewardsPage() {
   const [transactions, setTransactions] = useState([]);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [selectedReward, setSelectedReward] = useState(null);
 
   // Get current user ID for correct "You" matching
   let currentUserId = null;
@@ -595,15 +597,18 @@ export default function RewardsPage() {
                         </div>
                         
                         <button 
-                          onClick={() => handleClaim(reward)}
-                          disabled={isClaiming || balance.balance < reward.creditsRequired || reward.quantityAvailable <= 0}
+                          onClick={() => setSelectedReward(reward)}
                           className={`w-full py-2.5 rounded-lg font-bold text-sm border transition-colors ${
-                            balance.balance >= reward.creditsRequired && reward.quantityAvailable > 0
+                            reward.quantityAvailable > 0
                               ? 'border-[#127C2F] text-[#127C2F] hover:bg-green-50 bg-white'
-                              : 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed'
+                              : 'border-gray-200 text-gray-500 bg-gray-50 hover:bg-gray-100 cursor-not-allowed'
                           }`}
                         >
-                          {reward.type === 'physical' ? 'View Details' : 'Claim Reward'}
+                          {reward.quantityAvailable <= 0 
+                            ? 'Out of Stock' 
+                            : balance.balance >= reward.creditsRequired 
+                              ? 'Claim Reward' 
+                              : 'View Details'}
                         </button>
                       </div>
                     </div>
@@ -755,6 +760,18 @@ export default function RewardsPage() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Reward Detail Modal */}
+      {selectedReward && (
+        <RewardDetailModal 
+          reward={selectedReward}
+          onClose={() => setSelectedReward(null)}
+          onClaimSuccess={() => {
+            setSelectedReward(null);
+            fetchData(); // Refresh the balance and claims list
+          }}
+        />
       )}
     </div>
   );

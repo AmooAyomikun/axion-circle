@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import MarkerClusterGroup from '@changey/react-leaflet-markercluster';
 import L from 'leaflet';
-import { MapPinned, List, RefreshCw, AlertCircle, MapPinOff, X } from 'lucide-react';
+import { MapPinned, List, RefreshCw, AlertCircle, MapPinOff, X, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import MapErrorBoundary from './MapErrorBoundary';
 import ReportListView from './ReportListView';
@@ -102,6 +102,7 @@ export default function RegionalActivityMap({ reports, mapStatus, onRetry }) {
   const [viewMode, setViewMode] = useState('map'); // 'map' | 'list'
   const [currentCity, setCurrentCity] = useState('Lagos');
   const [gpsPermissionDenied, setGpsPermissionDenied] = useState(false);
+  const [isOverviewDismissed, setIsOverviewDismissed] = useState(false);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -275,6 +276,14 @@ export default function RegionalActivityMap({ reports, mapStatus, onRetry }) {
                           <h3 className="font-extrabold text-[13px] text-black uppercase mb-1 leading-tight">
                             {report.title || (report.category ? report.category.replace(/_/g, ' ') : 'Sanitation Issue')}
                           </h3>
+                          <div className="flex items-start gap-1 text-[9px] text-gray-500 mb-2">
+                            <MapPin className="w-2.5 h-2.5 mt-[2px] shrink-0" />
+                            <span className="line-clamp-1 leading-tight">
+                              {(report.address || report.areaName || '').includes('Location unavailable') 
+                                ? 'Location not automatically captured' 
+                                : (report.address || report.areaName || 'Location not captured')}
+                            </span>
+                          </div>
                           <p className="text-[10px] text-paragraph line-clamp-2 mb-3 leading-snug">
                             {report.description || 'Sanitation issue report'}
                           </p>
@@ -301,9 +310,19 @@ export default function RegionalActivityMap({ reports, mapStatus, onRetry }) {
         ) : null}
 
         {/* Bottom Left District Overview Overlay */}
-        {viewMode === 'map' && (
-          <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 bg-white border border-white-stroke rounded-lg p-3 sm:p-4 w-[200px] sm:w-[240px] shadow-lg z-[400] pointer-events-none">
-            <h3 className="font-bold text-[11px] sm:text-xs text-black mb-1.5">District Overview</h3>
+        {viewMode === 'map' && !isOverviewDismissed && (
+          <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 bg-white border border-white-stroke rounded-lg p-3 sm:p-4 w-[200px] sm:w-[240px] shadow-lg z-[400]">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsOverviewDismissed(true);
+              }}
+              className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-900 bg-gray-50 rounded-full transition-colors z-10"
+              aria-label="Dismiss overview"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+            <h3 className="font-bold text-[11px] sm:text-xs text-black mb-1.5 pr-6">District Overview</h3>
             <p className="text-[9px] sm:text-[10px] text-paragraph leading-relaxed">
               Displaying {filteredReports.length} total active reports across all locations. Zoom out to view reports outside of {currentCity}.
             </p>
