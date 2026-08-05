@@ -18,6 +18,7 @@ import com.cleanreport.repository.ReportUpvoteRepository;
 import com.cleanreport.repository.StatusHistoryRepository;
 import com.cleanreport.repository.UserRepository;
 import com.cleanreport.service.AbuseDetectionService;
+import com.cleanreport.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -71,6 +72,8 @@ class ReportServiceTest {
     private CreditService creditService;
     @Mock
     private AbuseDetectionService abuseDetectionService;
+    @Mock
+    private NotificationService notificationService;
 
     @InjectMocks
     private ReportService reportService;

@@ -15,8 +15,7 @@ import com.cleanreport.repository.ReportFlagRepository;
 import com.cleanreport.repository.StatusHistoryRepository;
 import com.cleanreport.repository.UserRepository;
 import com.cleanreport.model.entity.ReportUpvote;
-import com.cleanreport.util.ReferenceNumberGenerator;
-import lombok.RequiredArgsConstructor;
+import com.cleanreport.util.ReferenceNumberGenerator;import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -49,6 +48,7 @@ public class ReportService {
     private final GeocodingService geocodingService;
     private final CreditService creditService;
     private final AbuseDetectionService abuseDetectionService;
+    private final NotificationService notificationService;
     private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), SRID_WGS84);
 
     @Transactional
@@ -61,6 +61,11 @@ public class ReportService {
 
         // Award credits for report submission
         creditService.awardReportSubmitCredits(reporter, saved);
+
+        // Notify reporter that their report was received
+        notificationService.createNotification(reporter, saved, "REPORT_SUBMITTED",
+                "Report submitted successfully",
+                "Your report " + saved.getReferenceNumber() + " has been received and is under review. You earned +2 CleanCredits!");
 
         // Run abuse detection asynchronously — flags are informational, never block submission
         try {

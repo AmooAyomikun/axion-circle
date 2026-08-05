@@ -72,7 +72,8 @@ public class GoogleOAuthService {
         User user = userRepository.findByEmail(email.toLowerCase())
                 .orElseGet(() -> createGoogleUser(email, name, avatarUrl, googleId));
 
-        if (avatarUrl != null && !avatarUrl.equals(user.getAvatarUrl())) {
+        // Only set avatar from Google if user has no custom avatar yet
+        if (avatarUrl != null && (user.getAvatarUrl() == null || user.getAvatarUrl().isBlank())) {
             user.setAvatarUrl(avatarUrl);
             userRepository.save(user);
         }
