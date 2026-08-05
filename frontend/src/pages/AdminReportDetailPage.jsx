@@ -22,7 +22,14 @@ const statusConfig = {
   rejected: { bg: 'bg-[#FEE2E2]', text: 'text-[#EF4444]', border: 'border-[#EF4444]/20', dot: 'bg-[#EF4444]', label: 'Rejected' }
 };
 
-const getTimelineIcon = (isCompleted, isActive) => {
+const getTimelineIcon = (isCompleted, isActive, isRejected) => {
+  if (isRejected) {
+    return (
+      <div className="w-6 h-6 rounded-full bg-[#EF4444] flex items-center justify-center shrink-0 z-10">
+        <X className="w-3.5 h-3.5 text-white" />
+      </div>
+    );
+  }
   if (isCompleted && !isActive) {
     return (
       <div className="w-6 h-6 rounded-full bg-[#127C2F] flex items-center justify-center shrink-0 z-10">
@@ -245,6 +252,26 @@ export default function AdminReportDetailPage() {
       isActive: isCurrentActive
     };
   });
+
+  if (currentStatusStr === 'rejected') {
+    const rejectedRecord = (statusHistory || []).find(h => (h.newStatus || h.status || '').toLowerCase() === 'rejected');
+    timeline = [
+      {
+        ...timeline[0],
+        isCompleted: true,
+        isActive: false
+      },
+      {
+        status: 'Rejected',
+        label: 'Rejected',
+        desc: rejectedRecord?.note || rejectedRecord?.remarks || 'Report was reviewed and rejected.',
+        date: rejectedRecord?.createdAt || rejectedRecord?.date || report.updatedAt || report.createdAt,
+        isCompleted: true,
+        isActive: false,
+        isRejected: true
+      }
+    ];
+  }
 
   const formatDateTime = (dateString) => {
     if (!dateString) return '';
@@ -470,9 +497,9 @@ export default function AdminReportDetailPage() {
                   <div className="flex flex-col gap-6">
                     {timeline.map((step, idx) => (
                       <div key={idx} className="flex gap-4 relative z-10">
-                        {getTimelineIcon(step.isCompleted, step.isActive)}
+                        {getTimelineIcon(step.isCompleted, step.isActive, step.isRejected)}
                         <div className="-mt-0.5">
-                          <h4 className={`font-bold text-sm mb-0.5 ${step.isCompleted && !step.isActive ? 'text-[#127C2F]' : step.isActive ? 'text-[#006FED]' : 'text-paragraph'}`}>
+                          <h4 className={`font-bold text-sm mb-0.5 ${step.isRejected ? 'text-[#EF4444]' : step.isCompleted && !step.isActive ? 'text-[#127C2F]' : step.isActive ? 'text-[#006FED]' : 'text-paragraph'}`}>
                             {step.label}
                           </h4>
                           {step.desc && (

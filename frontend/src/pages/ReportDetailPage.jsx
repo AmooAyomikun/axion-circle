@@ -402,6 +402,7 @@ export default function ReportDetailPage() {
   if (currentStatusStr === 'acknowledged') activeStageIndex = 1;
   else if (currentStatusStr === 'inprogress') activeStageIndex = 2;
   else if (currentStatusStr === 'resolved') activeStageIndex = 3;
+  else if (currentStatusStr === 'rejected') activeStageIndex = -1;
 
   // Map history to stages
   const mappedStages = STAGES.map((stageName, index) => {
@@ -429,6 +430,26 @@ export default function ReportDetailPage() {
       note: historyRecord?.note || defaultNote
     };
   });
+
+  if (currentStatusStr === 'rejected') {
+    const rejectedRecord = statusHistory.find(h => (h.status || '').toLowerCase().replace(/[_ ]/g, '') === 'rejected');
+    mappedStages.length = 0;
+    mappedStages.push({
+      name: 'Reported',
+      isCompleted: true,
+      isActive: false,
+      date: report.createdAt || report.date,
+      note: 'Report has been delivered to the district'
+    });
+    mappedStages.push({
+      name: 'Rejected',
+      isCompleted: true,
+      isActive: false,
+      isRejected: true,
+      date: rejectedRecord?.createdAt || rejectedRecord?.date || report.updatedAt || report.createdAt,
+      note: rejectedRecord?.note || rejectedRecord?.remarks || 'Report was reviewed and rejected.'
+    });
+  }
 
   const reportReporterName = String(report.reporterName || report.reporter?.displayName || report.reporter?.name || report.reporter?.fullName || report.reporter?.firstName || '').toLowerCase();
   
@@ -669,8 +690,10 @@ export default function ReportDetailPage() {
                   return (
                     <div key={i} className="flex gap-4 relative z-10 mb-6 last:mb-0">
                       {/* Circle Icon */}
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-2 bg-white ${isCompleted ? 'border-[#118B33] bg-[#118B33]' : isActive ? 'border-primary' : 'border-white-stroke'}`}>
-                        {isCompleted ? (
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-2 bg-white ${stage.isRejected ? 'border-[#EF4444] bg-[#EF4444]' : isCompleted ? 'border-[#118B33] bg-[#118B33]' : isActive ? 'border-primary' : 'border-white-stroke'}`}>
+                        {stage.isRejected ? (
+                          <X className="w-4 h-4 text-white" strokeWidth={3} />
+                        ) : isCompleted ? (
                           <Check className="w-4 h-4 text-white" strokeWidth={3} />
                         ) : isActive ? (
                           <div className="w-3 h-3 rounded-full bg-primary"></div>
@@ -681,7 +704,7 @@ export default function ReportDetailPage() {
                       
                       {/* Text */}
                       <div className="flex flex-col pt-1">
-                        <span className={`font-bold text-[13px] ${isCompleted ? 'text-[#118B33]' : isActive ? 'text-black' : 'text-paragraph'}`}>
+                        <span className={`font-bold text-[13px] ${stage.isRejected ? 'text-[#EF4444]' : isCompleted ? 'text-[#118B33]' : isActive ? 'text-black' : 'text-paragraph'}`}>
                           {stage.name}
                         </span>
                         {stage.note && (
@@ -1004,7 +1027,11 @@ export default function ReportDetailPage() {
                 let textClasses = "font-bold text-[13px] text-black";
                 let innerIcon = null;
 
-                if (stage.isCompleted && !stage.isActive) {
+                if (stage.isRejected) {
+                  circleClasses = "w-[32px] h-[32px] rounded-full bg-[#EF4444] flex items-center justify-center shrink-0";
+                  innerIcon = <X className="w-[16px] h-[16px] text-white" strokeWidth={3} />;
+                  textClasses = "font-bold text-[14px] text-[#EF4444]";
+                } else if (stage.isCompleted && !stage.isActive) {
                   circleClasses = "w-[32px] h-[32px] rounded-full bg-[#127C2F] flex items-center justify-center shrink-0";
                   innerIcon = <Check className="w-[16px] h-[16px] text-white" strokeWidth={3} />;
                   textClasses = "font-bold text-[14px] text-[#127C2F]";
