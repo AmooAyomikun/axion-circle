@@ -52,8 +52,8 @@ public class FacebookOAuthService {
         User user = userRepository.findByEmail(email.toLowerCase())
                 .orElseGet(() -> createFacebookUser(email, name, avatarUrl, fbId));
 
-        // Update avatar if changed
-        if (avatarUrl != null && !avatarUrl.equals(user.getAvatarUrl())) {
+        // Only set avatar from Facebook if user has no custom avatar yet
+        if (avatarUrl != null && (user.getAvatarUrl() == null || user.getAvatarUrl().isBlank())) {
             user.setAvatarUrl(avatarUrl);
             userRepository.save(user);
         }
