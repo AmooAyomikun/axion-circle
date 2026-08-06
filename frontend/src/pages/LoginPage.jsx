@@ -276,7 +276,7 @@ export default function LoginPage() {
       if (apiErrorMsg && (apiErrorMsg.toLowerCase().includes('suspend') || apiErrorMsg.toLowerCase().includes('remov'))) {
         setServerError('This account has been suspended/removed. Contact support.');
       } else {
-        setServerError('Invalid email or password');
+        setServerError('Invalid email or password. If you registered via Google/Facebook, please use the social login buttons.');
       }
     } finally {
       setIsSubmitting(false);
