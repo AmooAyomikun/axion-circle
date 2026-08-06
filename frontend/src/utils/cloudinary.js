@@ -6,8 +6,8 @@ export const optimizeCloudinaryUrl = (url, width = 400) => {
     // If it already has f_auto or similar transformations, skip to avoid breaking it
     if (url.includes('/upload/f_')) return url;
     
-    // Insert f_auto,q_auto,w_{width},c_fill after /upload/
-    return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width},c_fill/`);
+    // Insert f_auto,q_auto,w_{width},c_limit after /upload/
+    return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width},c_limit/`);
   }
   
   return url;

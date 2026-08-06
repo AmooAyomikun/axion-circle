@@ -51,10 +51,18 @@ export default function LoginPage() {
           resData?.refresh_token || resData?.refreshToken;
 
         if (accessToken) {
-          localStorage.setItem('access_token', accessToken);
+          if (rememberMe) {
+            localStorage.setItem('access_token', accessToken);
+          } else {
+            sessionStorage.setItem('access_token', accessToken);
+          }
         }
         if (refreshToken) {
-          localStorage.setItem('refresh_token', refreshToken);
+          if (rememberMe) {
+            localStorage.setItem('refresh_token', refreshToken);
+          } else {
+            sessionStorage.setItem('refresh_token', refreshToken);
+          }
         }
 
         const parsedName = resData?.fullName || resData?.name || resData?.displayName || resData?.authorName || '';
@@ -73,9 +81,15 @@ export default function LoginPage() {
         
         const storeName = userObj.fullName || userObj.name || userObj.displayName || '';
 
-        localStorage.setItem('user', JSON.stringify(userObj));
-        localStorage.setItem('user_name', storeName);
-        localStorage.setItem('user_email', userEmail);
+        if (rememberMe) {
+          localStorage.setItem('user', JSON.stringify(userObj));
+          localStorage.setItem('user_name', storeName);
+          localStorage.setItem('user_email', userEmail);
+        } else {
+          sessionStorage.setItem('user', JSON.stringify(userObj));
+          sessionStorage.setItem('user_name', storeName);
+          sessionStorage.setItem('user_email', userEmail);
+        }
 
         toast.success('Logged in successfully!');
         navigate('/');
@@ -126,10 +140,18 @@ export default function LoginPage() {
               resData?.refresh_token || resData?.refreshToken;
 
             if (accessToken) {
-              localStorage.setItem('access_token', accessToken);
+              if (rememberMe) {
+                localStorage.setItem('access_token', accessToken);
+              } else {
+                sessionStorage.setItem('access_token', accessToken);
+              }
             }
             if (refreshToken) {
-              localStorage.setItem('refresh_token', refreshToken);
+              if (rememberMe) {
+                localStorage.setItem('refresh_token', refreshToken);
+              } else {
+                sessionStorage.setItem('refresh_token', refreshToken);
+              }
             }
 
             const parsedName = resData?.fullName || resData?.name || resData?.displayName || resData?.authorName || '';
@@ -148,9 +170,15 @@ export default function LoginPage() {
             
             const storeName = userObj.fullName || userObj.name || userObj.displayName || '';
 
-            localStorage.setItem('user', JSON.stringify(userObj));
-            localStorage.setItem('user_name', storeName);
-            localStorage.setItem('user_email', userEmail);
+            if (rememberMe) {
+              localStorage.setItem('user', JSON.stringify(userObj));
+              localStorage.setItem('user_name', storeName);
+              localStorage.setItem('user_email', userEmail);
+            } else {
+              sessionStorage.setItem('user', JSON.stringify(userObj));
+              sessionStorage.setItem('user_name', storeName);
+              sessionStorage.setItem('user_email', userEmail);
+            }
 
             toast.success('Logged in successfully!');
             navigate('/');
@@ -362,7 +390,7 @@ export default function LoginPage() {
             {/* Log into Account button */}
             <button
               type="submit"
-              disabled={!email || !password || isSubmitting}
+              disabled={isSubmitting}
               className="w-full px-4 py-2.5 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2 shadow-sm cursor-pointer"
             >
               {isSubmitting ? loadingText : 'Log into Account'}

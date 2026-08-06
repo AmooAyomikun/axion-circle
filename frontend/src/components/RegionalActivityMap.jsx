@@ -46,11 +46,24 @@ const getMarkerIcon = (status) => {
   });
 };
 
-const MapBoundsFit = ({ reports }) => {
+const MapCenterUpdater = ({ center, isActive }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (isActive && center) {
+      map.flyTo(center, 13, { duration: 1.5 });
+    }
+  }, [center, map, isActive]);
+  return null;
+};
+
+const MapBoundsFit = ({ reports, userLocationFound }) => {
   const map = useMap();
   const [prevReportIds, setPrevReportIds] = useState('');
 
   useEffect(() => {
+    // If we just found the user's location, don't immediately override it by fitting to all reports unless necessary
+    if (userLocationFound) return;
+    
     if (reports && reports.length > 0) {
       const currentIds = reports.map(r => r.id).sort().join(',');
       if (currentIds !== prevReportIds) {
@@ -59,7 +72,7 @@ const MapBoundsFit = ({ reports }) => {
         setPrevReportIds(currentIds);
       }
     }
-  }, [reports, map, prevReportIds]);
+  }, [reports, map, prevReportIds, userLocationFound]);
   return null;
 };
 
@@ -105,12 +118,16 @@ export default function RegionalActivityMap({ reports, mapStatus, onRetry }) {
   const [currentCity, setCurrentCity] = useState('Lagos');
   const [gpsPermissionDenied, setGpsPermissionDenied] = useState(false);
   const [isOverviewDismissed, setIsOverviewDismissed] = useState(false);
+  const [userLocationFound, setUserLocationFound] = useState(false);
+  const [mapCenter, setMapCenter] = useState([6.5244, 3.3792]); // default Lagos
 
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        () => {
+        (position) => {
           setGpsPermissionDenied(false);
+          setMapCenter([position.coords.latitude, position.coords.longitude]);
+          setUserLocationFound(true);
         },
         (error) => {
           if (error.code === error.PERMISSION_DENIED) {
@@ -221,7 +238,7 @@ export default function RegionalActivityMap({ reports, mapStatus, onRetry }) {
         {viewMode === 'map' ? (
           <MapErrorBoundary onMapError={() => setViewMode('list')}>
             <MapContainer
-              center={[6.5244, 3.3792]} // Lagos
+              center={mapCenter}
               zoom={12}
               scrollWheelZoom={false}
               className="absolute inset-0 z-0"
@@ -229,7 +246,8 @@ export default function RegionalActivityMap({ reports, mapStatus, onRetry }) {
               maxZoom={17}
             >
               <MapInvalidateSize />
-              <MapBoundsFit reports={filteredReports.filter((r) => r.latitude && r.longitude)} />
+              <MapCenterUpdater center={mapCenter} isActive={userLocationFound} />
+              <MapBoundsFit reports={filteredReports.filter((r) => r.latitude && r.longitude)} userLocationFound={userLocationFound} />
               <MapCenterTracker onCityChange={setCurrentCity} />
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

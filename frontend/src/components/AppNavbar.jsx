@@ -23,6 +23,7 @@ import NotificationBell from './NotificationBell';
 import { useOnlineSync } from '../hooks/useOnlineSync';
 import useInstallPrompt from '../hooks/useInstallPrompt';
 import useIsPWA from '../hooks/useIsPWA';
+import InstallPWAModal from './InstallPWAModal';
 
 export default function AppNavbar({ activeTab = '' }) {
   const navigate = useNavigate();
@@ -45,6 +46,7 @@ export default function AppNavbar({ activeTab = '' }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showMobileUserMenu, setShowMobileUserMenu] = useState(false);
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
 
   const getUserInfo = () => {
     try {
@@ -109,7 +111,7 @@ export default function AppNavbar({ activeTab = '' }) {
     if (canInstall) {
       await promptInstall();
     } else {
-      toast('App is already installed or install not available in this browser.', { icon: 'ℹ️' });
+      setIsInstallModalOpen(true);
     }
   };
 
@@ -535,6 +537,11 @@ export default function AppNavbar({ activeTab = '' }) {
           </div>
         </div>
       )}
+
+      <InstallPWAModal 
+        isOpen={isInstallModalOpen} 
+        onClose={() => setIsInstallModalOpen(false)} 
+      />
     </>
   );
 }

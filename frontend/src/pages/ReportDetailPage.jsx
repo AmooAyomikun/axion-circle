@@ -729,7 +729,10 @@ export default function ReportDetailPage() {
               <p className="text-[12px] text-paragraph leading-relaxed mb-5 max-w-[240px]">
                 When you send a report, your reward appears here after the report have been resolved.
               </p>
-              <button className="bg-[#118B33] text-white text-[12px] font-bold px-6 py-3 rounded-xl shadow-sm hover:bg-[#0e742a] transition-colors w-full max-w-[200px]">
+              <button 
+                onClick={() => navigate('/rewards')}
+                className="bg-[#118B33] text-white text-[12px] font-bold px-6 py-3 rounded-xl shadow-sm hover:bg-[#0e742a] transition-colors w-full max-w-[200px]"
+              >
                 See Your Rewards
               </button>
             </div>

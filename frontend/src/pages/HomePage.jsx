@@ -264,7 +264,7 @@ export default function HomePage() {
     if (canInstall) {
       await promptInstall();
     } else {
-      toast('App is already installed or install not available in this browser.', { icon: 'ℹ️' });
+      setIsInstallModalOpen(true);
     }
   };
 

@@ -747,10 +747,10 @@ export default function RewardsPage() {
             </button>
             <h3 className="text-2xl font-heading font-bold mb-4">How it Works</h3>
             <div className="space-y-4 text-gray-600 text-sm">
-              <p><strong>1. Report Issues:</strong> Submit valid environmental reports (+2 credits). Get bonus credits when verified (+5) and resolved (+10).</p>
-              <p><strong>2. Streaks:</strong> A submitted report each day keeps your flame alive. 7-day streak grants +3 bonus, 30-day grants +15 bonus.</p>
-              <p><strong>3. Level Up:</strong> As your lifetime credits grow, your rank increases (Observer → Legend), granting permanent earning multipliers (up to 2x!).</p>
-              <p><strong>4. Claim Rewards:</strong> Exchange your spendable balance for digital rewards from our partners!</p>
+              <p><strong>1. Report Issues:</strong> Submit environmental reports to earn +2 credits. Earn bonus credits when your report is verified (+5) and resolved (+10).</p>
+              <p><strong>2. Keep a Streak:</strong> Submitting a report daily keeps your streak alive! A 7-day streak grants a +3 bonus, and a 30-day streak grants a +15 bonus.</p>
+              <p><strong>3. Level Up:</strong> Your lifetime credits determine your Rank (Observer → Legend). Higher ranks grant permanent earning multipliers up to 2x on every credit you earn!</p>
+              <p><strong>4. Claim Rewards:</strong> Exchange your spendable credits for digital rewards (e.g. Data, Airtime, Store Discounts) directly from this page.</p>
             </div>
             <button 
               onClick={() => setShowHowItWorks(false)}
