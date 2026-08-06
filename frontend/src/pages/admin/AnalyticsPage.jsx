@@ -324,13 +324,13 @@ export default function AnalyticsPage() {
                 
                 <div className="flex-1 min-h-[250px] w-full flex items-center justify-center mt-4">
                   <ResponsiveContainer width="100%" height="100%">
-                    <PieChart margin={{ top: 20, right: 40, bottom: 20, left: 40 }}>
+                    <PieChart margin={{ top: 20, right: 50, bottom: 20, left: 50 }}>
                       <Pie
                         data={categoriesData}
                         cx="50%"
                         cy="50%"
                         innerRadius={0}
-                        outerRadius={85}
+                        outerRadius={75}
                         dataKey="value"
                         labelLine={{ stroke: '#D1D5DB', strokeWidth: 1.5, length1: 15, length2: 30 }}
                         label={<CustomPieLabel />}

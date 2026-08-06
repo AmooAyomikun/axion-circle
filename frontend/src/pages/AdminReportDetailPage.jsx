@@ -222,7 +222,7 @@ export default function AdminReportDetailPage() {
   else if (currentStatusStr === 'resolved') activeStageIndex = 3;
   else if (currentStatusStr === 'rejected') activeStageIndex = -1;
 
-  const timeline = STAGES.map((stageName, index) => {
+  let timeline = STAGES.map((stageName, index) => {
     // Attempt to find a matching history record
     const historyRecord = (statusHistory || []).find(h => {
       const s = (h.newStatus || h.status || '').toLowerCase().replace(/_/g, '').replace(' ', '');
