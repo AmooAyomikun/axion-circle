@@ -7,9 +7,10 @@ import {
 } from 'recharts';
 import AdminLayout from '../../components/AdminLayout';
 import SEO from '../../components/SEO';
-import { Download, FileText, CheckCircle2, Clock, Timer, TrendingUp } from 'lucide-react';
+import { Download, FileText, CheckCircle2, Clock, Timer, TrendingUp, Lock, WifiOff, SearchX, FileWarning } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AdminStatCard from '../../components/AdminStatCard';
+import StateCard from '../../components/StateCard';
 import { calculateTrendFromReports, generateSparklinePath } from '../../utils/trendUtils';
 import api from '../../services/api';
 
@@ -87,6 +88,7 @@ const CustomAreaTooltip = ({ active, payload }) => {
 
 export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
+  const [errorState, setErrorState] = useState(null);
   const [stats, setStats] = useState({ total: 0, resolved: 0, pending: 0, averageResponseTimeHours: 2.4 });
   const [reports, setReports] = useState([]);
   
@@ -99,6 +101,7 @@ export default function AnalyticsPage() {
   const fetchStats = useCallback(async () => {
     try {
       setLoading(true);
+      setErrorState(null);
       const [statsRes, repRes, dashRes, topContributorsRes] = await Promise.all([
         api.get('/reports/stats'),
         api.get('/admin/reports?size=200'),
@@ -202,6 +205,43 @@ export default function AnalyticsPage() {
 
     } catch (err) {
       console.error('Failed to fetch analytics stats', err);
+      let errorType = '500';
+      if (err.response) {
+        if (err.response.status === 403) errorType = '403';
+        else if (err.response.status === 404) errorType = '404';
+      } else if (err.code === 'ECONNABORTED' || !navigator.onLine || err.message?.includes('Network')) {
+        errorType = 'NETWORK';
+      }
+      
+      if (errorType === '403') {
+        setErrorState({
+          icon: Lock,
+          title: 'Permission denied',
+          description: 'You do not have permission to access this dashboard section. Contact a Super Admin.',
+          errorDetails: 'HTTP 403 · You do not have permission to access this resource.'
+        });
+      } else if (errorType === '404') {
+        setErrorState({
+          icon: SearchX,
+          title: 'Not found',
+          description: "We couldn't find the resource you were looking for.",
+          errorDetails: 'HTTP 404 · The requested resource could not be found.'
+        });
+      } else if (errorType === 'NETWORK') {
+        setErrorState({
+          icon: WifiOff,
+          title: 'Connection lost',
+          description: 'You appear to be offline. Reconnect and try again.',
+          errorDetails: 'NETWORK_TIMEOUT · Connection lost. Check your network and try again.'
+        });
+      } else {
+        setErrorState({
+          icon: FileWarning,
+          title: 'Unable to load analytics',
+          description: 'Something went wrong while loading analytics data.',
+          errorDetails: 'HTTP 500 · Something went wrong while loading data.'
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -260,6 +300,14 @@ export default function AnalyticsPage() {
           <div className="min-h-[500px] flex items-center justify-center">
              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
           </div>
+        ) : errorState ? (
+          <StateCard 
+            icon={errorState.icon}
+            title={errorState.title}
+            description={errorState.description}
+            errorDetails={errorState.errorDetails}
+            onAction={fetchStats}
+          />
         ) : (
           <>
             {/* TOP STATS GRID (Connected to Backend) */}
