@@ -1,39 +1,37 @@
 import React, { useState } from 'react';
-import { Search, ArrowLeft, ArrowRight, Trash2, X } from 'lucide-react';
-import { MOCK_REWARD_CATALOG } from './mockData';
+import { Search, ArrowLeft, ArrowRight, Trash2, X, Edit } from 'lucide-react';
+import { MOCK_REWARD_CATALOG, MOCK_PARTNER_STORES } from './mockData';
 import toast from 'react-hot-toast';
+import NewRewardModal from '../../../components/modals/NewRewardModal';
 
-export default function RewardCatalogTab() {
+export default function RewardCatalogTab({ isModalOpen, setIsModalOpen }) {
   const [rewards, setRewards] = useState(MOCK_REWARD_CATALOG);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectAll, setSelectAll] = useState(false);
-  const [selectedRewards, setSelectedRewards] = useState([]);
   
   const [itemToDelete, setItemToDelete] = useState(null);
+  const [editingReward, setEditingReward] = useState(null);
   
   const [page, setPage] = useState(0);
   const totalPages = 1;
 
-  const handleSelectAll = () => {
-    if (selectAll) {
-      setSelectedRewards([]);
-    } else {
-      setSelectedRewards(rewards.map(r => r.id));
-    }
-    setSelectAll(!selectAll);
+  const handleEdit = (reward) => {
+    setEditingReward(reward);
+    setIsModalOpen(true);
   };
 
-  const handleSelectReward = (id) => {
-    if (selectedRewards.includes(id)) {
-      setSelectedRewards(selectedRewards.filter(rewId => rewId !== id));
-      setSelectAll(false);
-    } else {
-      const newSelected = [...selectedRewards, id];
-      setSelectedRewards(newSelected);
-      if (newSelected.length === rewards.length && rewards.length > 0) {
-        setSelectAll(true);
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setTimeout(() => setEditingReward(null), 200);
+  };
+
+  const handleSaveReward = (savedReward) => {
+    setRewards(prev => {
+      const exists = prev.find(r => r.id === savedReward.id);
+      if (exists) {
+        return prev.map(r => r.id === savedReward.id ? savedReward : r);
       }
-    }
+      return [savedReward, ...prev];
+    });
   };
 
   const handleDeleteConfirm = () => {
@@ -70,15 +68,6 @@ export default function RewardCatalogTab() {
         <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
             <tr className="bg-white border-b border-white-stroke text-xs font-semibold text-paragraph h-[44px]">
-              <th className="px-4 py-3 w-12">
-                <input 
-                  type="checkbox" 
-                  aria-label="Select all" 
-                  checked={selectAll}
-                  onChange={handleSelectAll}
-                  className="w-4 h-4 rounded border-white-stroke text-primary focus:ring-primary cursor-pointer" 
-                />
-              </th>
               <th className="px-4 py-3 whitespace-nowrap">Reward Name</th>
               <th className="px-4 py-3 whitespace-nowrap">Credits Required</th>
               <th className="px-4 py-3 whitespace-nowrap">Partner Store</th>
@@ -90,22 +79,13 @@ export default function RewardCatalogTab() {
           <tbody className="divide-y divide-white-stroke text-sm">
             {filteredRewards.length === 0 ? (
               <tr>
-                <td colSpan="7" className="px-5 py-12 text-center text-paragraph">
+                <td colSpan="6" className="px-5 py-12 text-center text-paragraph">
                   No rewards found in catalog.
                 </td>
               </tr>
             ) : (
               filteredRewards.map((rew) => (
                 <tr key={rew.id} className="hover:bg-white-bg/50 transition-colors bg-white h-[72px]">
-                  <td className="px-4 py-4">
-                    <input 
-                      type="checkbox" 
-                      aria-label={`Select ${rew.name}`} 
-                      checked={selectedRewards.includes(rew.id)}
-                      onChange={() => handleSelectReward(rew.id)}
-                      className="w-4 h-4 rounded border-white-stroke text-primary focus:ring-primary cursor-pointer" 
-                    />
-                  </td>
                   <td className="px-4 py-4">
                     <span className={`font-bold text-[#1F2937] text-sm ${rew.isDiscounted || rew.status === 'Draft' ? 'line-through text-opacity-60' : ''}`}>
                       {rew.name}
@@ -131,7 +111,7 @@ export default function RewardCatalogTab() {
                   <td className="px-4 py-4 text-center">
                     <button 
                       onClick={() => setItemToDelete(rew)}
-                      className="p-2 text-alert-error hover:bg-alert-errorLight transition-colors focus:outline-none bg-white-bg rounded-lg mx-auto"
+                      className="p-2 text-alert-error hover:bg-alert-errorLight transition-colors focus:outline-none bg-white-bg rounded-lg mx-auto block"
                       title="Delete Reward"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -200,6 +180,14 @@ export default function RewardCatalogTab() {
           </div>
         </div>
       )}
+
+      <NewRewardModal 
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        onSuccess={handleSaveReward}
+        partnerStores={MOCK_PARTNER_STORES}
+        editReward={editingReward}
+      />
     </div>
   );
 }

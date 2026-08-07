@@ -1,11 +1,81 @@
 // Mock data for Admin Reward Management
 
 export const MOCK_CREDIT_RULES = [
-  { id: '1', name: 'Submit a Report', credits: 10, isActive: true },
-  { id: '2', name: 'Upvote a Report', credits: 1, isActive: true },
-  { id: '3', name: 'Report Resolved', credits: 50, isActive: true },
-  { id: '4', name: 'Share on Social Media', credits: 5, isActive: false },
-  { id: '5', name: 'Daily Login', credits: 2, isActive: true }
+  {
+    id: '1',
+    title: 'Submit Report',
+    description: 'Awarded the moment a resident submits a report with a valid photo and GPS location.',
+    trigger: 'Report.submitted',
+    appliesTo: 'All categories',
+    award: 10,
+    multiplier: 1,
+    dailyCap: 50,
+    monthlyCap: 600,
+    monthlyCapUsage: 100,
+    updatedAt: '2026-06-01',
+    updatedBy: 'Adaeze Okonkwo',
+    enabled: true
+  },
+  {
+    id: '2',
+    title: 'Report Acknowledged',
+    description: 'Awarded when the operations team validates the report as genuine.',
+    trigger: 'report.acknowledged',
+    appliesTo: 'All categories',
+    award: 5,
+    multiplier: 1,
+    dailyCap: 25,
+    monthlyCap: 300,
+    monthlyCapUsage: 100,
+    updatedAt: '2026-05-22',
+    updatedBy: 'Grace Etim',
+    enabled: true
+  },
+  {
+    id: '3',
+    title: 'Report Resolved',
+    description: 'Awarded once the sanitation issue has been cleared and after-photo evidence is uploaded.',
+    trigger: 'report.resolved',
+    appliesTo: 'All categories',
+    award: 5,
+    multiplier: 2,
+    dailyCap: 30,
+    monthlyCap: 400,
+    monthlyCapUsage: 100,
+    updatedAt: '2026-06-12',
+    updatedBy: 'Grace Etim',
+    enabled: true
+  },
+  {
+    id: '4',
+    title: 'First Report Bonus',
+    description: 'One-time welcome bonus for a resident\'s very first accepted report.',
+    trigger: 'user.first_report',
+    appliesTo: 'All categories',
+    award: 20,
+    multiplier: 1,
+    dailyCap: 20,
+    monthlyCap: 20,
+    monthlyCapUsage: 100,
+    updatedAt: '2026-04-08',
+    updatedBy: 'Adaeze Okonkwo',
+    enabled: true
+  },
+  {
+    id: '5',
+    title: 'Blocked Drain Priority',
+    description: 'Bonus credits for flood-risk drain reports during the rainy season.',
+    trigger: 'report.submitted',
+    appliesTo: 'Blocked Drain',
+    award: 15,
+    multiplier: 1.5,
+    dailyCap: 45,
+    monthlyCap: 450,
+    monthlyCapUsage: 100,
+    updatedAt: '2026-06-05',
+    updatedBy: 'Ibrahim Musa',
+    enabled: true
+  }
 ];
 
 export const MOCK_PARTNER_STORES = [

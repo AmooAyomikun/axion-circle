@@ -2,15 +2,35 @@ import React, { useState } from 'react';
 import { Search, ArrowLeft, ArrowRight, Edit, AlertCircle } from 'lucide-react';
 import { MOCK_PARTNER_STORES } from './mockData';
 import toast from 'react-hot-toast';
+import AddPartnerStoreModal from '../../../components/modals/AddPartnerStoreModal';
 
-export default function PartnerStoresTab() {
+export default function PartnerStoresTab({ isModalOpen, setIsModalOpen }) {
   const [stores, setStores] = useState(MOCK_PARTNER_STORES);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectAll, setSelectAll] = useState(false);
-  const [selectedStores, setSelectedStores] = useState([]);
+  const [editingStore, setEditingStore] = useState(null);
   
   const [page, setPage] = useState(0);
   const totalPages = 1;
+
+  const handleEdit = (store) => {
+    setEditingStore(store);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setTimeout(() => setEditingStore(null), 200);
+  };
+
+  const handleSaveStore = (savedStore) => {
+    setStores(prev => {
+      const exists = prev.find(s => s.id === savedStore.id);
+      if (exists) {
+        return prev.map(s => s.id === savedStore.id ? savedStore : s);
+      }
+      return [savedStore, ...prev];
+    });
+  };
 
   const handleToggleStatus = (id) => {
     setStores(prev => prev.map(store => {
@@ -22,28 +42,6 @@ export default function PartnerStoresTab() {
       }
       return store;
     }));
-  };
-
-  const handleSelectAll = () => {
-    if (selectAll) {
-      setSelectedStores([]);
-    } else {
-      setSelectedStores(stores.map(s => s.id));
-    }
-    setSelectAll(!selectAll);
-  };
-
-  const handleSelectStore = (id) => {
-    if (selectedStores.includes(id)) {
-      setSelectedStores(selectedStores.filter(storeId => storeId !== id));
-      setSelectAll(false);
-    } else {
-      const newSelected = [...selectedStores, id];
-      setSelectedStores(newSelected);
-      if (newSelected.length === stores.length && stores.length > 0) {
-        setSelectAll(true);
-      }
-    }
   };
 
   const filteredStores = stores.filter(store => 
@@ -72,15 +70,6 @@ export default function PartnerStoresTab() {
         <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
             <tr className="bg-white border-b border-white-stroke text-xs font-semibold text-paragraph h-[44px]">
-              <th className="px-4 py-3 w-12">
-                <input 
-                  type="checkbox" 
-                  aria-label="Select all" 
-                  checked={selectAll}
-                  onChange={handleSelectAll}
-                  className="w-4 h-4 rounded border-white-stroke text-primary focus:ring-primary cursor-pointer" 
-                />
-              </th>
               <th className="px-4 py-3 whitespace-nowrap">Store Name</th>
               <th className="px-4 py-3 whitespace-nowrap">Category</th>
               <th className="px-4 py-3 whitespace-nowrap">Location</th>
@@ -93,7 +82,7 @@ export default function PartnerStoresTab() {
           <tbody className="divide-y divide-white-stroke text-sm">
             {filteredStores.length === 0 ? (
               <tr>
-                <td colSpan="8" className="px-5 py-12 text-center text-paragraph">
+                <td colSpan="7" className="px-5 py-12 text-center text-paragraph">
                   No partner stores found.
                 </td>
               </tr>
@@ -103,15 +92,6 @@ export default function PartnerStoresTab() {
                 
                 return (
                   <tr key={store.id} className="hover:bg-white-bg/50 transition-colors bg-white h-[72px]">
-                    <td className="px-4 py-4">
-                      <input 
-                        type="checkbox" 
-                        aria-label={`Select ${store.name}`} 
-                        checked={selectedStores.includes(store.id)}
-                        onChange={() => handleSelectStore(store.id)}
-                        className="w-4 h-4 rounded border-white-stroke text-primary focus:ring-primary cursor-pointer" 
-                      />
-                    </td>
                     <td className="px-4 py-4">
                       <span className="font-bold text-[#1F2937] text-sm">{store.name}</span>
                     </td>
@@ -147,6 +127,7 @@ export default function PartnerStoresTab() {
                     </td>
                     <td className="px-4 py-4 text-center">
                       <button 
+                        onClick={() => handleEdit(store)}
                         className="p-2 text-black-icon hover:text-primary transition-colors focus:outline-none bg-white-bg rounded-lg"
                         title="Edit Store"
                       >
@@ -186,6 +167,13 @@ export default function PartnerStoresTab() {
           Next <ArrowRight className="w-4 h-4" />
         </button>
       </div>
+
+      <AddPartnerStoreModal 
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        onSuccess={handleSaveStore}
+        editStore={editingStore}
+      />
     </div>
   );
 }

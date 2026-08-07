@@ -16,6 +16,10 @@ export default function AdminRewardManagementPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const [isCreditRuleModalOpen, setIsCreditRuleModalOpen] = useState(false);
+  const [isPartnerStoreModalOpen, setIsPartnerStoreModalOpen] = useState(false);
+  const [isRewardModalOpen, setIsRewardModalOpen] = useState(false);
+
   const tabs = [
     { id: 'credit-rules', label: 'Credit Rules' },
     { id: 'partner-stores', label: 'Partner Stores' },
@@ -58,16 +62,28 @@ export default function AdminRewardManagementPage() {
             </p>
           </div>
           <div className="flex items-center gap-3 self-start sm:self-auto">
+            {currentTab === 'credit-rules' && (
+              <button 
+                onClick={() => setIsCreditRuleModalOpen(true)}
+                className="inline-flex items-center justify-center px-4 py-2 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-colors shadow-sm text-sm"
+              >
+                Add Credit Rule
+              </button>
+            )}
             {currentTab === 'partner-stores' && (
-              <button className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-colors shadow-sm text-sm">
-                <Plus className="w-4 h-4" />
+              <button 
+                onClick={() => setIsPartnerStoreModalOpen(true)}
+                className="inline-flex items-center justify-center px-4 py-2 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-colors shadow-sm text-sm"
+              >
                 Add Store
               </button>
             )}
             {currentTab === 'reward-catalog' && (
-              <button className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-colors shadow-sm text-sm">
-                <Plus className="w-4 h-4" />
-                Add Reward
+              <button 
+                onClick={() => setIsRewardModalOpen(true)}
+                className="inline-flex items-center justify-center px-4 py-2 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-colors shadow-sm text-sm"
+              >
+                New Reward
               </button>
             )}
             <button
@@ -105,10 +121,19 @@ export default function AdminRewardManagementPage() {
 
         {/* Main Content Area - Tabs render their own cards now */}
         <div className="w-full">
-          {currentTab === 'credit-rules' && <CreditRulesTab />}
-          {currentTab === 'partner-stores' && <PartnerStoresTab />}
+          {currentTab === 'credit-rules' && <CreditRulesTab 
+            isModalOpen={isCreditRuleModalOpen} 
+            setIsModalOpen={setIsCreditRuleModalOpen} 
+          />}
+          {currentTab === 'partner-stores' && <PartnerStoresTab 
+            isModalOpen={isPartnerStoreModalOpen} 
+            setIsModalOpen={setIsPartnerStoreModalOpen} 
+          />}
           {currentTab === 'redemption-requests' && <RedemptionRequestsTab />}
-          {currentTab === 'reward-catalog' && <RewardCatalogTab />}
+          {currentTab === 'reward-catalog' && <RewardCatalogTab 
+            isModalOpen={isRewardModalOpen} 
+            setIsModalOpen={setIsRewardModalOpen} 
+          />}
         </div>
         
       </div>
