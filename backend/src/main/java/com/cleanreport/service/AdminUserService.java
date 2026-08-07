@@ -3,9 +3,19 @@ package com.cleanreport.service;
 import com.cleanreport.dto.request.SuspendUserRequest;
 import com.cleanreport.dto.request.UpdateUserRoleRequest;
 import com.cleanreport.dto.response.AdminUserResponse;
+import com.cleanreport.dto.response.ReportResponse;
+import com.cleanreport.dto.response.RewardClaimResponse;
+import com.cleanreport.dto.response.UserActivityResponse;
 import com.cleanreport.exception.ResourceNotFoundException;
+import com.cleanreport.model.entity.Report;
+import com.cleanreport.model.entity.RewardClaim;
 import com.cleanreport.model.entity.User;
+import com.cleanreport.model.enums.ReportStatus;
 import com.cleanreport.model.enums.UserRole;
+import com.cleanreport.repository.ReportFlagRepository;
+import com.cleanreport.repository.ReportRepository;
+import com.cleanreport.repository.ReportUpvoteRepository;
+import com.cleanreport.repository.RewardClaimRepository;
 import com.cleanreport.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,6 +40,10 @@ public class AdminUserService {
     private static final int INACTIVE_THRESHOLD_DAYS = 30;
 
     private final UserRepository userRepository;
+    private final ReportRepository reportRepository;
+    private final ReportUpvoteRepository reportUpvoteRepository;
+    private final ReportFlagRepository reportFlagRepository;
+    private final RewardClaimRepository rewardClaimRepository;
 
     @Transactional(readOnly = true)
     public Page<AdminUserResponse> listUsers(UserRole role, String search,
@@ -111,8 +127,85 @@ public class AdminUserService {
         return user;
     }
 
+    @Transactional(readOnly = true)
+    public Page<ReportResponse> getUserReports(UUID userId, Pageable pageable) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
+        return reportRepository.findByReporterIdOrderByCreatedAtDesc(userId, pageable)
+                .map(r -> {
+                    int upvotes = (int) reportUpvoteRepository.countByReportId(r.getId());
+                    int flags = reportFlagRepository.findByReportIdOrderByCreatedAtDesc(r.getId()).size();
+                    String rName = Boolean.TRUE.equals(r.getIsAnonymous()) ? "Anonymous" : r.getReporter().getDisplayName();
+                    return ReportResponse.builder()
+                            .id(r.getId()).referenceNumber(r.getReferenceNumber())
+                            .reporterId(r.getReporter().getId()).reporterName(rName)
+                            .title(r.getTitle()).photoUrl(r.getPhotoUrl())
+                            .latitude(r.getLocation().getY()).longitude(r.getLocation().getX())
+                            .address(r.getAddress()).areaName(r.getAreaName())
+                            .category(r.getCategory()).status(r.getStatus()).urgency(r.getUrgency())
+                            .isAnonymous(r.getIsAnonymous())
+                            .upvotesCount(upvotes).hasUpvoted(false).flagCount(flags)
+                            .createdAt(r.getCreatedAt()).updatedAt(r.getUpdatedAt())
+                            .build();
+                });
+    }
+
+    @Transactional(readOnly = true)
+    public Page<RewardClaimResponse> getUserRewards(UUID userId, Pageable pageable) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
+        return rewardClaimRepository.findByUserIdOrderByClaimedAtDesc(userId, pageable)
+                .map(c -> RewardClaimResponse.builder()
+                        .id(c.getId())
+                        .rewardName(c.getReward().getName())
+                        .rewardCategory(c.getReward().getCategory())
+                        .creditsSpent(c.getReward().getCreditsRequired())
+                        .redemptionCode(c.getRedemptionCode())
+                        .status(c.getStatus())
+                        .claimedAt(c.getClaimedAt())
+                        .build());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UserActivityResponse> getUserActivity(UUID userId, Pageable pageable) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
+
+        List<UserActivityResponse> activities = new ArrayList<>();
+
+        // Report submissions
+        reportRepository.findByReporterId(userId).forEach(r ->
+                activities.add(UserActivityResponse.builder()
+                        .id(r.getId())
+                        .type("REPORT_SUBMITTED")
+                        .description("Submitted report: " + r.getTitle() + " (" + r.getReferenceNumber() + ")")
+                        .creditsChange(2)
+                        .timestamp(r.getCreatedAt())
+                        .build()));
+
+        // Reward claims
+        rewardClaimRepository.findByUserIdOrderByClaimedAtDesc(userId).forEach(c ->
+                activities.add(UserActivityResponse.builder()
+                        .id(c.getId())
+                        .type("REWARD_CLAIMED")
+                        .description("Claimed reward: " + c.getReward().getName())
+                        .creditsChange(-c.getReward().getCreditsRequired())
+                        .timestamp(c.getClaimedAt())
+                        .build()));
+
+        activities.sort(Comparator.comparing(UserActivityResponse::getTimestamp).reversed());
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), activities.size());
+        List<UserActivityResponse> pageContent = start >= activities.size()
+                ? List.of() : activities.subList(start, end);
+        return new PageImpl<>(pageContent, pageable, activities.size());
+    }
+
     private AdminUserResponse mapToResponse(User user) {
         Long totalReports = userRepository.countReportsByUserId(user.getId());
+        Long resolvedReports = userRepository.countResolvedReportsByUserId(user.getId());
+        Integer creditsRedeemed = userRepository.sumCreditsRedeemedByUserId(user.getId());
         boolean isInactive = user.getLastLoginAt() == null
                 || user.getLastLoginAt().isBefore(Instant.now().minus(INACTIVE_THRESHOLD_DAYS, ChronoUnit.DAYS));
         return AdminUserResponse.builder()
@@ -133,6 +226,8 @@ public class AdminUserService {
                 .level(user.getLevel())
                 .streakCount(user.getStreakCount())
                 .totalReports(totalReports)
+                .resolvedReports(resolvedReports)
+                .creditsRedeemed(creditsRedeemed != null ? creditsRedeemed : 0)
                 .createdAt(user.getCreatedAt())
                 .lastLoginAt(user.getLastLoginAt())
                 .inactive(isInactive)

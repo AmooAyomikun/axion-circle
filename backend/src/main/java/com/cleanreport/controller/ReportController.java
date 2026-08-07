@@ -210,6 +210,18 @@ public class ReportController {
     }
 
     @Operation(
+            summary = "Get lightweight map markers for all reports",
+            description = """
+                    Returns all reports as minimal marker objects — only id, coordinates, status,
+                    category, areaName and createdAt. Excludes description, photoUrl and all heavy fields.
+                    Designed for rendering 10,000+ map pins without browser lag. **Public endpoint.**
+                    """)
+    @GetMapping("/map-markers")
+    public ResponseEntity<ApiResponse<java.util.List<com.cleanreport.dto.response.MapMarkerResponse>>> getMapMarkers() {
+        return ResponseEntity.ok(ApiResponse.ok(reportService.getMapMarkers()));
+    }
+
+    @Operation(
             summary = "Get report by ID",
             description = """
                     Returns full details of a single report including reporter name

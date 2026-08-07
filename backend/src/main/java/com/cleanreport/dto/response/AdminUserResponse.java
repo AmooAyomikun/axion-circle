@@ -35,6 +35,8 @@ public class AdminUserResponse {
     private UserLevel level;
     private Integer streakCount;
     private Long totalReports;
+    private Long resolvedReports;
+    private Integer creditsRedeemed;
     private Instant createdAt;
     private Instant lastLoginAt;
 

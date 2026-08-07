@@ -97,4 +97,37 @@ public class AdminUserController {
     public ResponseEntity<ApiResponse<AdminUserResponse>> restore(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.ok(adminUserService.restore(id), "User restored"));
     }
+
+    @Operation(summary = "Get a user's reports (Admin only)", security = @SecurityRequirement(name = "Bearer Auth"))
+    @GetMapping("/{id}/reports")
+    public ResponseEntity<ApiResponse<org.springframework.data.domain.Page<com.cleanreport.dto.response.ReportResponse>>> getUserReports(
+            @PathVariable UUID id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(ApiResponse.ok(adminUserService.getUserReports(id,
+                org.springframework.data.domain.PageRequest.of(page, Math.min(size, 100),
+                        org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt")))));
+    }
+
+    @Operation(summary = "Get a user's reward claim history (Admin only)", security = @SecurityRequirement(name = "Bearer Auth"))
+    @GetMapping("/{id}/rewards")
+    public ResponseEntity<ApiResponse<org.springframework.data.domain.Page<com.cleanreport.dto.response.RewardClaimResponse>>> getUserRewards(
+            @PathVariable UUID id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(ApiResponse.ok(adminUserService.getUserRewards(id,
+                org.springframework.data.domain.PageRequest.of(page, Math.min(size, 100)))));
+    }
+
+    @Operation(summary = "Get a user's activity timeline (Admin only)",
+            description = "Aggregated chronological activity: report submissions and reward claims.",
+            security = @SecurityRequirement(name = "Bearer Auth"))
+    @GetMapping("/{id}/activity")
+    public ResponseEntity<ApiResponse<org.springframework.data.domain.Page<com.cleanreport.dto.response.UserActivityResponse>>> getUserActivity(
+            @PathVariable UUID id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(ApiResponse.ok(adminUserService.getUserActivity(id,
+                org.springframework.data.domain.PageRequest.of(page, Math.min(size, 100)))));
+    }
 }

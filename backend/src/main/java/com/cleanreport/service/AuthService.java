@@ -65,6 +65,13 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail().toLowerCase().trim())
                 .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
 
+        // Check if this is an OAuth-only account before attempting password match
+        String passwordHash = user.getPasswordHash();
+        if (passwordHash == null || passwordHash.startsWith("OAUTH_")) {
+            throw new UnauthorizedException(
+                    "This account was registered using a social login. Please log in with Google or Facebook.");
+        }
+
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             log.warn("Failed login attempt for: {}", request.getEmail());
             throw new UnauthorizedException("Invalid email or password");

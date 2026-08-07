@@ -26,6 +26,8 @@ public interface ReportRepository extends JpaRepository<Report, UUID>, JpaSpecif
 
     List<Report> findByReporterId(UUID reporterId);
 
+    org.springframework.data.domain.Page<Report> findByReporterIdOrderByCreatedAtDesc(UUID reporterId, Pageable pageable);
+
     @Query(value = "SELECT * FROM reports r WHERE " +
             "ST_DWithin(r.location::geography, ST_MakePoint(:lng, :lat)::geography, :radiusMeters)",
             nativeQuery = true)
@@ -82,4 +84,14 @@ public interface ReportRepository extends JpaRepository<Report, UUID>, JpaSpecif
             "GROUP BY r.area_name ORDER BY cnt DESC LIMIT :limit",
             nativeQuery = true)
     List<Object[]> findTopAreasByReportCount(@Param("limit") int limit);
+
+    /**
+     * Lightweight map markers — only id, coordinates, status, category, area_name, created_at.
+     * No description, photo_url or heavy fields. Used for map rendering.
+     */
+    @Query(value = "SELECT r.id, ST_Y(r.location::geometry) AS latitude, ST_X(r.location::geometry) AS longitude, " +
+            "r.status, r.category, r.area_name, r.created_at " +
+            "FROM reports r ORDER BY r.created_at DESC",
+            nativeQuery = true)
+    List<Object[]> findAllMapMarkers();
 }

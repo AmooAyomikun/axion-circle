@@ -201,6 +201,25 @@ public class ReportService {
     /**
      * Dashboard statistics: totals by status and category.
      */
+    /**
+     * Returns lightweight markers for all reports — only fields needed to plot map dots.
+     * Strips out description, photoUrl and other heavy fields for performance.
+     */
+    @Transactional(readOnly = true)
+    public List<com.cleanreport.dto.response.MapMarkerResponse> getMapMarkers() {
+        return reportRepository.findAllMapMarkers().stream()
+                .map(row -> com.cleanreport.dto.response.MapMarkerResponse.builder()
+                        .id(java.util.UUID.fromString(row[0].toString()))
+                        .latitude(((Number) row[1]).doubleValue())
+                        .longitude(((Number) row[2]).doubleValue())
+                        .status(com.cleanreport.model.enums.ReportStatus.valueOf(row[3].toString()))
+                        .category(com.cleanreport.model.enums.ReportCategory.valueOf(row[4].toString()))
+                        .areaName(row[5] != null ? row[5].toString() : null)
+                        .createdAt(row[6] != null ? ((java.sql.Timestamp) row[6]).toInstant() : null)
+                        .build())
+                .toList();
+    }
+
     public DashboardStatsResponse getDashboardStats() {
         long total = reportRepository.count();
 

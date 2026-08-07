@@ -53,4 +53,10 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     @Query("SELECT COUNT(r) FROM Report r WHERE r.reporter.id = :userId")
     Long countReportsByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT COUNT(r) FROM Report r WHERE r.reporter.id = :userId AND r.status = com.cleanreport.model.enums.ReportStatus.RESOLVED")
+    Long countResolvedReportsByUserId(@Param("userId") UUID userId);
+
+    @Query(value = "SELECT COALESCE(SUM(r.credits_required), 0) FROM reward_claims rc JOIN rewards r ON r.id = rc.reward_id WHERE rc.user_id = :userId", nativeQuery = true)
+    Integer sumCreditsRedeemedByUserId(@Param("userId") UUID userId);
 }
