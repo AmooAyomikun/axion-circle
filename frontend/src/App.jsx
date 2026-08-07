@@ -26,6 +26,7 @@ const AnalyticsPage = lazy(() => import('./pages/admin/AnalyticsPage'));
 const UsersPage = lazy(() => import('./pages/admin/UsersPage'));
 const AdminRewardManagementPage = lazy(() => import('./pages/admin/reward-management/index'));
 const AdminReportDetailPage = lazy(() => import('./pages/AdminReportDetailPage'));
+const AdminUserDetailPage = lazy(() => import('./pages/admin/AdminUserDetailPage'));
 const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'));
@@ -155,6 +156,7 @@ function App() {
           <Route path="/admin/reports/:id" element={<AdminRoute><AdminReportDetailPage /></AdminRoute>} />
           <Route path="/admin/analytics" element={<AdminRoute><AnalyticsPage /></AdminRoute>} />
           <Route path="/admin/users" element={<AdminRoute><UsersPage /></AdminRoute>} />
+          <Route path="/admin/users/:id" element={<AdminRoute><AdminUserDetailPage /></AdminRoute>} />
           <Route path="/admin/reward-management" element={<AdminRoute><AdminRewardManagementPage /></AdminRoute>} />
 
             {/* 404 */}
