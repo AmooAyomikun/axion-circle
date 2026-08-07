@@ -238,7 +238,7 @@ public class ReportController {
                             {"success":false,"message":"Report not found: 550e8400-e29b-41d4-a716-446655440000","errors":null,"timestamp":"2026-07-13T12:00:00Z"}
                             """)))
     })
-    @GetMapping("/{id}")
+    @GetMapping("/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}")
     public ResponseEntity<ApiResponse<ReportResponse>> getReportById(
             @Parameter(description = "Report UUID", example = "550e8400-e29b-41d4-a716-446655440000")
             @PathVariable UUID id,
