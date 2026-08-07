@@ -203,9 +203,9 @@ public class AdminUserService {
     }
 
     private AdminUserResponse mapToResponse(User user) {
-        Long totalReports = userRepository.countReportsByUserId(user.getId());
-        Long resolvedReports = userRepository.countResolvedReportsByUserId(user.getId());
-        Integer creditsRedeemed = userRepository.sumCreditsRedeemedByUserId(user.getId());
+        Long totalReports = reportRepository.countByReporterId(user.getId());
+        Long resolvedReports = reportRepository.countByReporterIdAndStatus(user.getId(), ReportStatus.RESOLVED);
+        Integer creditsRedeemed = rewardClaimRepository.sumCreditsRedeemedByUserId(user.getId());
         boolean isInactive = user.getLastLoginAt() == null
                 || user.getLastLoginAt().isBefore(Instant.now().minus(INACTIVE_THRESHOLD_DAYS, ChronoUnit.DAYS));
         return AdminUserResponse.builder()

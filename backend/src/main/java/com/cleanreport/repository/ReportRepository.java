@@ -28,6 +28,10 @@ public interface ReportRepository extends JpaRepository<Report, UUID>, JpaSpecif
 
     org.springframework.data.domain.Page<Report> findByReporterIdOrderByCreatedAtDesc(UUID reporterId, Pageable pageable);
 
+    long countByReporterId(UUID reporterId);
+
+    long countByReporterIdAndStatus(UUID reporterId, com.cleanreport.model.enums.ReportStatus status);
+
     @Query(value = "SELECT * FROM reports r WHERE " +
             "ST_DWithin(r.location::geography, ST_MakePoint(:lng, :lat)::geography, :radiusMeters)",
             nativeQuery = true)

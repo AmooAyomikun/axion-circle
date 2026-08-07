@@ -1,7 +1,6 @@
 package com.cleanreport.repository;
 
 import com.cleanreport.model.entity.User;
-import com.cleanreport.model.entity.Report;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -50,13 +49,4 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Query(value = "SELECT COUNT(*) FROM users WHERE (:includeDeleted = TRUE OR deleted_at IS NULL) AND (:inactiveDays = 0 OR last_login_at IS NULL OR last_login_at < NOW() - (:inactiveDays || ' days')::INTERVAL) AND (COALESCE(:search, '') = '' OR LOWER(display_name) LIKE LOWER(CONCAT('%', CAST(:search AS TEXT), '%')) OR LOWER(email) LIKE LOWER(CONCAT('%', CAST(:search AS TEXT), '%')))",
            nativeQuery = true)
     long countBySearch(@Param("search") String search, @Param("includeDeleted") boolean includeDeleted, @Param("inactiveDays") int inactiveDays);
-
-    @Query("SELECT COUNT(r) FROM Report r WHERE r.reporter.id = :userId")
-    Long countReportsByUserId(@Param("userId") UUID userId);
-
-    @Query("SELECT COUNT(r) FROM Report r WHERE r.reporter.id = :userId AND r.status = com.cleanreport.model.enums.ReportStatus.RESOLVED")
-    Long countResolvedReportsByUserId(@Param("userId") UUID userId);
-
-    @Query(value = "SELECT COALESCE(SUM(r.credits_required), 0) FROM reward_claims rc JOIN rewards r ON r.id = rc.reward_id WHERE rc.user_id = :userId", nativeQuery = true)
-    Integer sumCreditsRedeemedByUserId(@Param("userId") UUID userId);
 }
