@@ -134,8 +134,7 @@ export default function AdminLayout({ children }) {
     { name: 'Report', icon: FileText, path: '/admin/reports' },
     { name: 'Reward Management', icon: Gift, path: '/admin/reward-management' },
     { name: 'Analytics', icon: BarChart2, path: '/admin/analytics' },
-    { name: 'Users', icon: Users, path: '/admin/users' },
-    { name: 'Profile', icon: User, path: '/profile' }
+    { name: 'Users', icon: Users, path: '/admin/users' }
   ];
 
   return (
