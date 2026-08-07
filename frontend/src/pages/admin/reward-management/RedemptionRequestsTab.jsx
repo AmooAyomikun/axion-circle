@@ -5,33 +5,9 @@ import { MOCK_REDEMPTION_REQUESTS } from './mockData';
 export default function RedemptionRequestsTab() {
   const [requests, setRequests] = useState(MOCK_REDEMPTION_REQUESTS);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectAll, setSelectAll] = useState(false);
-  const [selectedRequests, setSelectedRequests] = useState([]);
   
   const [page, setPage] = useState(0);
   const totalPages = 1;
-
-  const handleSelectAll = () => {
-    if (selectAll) {
-      setSelectedRequests([]);
-    } else {
-      setSelectedRequests(requests.map(r => r.id));
-    }
-    setSelectAll(!selectAll);
-  };
-
-  const handleSelectRequest = (id) => {
-    if (selectedRequests.includes(id)) {
-      setSelectedRequests(selectedRequests.filter(reqId => reqId !== id));
-      setSelectAll(false);
-    } else {
-      const newSelected = [...selectedRequests, id];
-      setSelectedRequests(newSelected);
-      if (newSelected.length === requests.length && requests.length > 0) {
-        setSelectAll(true);
-      }
-    }
-  };
 
   const filteredRequests = requests.filter(req => 
     req.userName.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -73,15 +49,6 @@ export default function RedemptionRequestsTab() {
         <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
             <tr className="bg-white border-b border-white-stroke text-xs font-semibold text-paragraph h-[44px]">
-              <th className="px-4 py-3 w-12">
-                <input 
-                  type="checkbox" 
-                  aria-label="Select all" 
-                  checked={selectAll}
-                  onChange={handleSelectAll}
-                  className="w-4 h-4 rounded border-white-stroke text-primary focus:ring-primary cursor-pointer" 
-                />
-              </th>
               <th className="px-4 py-3 whitespace-nowrap">User Name</th>
               <th className="px-4 py-3 whitespace-nowrap">Store Name</th>
               <th className="px-4 py-3 whitespace-nowrap">Category</th>
@@ -94,22 +61,13 @@ export default function RedemptionRequestsTab() {
           <tbody className="divide-y divide-white-stroke text-sm">
             {filteredRequests.length === 0 ? (
               <tr>
-                <td colSpan="8" className="px-5 py-12 text-center text-paragraph">
+                <td colSpan="7" className="px-5 py-12 text-center text-paragraph">
                   No redemption requests found.
                 </td>
               </tr>
             ) : (
               filteredRequests.map((req) => (
                 <tr key={req.id} className="hover:bg-white-bg/50 transition-colors bg-white h-[72px]">
-                  <td className="px-4 py-4">
-                    <input 
-                      type="checkbox" 
-                      aria-label={`Select ${req.id}`} 
-                      checked={selectedRequests.includes(req.id)}
-                      onChange={() => handleSelectRequest(req.id)}
-                      className="w-4 h-4 rounded border-white-stroke text-primary focus:ring-primary cursor-pointer" 
-                    />
-                  </td>
                   <td className="px-4 py-4">
                     <span className="font-bold text-[#1F2937] text-sm">{req.userName}</span>
                   </td>
