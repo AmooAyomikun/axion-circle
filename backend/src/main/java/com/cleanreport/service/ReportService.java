@@ -208,15 +208,27 @@ public class ReportService {
     @Transactional(readOnly = true)
     public List<com.cleanreport.dto.response.MapMarkerResponse> getMapMarkers() {
         return reportRepository.findAllMapMarkers().stream()
-                .map(row -> com.cleanreport.dto.response.MapMarkerResponse.builder()
-                        .id(java.util.UUID.fromString(row[0].toString()))
-                        .latitude(((Number) row[1]).doubleValue())
-                        .longitude(((Number) row[2]).doubleValue())
-                        .status(com.cleanreport.model.enums.ReportStatus.valueOf(row[3].toString()))
-                        .category(com.cleanreport.model.enums.ReportCategory.valueOf(row[4].toString()))
-                        .areaName(row[5] != null ? row[5].toString() : null)
-                        .createdAt(row[6] != null ? ((java.sql.Timestamp) row[6]).toInstant() : null)
-                        .build())
+                .map(row -> {
+                    java.time.Instant ts = null;
+                    if (row[6] != null) {
+                        if (row[6] instanceof java.sql.Timestamp) {
+                            ts = ((java.sql.Timestamp) row[6]).toInstant();
+                        } else if (row[6] instanceof java.time.Instant) {
+                            ts = (java.time.Instant) row[6];
+                        } else if (row[6] instanceof java.time.OffsetDateTime) {
+                            ts = ((java.time.OffsetDateTime) row[6]).toInstant();
+                        }
+                    }
+                    return com.cleanreport.dto.response.MapMarkerResponse.builder()
+                            .id(java.util.UUID.fromString(row[0].toString()))
+                            .latitude(((Number) row[1]).doubleValue())
+                            .longitude(((Number) row[2]).doubleValue())
+                            .status(com.cleanreport.model.enums.ReportStatus.valueOf(row[3].toString()))
+                            .category(com.cleanreport.model.enums.ReportCategory.valueOf(row[4].toString()))
+                            .areaName(row[5] != null ? row[5].toString() : null)
+                            .createdAt(ts)
+                            .build();
+                })
                 .toList();
     }
 
