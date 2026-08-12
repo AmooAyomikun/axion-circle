@@ -78,25 +78,33 @@ public class AdminRewardController {
 
     @Operation(summary = "List all redemption requests (Admin)", security = @SecurityRequirement(name = "Bearer Auth"))
     @GetMapping("/redemption-requests")
-    public ResponseEntity<ApiResponse<Page<com.cleanreport.dto.response.RewardClaimResponse>>> listRedemptionRequests(
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> listRedemptionRequests(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        Page<RewardClaim> claims = rewardClaimRepository.findAll(
-                PageRequest.of(page, Math.min(size, 100), Sort.by(Sort.Direction.DESC, "claimedAt")));
-        Page<com.cleanreport.dto.response.RewardClaimResponse> response = claims.map(c ->
-            com.cleanreport.dto.response.RewardClaimResponse.builder()
-                .id(c.getId())
-                .userId(c.getUser() != null ? c.getUser().getId() : null)
-                .userName(c.getUser() != null ? c.getUser().getDisplayName() : null)
-                .rewardName(c.getReward() != null ? c.getReward().getName() : null)
-                .rewardCategory(c.getReward() != null ? c.getReward().getCategory() : null)
-                .creditsSpent(c.getReward() != null ? c.getReward().getCreditsRequired() : null)
-                .redemptionCode(c.getRedemptionCode())
-                .status(c.getStatus())
-                .claimedAt(c.getClaimedAt())
-                .build()
-        );
-        return ResponseEntity.ok(ApiResponse.ok(response));
+        int limit = Math.min(size, 100);
+        long offset = (long) page * limit;
+        long total = rewardClaimRepository.countAllClaims();
+        List<Object[]> rows = rewardClaimRepository.findAllClaimsNative(limit, offset);
+        List<java.util.Map<String, Object>> content = rows.stream().map(row -> {
+            java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+            m.put("id", row[0] != null ? row[0].toString() : null);
+            m.put("userId", row[1] != null ? row[1].toString() : null);
+            m.put("userName", row[2] != null ? row[2].toString() : null);
+            m.put("rewardName", row[3] != null ? row[3].toString() : null);
+            m.put("rewardCategory", row[4] != null ? row[4].toString() : null);
+            m.put("creditsSpent", row[5] != null ? ((Number) row[5]).intValue() : null);
+            m.put("redemptionCode", row[6] != null ? row[6].toString() : null);
+            m.put("status", row[7] != null ? row[7].toString() : null);
+            m.put("claimedAt", row[8] != null ? row[8].toString() : null);
+            return m;
+        }).toList();
+        java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("content", content);
+        result.put("totalElements", total);
+        result.put("totalPages", (int) Math.ceil((double) total / limit));
+        result.put("page", page);
+        result.put("size", limit);
+        return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
     @Operation(summary = "Update redemption request status (Admin) — APPROVED, REJECTED, COLLECTED",
