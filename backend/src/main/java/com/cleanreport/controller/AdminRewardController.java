@@ -77,6 +77,7 @@ public class AdminRewardController {
     // ─── REDEMPTION REQUESTS ──────────────────────────────────
 
     @Operation(summary = "List all redemption requests (Admin)", security = @SecurityRequirement(name = "Bearer Auth"))
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     @GetMapping("/redemption-requests")
     public ResponseEntity<ApiResponse<Page<RewardClaim>>> listRedemptionRequests(
             @RequestParam(defaultValue = "0") int page,
