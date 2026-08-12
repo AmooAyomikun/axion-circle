@@ -82,6 +82,7 @@ public class RewardService {
     /**
      * Get user's claim history.
      */
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public List<RewardClaim> getMyClaims(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
