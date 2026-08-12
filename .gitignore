@@ -64,3 +64,4 @@ docker-data/
 
 # --- Media / Assets ---
 *.mp4
+!backend/app.jar
