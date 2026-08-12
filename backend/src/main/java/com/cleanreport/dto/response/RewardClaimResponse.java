@@ -12,6 +12,8 @@ import java.util.UUID;
 @Data @Builder @NoArgsConstructor @AllArgsConstructor
 public class RewardClaimResponse {
     private UUID id;
+    private UUID userId;
+    private String userName;
     private String rewardName;
     private String rewardCategory;
     private Integer creditsSpent;

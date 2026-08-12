@@ -77,14 +77,26 @@ public class AdminRewardController {
     // ─── REDEMPTION REQUESTS ──────────────────────────────────
 
     @Operation(summary = "List all redemption requests (Admin)", security = @SecurityRequirement(name = "Bearer Auth"))
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     @GetMapping("/redemption-requests")
-    public ResponseEntity<ApiResponse<Page<RewardClaim>>> listRedemptionRequests(
+    public ResponseEntity<ApiResponse<Page<com.cleanreport.dto.response.RewardClaimResponse>>> listRedemptionRequests(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         Page<RewardClaim> claims = rewardClaimRepository.findAll(
                 PageRequest.of(page, Math.min(size, 100), Sort.by(Sort.Direction.DESC, "claimedAt")));
-        return ResponseEntity.ok(ApiResponse.ok(claims));
+        Page<com.cleanreport.dto.response.RewardClaimResponse> response = claims.map(c ->
+            com.cleanreport.dto.response.RewardClaimResponse.builder()
+                .id(c.getId())
+                .userId(c.getUser() != null ? c.getUser().getId() : null)
+                .userName(c.getUser() != null ? c.getUser().getDisplayName() : null)
+                .rewardName(c.getReward() != null ? c.getReward().getName() : null)
+                .rewardCategory(c.getReward() != null ? c.getReward().getCategory() : null)
+                .creditsSpent(c.getReward() != null ? c.getReward().getCreditsRequired() : null)
+                .redemptionCode(c.getRedemptionCode())
+                .status(c.getStatus())
+                .claimedAt(c.getClaimedAt())
+                .build()
+        );
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
     @Operation(summary = "Update redemption request status (Admin) — APPROVED, REJECTED, COLLECTED",
