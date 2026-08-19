@@ -15,6 +15,16 @@ public class PartnerStore {
     private String category;
     @Column(length = 300)
     private String location;
+    @Column(length = 300)
+    private String address;
+    @Column(length = 100)
+    private String phone;
+    @Column(length = 200)
+    private String email;
+    @Column(name = "contact_person", length = 100)
+    private String contactPerson;
+    @Column(columnDefinition = "TEXT")
+    private String description;
     @Column(name = "redemption_limit")
     @Builder.Default private Integer redemptionLimit = 0;
     @Column(nullable = false, length = 20)
