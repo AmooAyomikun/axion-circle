@@ -42,6 +42,10 @@ public class Reward {
     @Column(name = "category", length = 100)
     private String category;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "partner_store_id")
+    private PartnerStore partnerStore;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

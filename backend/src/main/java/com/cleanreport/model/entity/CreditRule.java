@@ -19,6 +19,12 @@ public class CreditRule {
     private String eventType;
     @Column(name = "is_active", nullable = false)
     @Builder.Default private Boolean isActive = true;
+    @Column(name = "multiplier")
+    @Builder.Default private Double multiplier = 1.0;
+    @Column(name = "daily_cap")
+    private Integer dailyCap;
+    @Column(name = "monthly_cap")
+    private Integer monthlyCap;
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
     @Column(name = "updated_at", nullable = false)

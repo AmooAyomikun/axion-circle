@@ -109,8 +109,9 @@ public class AdminRewardController {
 
     @Operation(summary = "Update redemption request status (Admin) — APPROVED, REJECTED, COLLECTED",
             security = @SecurityRequirement(name = "Bearer Auth"))
+    @org.springframework.transaction.annotation.Transactional
     @PatchMapping("/redemption-requests/{id}/status")
-    public ResponseEntity<ApiResponse<RewardClaim>> updateRedemptionStatus(
+    public ResponseEntity<ApiResponse<com.cleanreport.dto.response.RewardClaimResponse>> updateRedemptionStatus(
             @PathVariable UUID id,
             @RequestBody Map<String, String> body) {
         RewardClaim claim = rewardClaimRepository.findById(id)
@@ -122,7 +123,19 @@ public class AdminRewardController {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid status. Use: PENDING, APPROVED, REJECTED, COLLECTED");
         }
-        return ResponseEntity.ok(ApiResponse.ok(rewardClaimRepository.save(claim), "Status updated to " + status));
+        RewardClaim saved = rewardClaimRepository.save(claim);
+        com.cleanreport.dto.response.RewardClaimResponse response = com.cleanreport.dto.response.RewardClaimResponse.builder()
+                .id(saved.getId())
+                .userId(saved.getUser() != null ? saved.getUser().getId() : null)
+                .userName(saved.getUser() != null ? saved.getUser().getDisplayName() : null)
+                .rewardName(saved.getReward() != null ? saved.getReward().getName() : null)
+                .rewardCategory(saved.getReward() != null ? saved.getReward().getCategory() : null)
+                .creditsSpent(saved.getReward() != null ? saved.getReward().getCreditsRequired() : null)
+                .redemptionCode(saved.getRedemptionCode())
+                .status(saved.getStatus())
+                .claimedAt(saved.getClaimedAt())
+                .build();
+        return ResponseEntity.ok(ApiResponse.ok(response, "Status updated to " + status));
     }
 
     // ─── CREDIT RULES ─────────────────────────────────────────
@@ -142,6 +155,9 @@ public class AdminRewardController {
         if (updates.getName() != null) rule.setName(updates.getName());
         if (updates.getCredits() != null) rule.setCredits(updates.getCredits());
         if (updates.getDescription() != null) rule.setDescription(updates.getDescription());
+        if (updates.getMultiplier() != null) rule.setMultiplier(updates.getMultiplier());
+        if (updates.getDailyCap() != null) rule.setDailyCap(updates.getDailyCap());
+        if (updates.getMonthlyCap() != null) rule.setMonthlyCap(updates.getMonthlyCap());
         return ResponseEntity.ok(ApiResponse.ok(creditRuleRepository.save(rule), "Credit rule updated"));
     }
 
@@ -174,6 +190,7 @@ public class AdminRewardController {
     }
 
     @Operation(summary = "Update a partner store (Admin)", security = @SecurityRequirement(name = "Bearer Auth"))
+    @org.springframework.transaction.annotation.Transactional
     @PutMapping("/partner-stores/{id}")
     public ResponseEntity<ApiResponse<PartnerStore>> updatePartnerStore(
             @PathVariable UUID id, @RequestBody PartnerStore updates) {
@@ -182,12 +199,24 @@ public class AdminRewardController {
         if (updates.getName() != null) store.setName(updates.getName());
         if (updates.getCategory() != null) store.setCategory(updates.getCategory());
         if (updates.getLocation() != null) store.setLocation(updates.getLocation());
+        if (updates.getAddress() != null) store.setAddress(updates.getAddress());
+        if (updates.getPhone() != null) store.setPhone(updates.getPhone());
+        if (updates.getEmail() != null) store.setEmail(updates.getEmail());
+        if (updates.getContactPerson() != null) store.setContactPerson(updates.getContactPerson());
+        if (updates.getDescription() != null) store.setDescription(updates.getDescription());
         if (updates.getRedemptionLimit() != null) store.setRedemptionLimit(updates.getRedemptionLimit());
+        // Accept status changes in PUT as well
+        if (updates.getStatus() != null && !updates.getStatus().isBlank()) {
+            if (!"ACTIVE".equals(updates.getStatus()) && !"SUSPENDED".equals(updates.getStatus()))
+                throw new IllegalArgumentException("status must be ACTIVE or SUSPENDED");
+            store.setStatus(updates.getStatus());
+        }
         return ResponseEntity.ok(ApiResponse.ok(partnerStoreRepository.save(store), "Partner store updated"));
     }
 
     @Operation(summary = "Toggle partner store status (Admin) — ACTIVE or SUSPENDED",
             security = @SecurityRequirement(name = "Bearer Auth"))
+    @org.springframework.transaction.annotation.Transactional
     @PatchMapping("/partner-stores/{id}/status")
     public ResponseEntity<ApiResponse<PartnerStore>> togglePartnerStore(
             @PathVariable UUID id, @RequestBody Map<String, String> body) {
