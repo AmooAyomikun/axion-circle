@@ -50,19 +50,27 @@ export default function AdminRewardManagementPage() {
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-xl sm:text-[22px] font-heading font-bold mb-1">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-lg sm:text-[22px] font-heading font-bold mb-1">
               <span className="text-paragraph">Dashboard</span>
               <span className="text-paragraph">›</span>
-              <span className="text-paragraph">Reward Management</span>
+              <span className="text-paragraph whitespace-nowrap">Reward Management</span>
               <span className="text-paragraph">›</span>
-              <span className="text-primary">{tabs.find(t => t.id === currentTab)?.label}</span>
+              <span className="text-primary whitespace-nowrap">{tabs.find(t => t.id === currentTab)?.label}</span>
             </div>
-            <p className="text-sm text-paragraph font-medium">
+            <p className="text-xs sm:text-sm text-paragraph font-medium mt-1">
               Manage CleanCredits rules, partner stores, redemptions and the reward catalog.
             </p>
           </div>
           <div className="flex items-center gap-3 self-start sm:self-auto">
 
+            {currentTab === 'credit-rules' && (
+              <button 
+                onClick={() => setIsCreditRuleModalOpen(true)}
+                className="inline-flex items-center justify-center px-4 py-2 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-colors shadow-sm text-sm"
+              >
+                New Rule
+              </button>
+            )}
             {currentTab === 'partner-stores' && (
               <button 
                 onClick={() => setIsPartnerStoreModalOpen(true)}
@@ -91,8 +99,8 @@ export default function AdminRewardManagementPage() {
         </div>
 
         {/* Tab Navigation (Pill layout) */}
-        <div className="flex">
-          <div className="inline-flex items-center gap-1 p-1 bg-white border border-white-stroke rounded-xl shadow-sm overflow-x-auto no-scrollbar">
+        <div className="flex w-full overflow-hidden">
+          <div className="flex items-center gap-1 p-1 bg-white border border-white-stroke rounded-xl shadow-sm overflow-x-auto no-scrollbar w-full sm:w-auto">
             {tabs.map((tab) => {
               const isActive = currentTab === tab.id;
               return (

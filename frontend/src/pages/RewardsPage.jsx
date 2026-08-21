@@ -142,10 +142,10 @@ export default function RewardsPage() {
       const reqs = [api.get('/rewards')];
       
       if (token) {
-        reqs.push(api.get('/credits/balance').catch(() => ({ data: { data: null } })));
-        reqs.push(api.get('/leaderboard').catch(() => ({ data: { data: [] } })));
-        reqs.push(api.get('/rewards/my-claims').catch(() => ({ data: { data: [] } })));
-        reqs.push(api.get('/credits/history?size=10').catch(() => ({ data: { data: { content: [] } } })));
+        reqs.push(api.get('/credits/balance'));
+        reqs.push(api.get('/leaderboard'));
+        reqs.push(api.get('/rewards/my-claims'));
+        reqs.push(api.get('/credits/history?size=10'));
       }
 
       const results = await Promise.all(reqs);

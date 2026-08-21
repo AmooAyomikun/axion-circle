@@ -48,7 +48,7 @@ export default function AdminReportsPage() {
       // Fetch stats for the top cards
       const [statsRes, dashRes] = await Promise.all([
         api.get('/reports/stats'),
-        api.get('/analytics/dashboard').catch(() => null)
+        api.get('/analytics/dashboard')
       ]);
       
       let ackCount = 0;

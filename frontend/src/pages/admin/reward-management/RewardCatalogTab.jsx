@@ -17,7 +17,9 @@ export default function RewardCatalogTab({ isModalOpen, setIsModalOpen }) {
         api.get('/admin/rewards'),
         api.get('/admin/partner-stores')
       ]);
-      setRewards(resRewards.data?.data || []);
+      const data = resRewards.data?.data || [];
+      const sortedData = [...data].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      setRewards(sortedData);
       setPartnerStores(resStores.data?.data || []);
     } catch (error) {
       toast.error('Failed to load reward catalog');
@@ -71,7 +73,7 @@ export default function RewardCatalogTab({ isModalOpen, setIsModalOpen }) {
   };
 
   const filteredRewards = rewards.filter(rew => {
-    const storeObj = partnerStores.find(s => s.id === rew.partner_store_id || s.id === rew.partnerStore?.id);
+    const storeObj = partnerStores.find(s => String(s.id) === String(rew.partner_store_id) || String(s.id) === String(rew.partnerStoreId) || String(s.id) === String(rew.partnerId) || String(s.id) === String(rew.storeId) || String(s.id) === String(rew.partnerStore?.id));
     const storeName = rew.partnerStore?.name || storeObj?.name || (typeof rew.store === 'object' ? rew.store?.name : rew.store) || '';
     return (rew.name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) || 
            storeName.toLowerCase().includes((searchTerm || '').toLowerCase());
@@ -133,7 +135,8 @@ export default function RewardCatalogTab({ isModalOpen, setIsModalOpen }) {
                     {((rew.creditsRequired ?? rew.credits) || 0).toLocaleString()}
                   </td>
                   <td className="px-4 py-4 text-[#4B5563] font-medium text-sm">
-                    {rew.partnerStore?.name || partnerStores.find(s => String(s.id) === String(rew.partner_store_id))?.name || (typeof rew.store === 'object' ? rew.store?.name : rew.store) || 'Unknown'}
+                    {console.log('Reward data:', rew)}
+                    {rew.partnerStore?.name || partnerStores.find(s => String(s.id) === String(rew.partner_store_id) || String(s.id) === String(rew.partnerStoreId) || String(s.id) === String(rew.partnerId) || String(s.id) === String(rew.storeId))?.name || (typeof rew.store === 'object' ? rew.store?.name : rew.store) || 'Unknown'}
                   </td>
                   <td className="px-4 py-4 text-[#4B5563] font-medium text-sm">
                     {rew.quantityAvailable ?? 'N/A'}

@@ -109,9 +109,7 @@ export default function NotificationsPage() {
 
     try {
       setIsSubscribing(true);
-      // MOCK API CALL
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      // await api.post('/newsletter/subscribe', { email });
+      await api.post('/newsletter/subscribe', { email });
       toast.success("Subscribed successfully!");
       setEmail('');
     } catch (error) {

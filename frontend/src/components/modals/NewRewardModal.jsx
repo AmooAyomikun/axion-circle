@@ -93,7 +93,9 @@ export default function NewRewardModal({ isOpen, onClose, onSuccess, editReward 
         ...formData,
         quantityAvailable: formData.stock,
         isActive: formData.status === 'ACTIVE',
-        partner_store_id: formData.partnerId
+        partner_store_id: formData.partnerId,
+        partnerStoreId: formData.partnerId,
+        partnerStore: formData.partnerId ? { id: formData.partnerId } : null
       };
       
       if (editReward && editReward.id) {

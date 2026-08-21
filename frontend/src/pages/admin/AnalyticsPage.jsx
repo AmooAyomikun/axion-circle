@@ -97,6 +97,9 @@ export default function AnalyticsPage() {
   const [areasData, setAreasData] = useState([]);
   const [timelineData, setTimelineData] = useState([]);
   const [contributorsData, setContributorsData] = useState([]);
+  
+  const [categoriesTimeFilter, setCategoriesTimeFilter] = useState('Weekly');
+  const [reportsTimeFilter, setReportsTimeFilter] = useState('Weekly');
 
   const fetchStats = useCallback(async () => {
     try {
@@ -105,8 +108,8 @@ export default function AnalyticsPage() {
       const [statsRes, repRes, dashRes, topContributorsRes] = await Promise.all([
         api.get('/reports/stats'),
         api.get('/admin/reports?size=200'),
-        api.get('/analytics/dashboard').catch(() => null),
-        api.get('/analytics/top-contributors?limit=10').catch(() => null)
+        api.get('/analytics/dashboard'),
+        api.get('/analytics/top-contributors?limit=10')
       ]);
 
       let ackCount = 0;
@@ -357,11 +360,12 @@ export default function AnalyticsPage() {
                     <p className="text-sm text-[#6B7280] mt-1">Breakdown of reports by issue category</p>
                   </div>
                   <div className="flex bg-white border border-[#E5E7EB] rounded-lg p-0.5">
-                    {['Weekly', 'Monthly', 'Yearly'].map((filter, i) => (
+                    {['Weekly', 'Monthly', 'Yearly'].map((filter) => (
                       <button
                         key={filter}
+                        onClick={() => setCategoriesTimeFilter(filter)}
                         className={`px-4 py-1.5 text-[13px] rounded-md transition-colors ${
-                          i === 0 ? 'bg-white text-[#127C2F] shadow-sm font-semibold' : 'text-[#4B5563] hover:text-black font-medium'
+                          categoriesTimeFilter === filter ? 'bg-white text-[#127C2F] shadow-sm font-semibold' : 'text-[#4B5563] hover:text-black font-medium'
                         }`}
                       >
                         {filter}
@@ -372,15 +376,15 @@ export default function AnalyticsPage() {
                 
                 <div className="flex-1 min-h-[250px] w-full flex items-center justify-center mt-4">
                   <ResponsiveContainer width="100%" height="100%">
-                    <PieChart margin={{ top: 20, right: 50, bottom: 20, left: 50 }}>
+                    <PieChart margin={{ top: 20, right: 70, bottom: 20, left: 70 }}>
                       <Pie
                         data={categoriesData}
                         cx="50%"
                         cy="50%"
                         innerRadius={0}
-                        outerRadius={75}
+                        outerRadius={65}
                         dataKey="value"
-                        labelLine={{ stroke: '#D1D5DB', strokeWidth: 1.5, length1: 15, length2: 30 }}
+                        labelLine={{ stroke: '#D1D5DB', strokeWidth: 1.5, length1: 10, length2: 25 }}
                         label={<CustomPieLabel />}
                         stroke="#ffffff"
                         strokeWidth={2}
@@ -490,11 +494,12 @@ export default function AnalyticsPage() {
                   <p className="text-sm text-[#6B7280] mt-1">Switch the time grain to explore trends</p>
                 </div>
                 <div className="flex bg-white border border-[#E5E7EB] rounded-lg p-0.5">
-                  {['Weekly', 'Monthly', 'Yearly'].map((filter, i) => (
+                  {['Weekly', 'Monthly', 'Yearly'].map((filter) => (
                     <button
                       key={filter}
+                      onClick={() => setReportsTimeFilter(filter)}
                       className={`px-4 py-1.5 text-[13px] rounded-md transition-colors ${
-                        i === 0 ? 'bg-white text-[#127C2F] shadow-sm font-semibold' : 'text-[#4B5563] hover:text-black font-medium'
+                        reportsTimeFilter === filter ? 'bg-white text-[#127C2F] shadow-sm font-semibold' : 'text-[#4B5563] hover:text-black font-medium'
                       }`}
                     >
                       {filter}

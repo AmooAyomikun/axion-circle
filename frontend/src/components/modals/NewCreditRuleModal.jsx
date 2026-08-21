@@ -90,13 +90,13 @@ export default function NewCreditRuleModal({ isOpen, onClose, onSuccess, editRul
     setIsSubmitting(true);
     try {
       const payload = {
-        ...formData,
-        award: parseInt(formData.award, 10),
+        name: formData.title,
         credits: parseInt(formData.award, 10),
+        eventType: formData.trigger,
+        description: formData.description,
         multiplier: parseFloat(formData.multiplier),
         dailyCap: parseInt(formData.dailyCap, 10),
         monthlyCap: parseInt(formData.monthlyCap, 10),
-        name: formData.title,
         status: formData.enabled ? 'ACTIVE' : 'INACTIVE',
         isActive: formData.enabled
       };
